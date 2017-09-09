@@ -25,7 +25,12 @@ class Game {
 		this.occupiedLocationsArray = null;
 		this.occupiedLocationsMapFeatures = {};
 		this.occupiedLocationsGroundOverlays = {};
+		this.showUserLocationsBtn = document.getElementById('showUserLocationsButton');
 
+		this.showUserLocationsBtn.addEventListener('click', (event) => {
+			// let target = event.target;
+			this.showAllUserLocations();
+		});
 		this.locInfoContainer.addEventListener('click', (event) => {
 			let target = event.target;
 
@@ -54,7 +59,14 @@ class Game {
 			}
 			if (target.closest('#occupy-btn')) {
 				target = target.closest('#occupy-btn');
-				this.showOccupationForm();
+				// a restriction
+				if (this.checkAbilityToOccupyLocation(this.currentLocation)) {
+					console.log('can be occupied');
+					this.showOccupationForm();
+				} else {
+					// set pop-up or smth if cannot occupy
+					console.log('cannot be occupied, out of bounds');
+				}
 				return;
 			}
 			if (target.closest('#edit-loc-btn')) {
@@ -137,7 +149,7 @@ class Game {
 	get mapFeaturesStyles() {
 		return {
 			defaultStyles: {
-				strokeColor: 'gray ',
+				strokeColor: 'transparent ',
 				fillColor: 'transparent',
 				fillOpacity: 0.2,
 				strokeWeight: 1,
@@ -147,11 +159,9 @@ class Game {
 				fillColor: 'green'
 			},
 			occupiedLocation: {
-				fillColor: 'gray'
+				fillColor: 'grey'
 			},
 			profitLocation: {
-				strokeColor: 'orange',
-				strokeWeight: 3
 			},
 			highlightedEmptyLocation: {
 				strokeColor: 'blue'
@@ -304,6 +314,37 @@ class Game {
 			});
 	}
 
+	// all user locations rendering method
+
+	showAllUserLocations() {
+		const userLocations = [];
+		const bounds = new google.maps.LatLngBounds();
+		console.dir(bounds);
+		this.getOccupiedLocations()
+			.then(() => {
+				this.occupiedLocationsArray.forEach((location) => {
+					if (location.isMaster) {
+						userLocations.push(location);
+					}
+				});
+				if (userLocations.length < 2) {
+					console.log('only one loc');
+				} else {
+					userLocations.forEach((location) => {
+						const northWest = location.northWest;
+						const northWestPoint = new google.maps.LatLng(northWest.lat, northWest.lng);
+						// console.dir()
+						console.dir(northWestPoint);
+						bounds.extend(northWestPoint);
+					});
+					this.map.fitBounds(bounds);
+				}
+			})
+			.catch((err) => {
+				console.log(`script.js 323 ${err}`);
+			});
+	}
+
 	// CURRENT LOCATION RENDER METHODS
 
 	renderCurrentLocationInfo() {
@@ -428,6 +469,23 @@ class Game {
 				this.renderHighlightedLocationTextInfo();
 			});
 	}
+	// renderEmptyLocationInfo(event) {
+	// 	this.getGridByGeoCoords({
+	// 		lat: event.latLng.lat(),
+	// 		lng: event.latLng.lng()
+	// 	})
+	// 		.then((clickedLocation) => {
+	// 			if (this.checkAbilityToOccupyLocation(clickedLocation)) {
+	// 				console.log('can be occupied');
+	// 				clickedLocation.locationName = 'Empty Location';
+	// 				this.highlightEmptyLocation(clickedLocation);
+	// 				this.renderHighlightedLocationTextInfo();
+	// 			} else {
+	// 				// set styles if cannot occupy
+	// 				console.dir(`cannot be occupied, out of bounds${clickedLocation.northWest}`);
+	// 			}
+	// 		});
+	// }
 
 	highlightEmptyLocation(clickedLocation) {
 		this.removeHighlight();
@@ -476,6 +534,56 @@ class Game {
 
 	// LOCATION INTERACTION METHODS	
 
+	defineBoundsOfATerritoryToBeOccupied() {
+		const northWest = {
+			lat: 50.067,
+			lng: 36.12672
+		};
+		const distance = {
+			lat: 0.1692,
+			lng: 0.3000
+		};
+		return this.coordsWhichRestrictTerritory(northWest, distance);
+	}
+
+	checkAbilityToOccupyLocation(location) {
+		const polygonObjWhithinCanSaveLoc = this.defineBoundsOfATerritoryToBeOccupied();
+		const northWestLocCoords = location.northWest;
+		const conditions = [
+			northWestLocCoords.lat >= polygonObjWhithinCanSaveLoc.northWest.lat,
+			northWestLocCoords.lat <= polygonObjWhithinCanSaveLoc.southWest.lat,
+			northWestLocCoords.lng >= polygonObjWhithinCanSaveLoc.northEast.lng,
+			northWestLocCoords.lng <= polygonObjWhithinCanSaveLoc.northWest.lng
+		];
+		let check = true;
+		conditions.forEach((cond) => {
+			if (cond) {
+				check = false;
+			}
+		});
+		return check;
+	}
+
+	coordsWhichRestrictTerritory(northWest, distance) {
+		class RestrictCoordsObj {
+			constructor() {
+				this.northWest = northWest;
+				this.northEast = {
+					lat: northWest.lat,
+					lng: northWest.lng + distance.lng
+				};
+				this.southWest = {
+					lat: northWest.lat - distance.lat,
+					lng: northWest.lng
+				};
+				this.southEast = {
+					lat: this.southWest.lat,
+					lng: this.northEast.lng
+				};
+			}
+		}
+		return new RestrictCoordsObj();
+	}
 	showOccupationForm() {
 		this.locInfoContainer.className = 'loc-info';
 		this.locInfoContainer.classList.add('show-form');
@@ -835,12 +943,12 @@ function initMap() {
 				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
 
-			setTimeout(() => {
-				game.refreshUserGeodata({
-					lat: game.userGeoData.lat,
-					lng: game.userGeoData.lng
-				});
-			}, 5000);
+			// setTimeout(() => {
+			// 	game.refreshUserGeodata({
+			// 		lat: game.userGeoData.lat,
+			// 		lng: game.userGeoData.lng
+			// 	});
+			// }, 5000);
 
 			map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
