@@ -332,16 +332,18 @@ class Game {
 				} else {
 					userLocations.forEach((location) => {
 						const northWest = location.northWest;
+						console.log(`${northWest.lat} ${northWest.lng}`);
 						const northWestPoint = new google.maps.LatLng(northWest.lat, northWest.lng);
 						// console.dir()
-						console.dir(northWestPoint);
+						this.locInfoContainer.classList.add('hide');
+						// console.dir(northWestPoint);
 						bounds.extend(northWestPoint);
 					});
 					this.map.fitBounds(bounds);
 				}
 			})
 			.catch((err) => {
-				console.log(`script.js 323 ${err}`);
+				console.log(err);
 			});
 	}
 
@@ -896,7 +898,6 @@ function initMap() {
 				}
 			}
 		});
-
 
 		map.data.setStyle((feature) => {
 			const defaultStyles = game.mapFeaturesStyles.defaultStyles;
