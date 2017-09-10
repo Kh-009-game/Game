@@ -47,13 +47,12 @@ router.post('/create', (req, res, next) => {
 	}, req.body);
 	const newLocation = new OccupiedLocation(newLocationData);
 	newLocation.saveLocation()
-		.then((createdLocation) => {
-			createdLocation.isMaster = true;
-			res.json(createdLocation);
+		.then(() => {
+			res.sendStatus(200);
 			sockets.sendMessage('update', {
-				masterName: createdLocation.masterName,
-				locationName: createdLocation.locationName,
-				dailyMessage: createdLocation.dailyMessage
+				masterName: newLocationData.userId,
+				locationName: newLocationData.locationName,
+				dailyMessage: newLocationData.dailyMessage
 			});
 		})
 		.catch(err => next(err));
@@ -115,6 +114,11 @@ router.put('/:id', (req, res, next) => {
 		editedLocation.editLocation()
 			.then(() => {
 				res.sendStatus(200);
+				sockets.sendMessage('update', {
+					masterName: req.reqLocation.masterId,
+					locationName: req.reqLocation.locationName,
+					dailyMessage: req.reqLocation.dailyMessage
+				});
 			})
 			.catch((err) => {
 				next(err);
@@ -139,6 +143,11 @@ router.delete('/:id', (req, res, next) => {
 		req.reqLocation.deleteLocation()
 			.then(() => {
 				res.sendStatus(200);
+				sockets.sendMessage('update', {
+					masterName: req.reqLocation.masterId,
+					locationName: req.reqLocation.locationName,
+					dailyMessage: req.reqLocation.dailyMessage
+				});
 			})
 			.catch((err) => {
 				next(err);
@@ -168,6 +177,11 @@ router.put('/:id/get-bank', (req, res, next) => {
 		req.reqLocation.takeDailyBank()
 			.then(() => {
 				res.sendStatus(200);
+				sockets.sendMessage('update', {
+					masterName: req.reqLocation.masterId,
+					locationName: req.reqLocation.locationName,
+					dailyMessage: req.reqLocation.dailyMessage
+				});
 			})
 			.catch((err) => {
 				next(err);
@@ -182,6 +196,11 @@ router.put('/:id/restore-population', (req, res, next) => {
 		req.reqLocation.restoreLoyalPopulation()
 			.then(() => {
 				res.sendStatus(200);
+				sockets.sendMessage('update', {
+					masterName: req.reqLocation.masterId,
+					locationName: req.reqLocation.locationName,
+					dailyMessage: req.reqLocation.dailyMessage
+				});
 			})
 			.catch((err) => {
 				next(err);

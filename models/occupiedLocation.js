@@ -52,13 +52,13 @@ class OccupiedLocation extends EmptyLocation {
 					);
 				})
 			)
-		]))
-			.then(() => global.db.one(
-				`select loc_id from locations2																			 
-				where locations2.lat = ${this.northWest.lat} 
-				and locations2.lng = ${this.northWest.lng}`
-			))
-			.then(data => OccupiedLocation.getLocationById(data.loc_id));
+		]));
+		// .then(() => global.db.one(
+		// 	`select loc_id from locations2																			 
+		// 	where locations2.lat = ${this.northWest.lat} 
+		// 	and locations2.lng = ${this.northWest.lng}`
+		// ))
+		// .then(data => OccupiedLocation.getLocationById(data.loc_id));
 	}
 
 	editLocation() {

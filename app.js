@@ -16,6 +16,7 @@ const locationsRoutes = require('./routes/locations.routes');
 const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
 const schedule = require('node-schedule');
+const sockets = require('./services/sockets');
 require('dotenv').config();
 
 const app = express();
@@ -74,6 +75,11 @@ schedule.scheduleJob('0 0 3 * * *', () => {
 	console.log('daily event!');
 	OccupiedLocation.recalcLocationsLifecycle()
 		.then(() => {
+			sockets.sendMessage('update', {
+				masterName: '???',
+				locationName: '???',
+				dailyMessage: '???'
+			});
 			console.log('OK');
 		})
 		.catch((err) => {

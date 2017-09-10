@@ -24,7 +24,7 @@ class Game {
 		this.currentLocationMapFeature = null;
 		this.highlightedLocation = null;
 		this.highlightedMapFeature = null;
-		this.occupiedLocationsArray = null;
+		this.occupiedLocationsArray = [];
 		this.occupiedLocationsMapFeatures = {};
 		this.occupiedLocationsGroundOverlays = {};
 		this.showUserLocationsBtn = document.getElementById('showUserLocationsButton');
@@ -125,11 +125,11 @@ class Game {
 
 	getAndRenderFeatureByLocObj(location) {
 		// remove old one feature if it is already present
-		if (this.occupiedLocationsMapFeatures[location.locationId]) {
-			this.map.data.remove(
-				this.occupiedLocationsMapFeatures[location.locationId]
-			);
-		}
+		// if (this.occupiedLocationsMapFeatures[location.locationId]) {
+		// 	this.map.data.remove(
+		// 		this.occupiedLocationsMapFeatures[location.locationId]
+		// 	);
+		// }
 		const properties = this.getMapFeatureProperties(location);
 
 		const locationGeoObj = {
@@ -146,9 +146,9 @@ class Game {
 		const locId = location.locationId;
 		if (!locId) return false;
 
-		if (this.occupiedLocationsGroundOverlays[locId]) {
-			this.occupiedLocationsGroundOverlays[locId].setMap(null);
-		}
+		// if (this.occupiedLocationsGroundOverlays[locId]) {
+		// 	this.occupiedLocationsGroundOverlays[locId].setMap(null);
+		// }
 
 		const groundOverlay = new google.maps.GroundOverlay(
 			`/api/locations/${location.locationId}/svg`,	{
@@ -252,11 +252,7 @@ class Game {
 					rej(srcXHR.response);
 				}
 			});
-		})
-			.then(locArray => new Promise((res) => {
-				this.occupiedLocationsArray = locArray;
-				res();
-			}));
+		});
 	}
 
 	// get current location info (returns empty or occupied locations on the current point)
@@ -318,16 +314,25 @@ class Game {
 
 	renderOccupiedLocations() {
 		this.getOccupiedLocations()
-			.then(() => {
+			.then((locArray) => {
+				this.clearMap();
+				this.occupiedLocationsArray = locArray;
 				this.occupiedLocationsArray.forEach((location) => {
 					this.renderFullLocation(location);
 				});
-
 				document.dispatchEvent(this.occLocRenderedEvent);
 			})
 			.catch((err) => {
 				console.log(err);
 			});
+	}
+
+	clearMap() {
+		this.occupiedLocationsArray.forEach((location) => {
+			const locId = location.locationId;
+			this.map.data.remove(this.occupiedLocationsMapFeatures[locId]);
+			this.occupiedLocationsGroundOverlays[locId].setMap(null);
+		});
 	}
 
 	// all user locations rendering method
@@ -336,6 +341,7 @@ class Game {
 		const userLocations = [];
 		const bounds = new google.maps.LatLngBounds();
 		console.dir(bounds);
+		// no need to send request!
 		this.getOccupiedLocations()
 			.then(() => {
 				this.occupiedLocationsArray.forEach((location) => {
@@ -675,25 +681,26 @@ class Game {
 
 	occupyCurrentLocation() {
 		this.occupyLocation(this.currentLocation)
-			.then((newLocation) => {
-				const currentIsHighlighted = this.currentLocation.isHighlighted;
+			// .then((newLocation) => {
+			// 	const currentIsHighlighted = this.currentLocation.isHighlighted;
 
-				this.occupiedLocationsArray.push(newLocation);
-				this.renderFullLocation(newLocation);
-				this.renderCurrentOccupiedLocation(newLocation);
+			// 	this.occupiedLocationsArray.push(newLocation);
+			// 	this.renderFullLocation(newLocation);
+			// 	this.renderCurrentOccupiedLocation(newLocation);
 
-				const promises = [
-					this.renderCurrentLocationTextInfo()
-				];
+			// 	const promises = [
+			// 		this.renderCurrentLocationTextInfo()
+			// 	];
 
-				if (currentIsHighlighted) {
-					this.highlightOccupiedLocation(newLocation);
-					promises.push(this.renderHighlightedLocationTextInfo());
-				}
+			// 	if (currentIsHighlighted) {
+			// 		this.highlightOccupiedLocation(newLocation);
+			// 		promises.push(this.renderHighlightedLocationTextInfo());
+			// 	}
 
-				return Promise.all(promises);
-			})
+			// 	return Promise.all(promises);
+			// })
 			.then(() => {
+				alert('Congrats! You\'ve occupied the location!');
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
@@ -710,8 +717,8 @@ class Game {
 				return this.renderHighlightedLocationTextInfo();
 			})
 			.then(() => {
+				alert('Congrats! You\'ve occupied the location!');
 				this.hideOccupationForm();
-				socket.emit('change', 'new location data');
 			})
 			.catch((err) => {
 				console.log(err);
@@ -730,7 +737,7 @@ class Game {
 				if (xhr.status !== 200) {
 					rej(xhr.response);
 				}
-				res(JSON.parse(xhr.response));
+				res();
 			});
 		});
 	}
@@ -786,7 +793,7 @@ class Game {
 		this.deleteHighlightedLocation()
 			.then(() => {
 				// need refresh locations method
-				console.log('refresh the page');
+				alert('You\'ve deleted location');
 			})
 			.catch((err) => {
 				console.log(err);
@@ -874,7 +881,7 @@ class Game {
 			});
 	}
 
-	// TEMPLATES
+	// GET TEMPLATES
 
 	getLocOccupFormHTML(location) {
 		return new Promise((res, rej) => {
@@ -1053,11 +1060,12 @@ function initMap() {
 			}
 		});
 
-		// socket.on('update', (data) => {
-		// 	setupMessage('Notification', `The new location was occupied <br> Master is ${data.masterName} <br> Location name is ${data.locationName} <br> Daily message is ${data.dailyMessage}`);
-		// 	console.log('socketData', data);
-		// 	game.renderOccupiedLocations();
-		// });
+		socket.on('update', (data) => {
+			setupMessage('Notification', `The new location was occupied <br> Master is ${data.masterName} <br> Location name is ${data.locationName} <br> Daily message is ${data.dailyMessage}`);
+			console.log('socketData', data);
+			game.renderOccupiedLocations();
+			console.log(game.occupiedLocationsMapFeatures);
+		});
 
 
 		map.data.setStyle((feature) => {
@@ -1150,8 +1158,8 @@ function createMessage(title, body) {
 function positionMessage(elem) {
 	elem.style.position = 'absolute';
 	const scroll = document.documentElement.scrollTop || document.body.scrollTop;
-	elem.style.top = `${scroll + 200 }px`;
-	elem.style.right = `${20 }px`;
+	elem.style.top = `${scroll + 200}px`;
+	elem.style.right = `${20}px`;
 }
 
 // Running
