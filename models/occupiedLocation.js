@@ -248,7 +248,7 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	static recalcLocationsLifecycle() {
-		global.db.tx(t => t.batch([
+		return global.db.tx(t => t.batch([
 			t.none(`delete from locations2
 							where loc_id IN (
 								select loc_id from master_location2
@@ -264,13 +264,7 @@ class OccupiedLocation extends EmptyLocation {
 			.then(() => global.db.none(`update master_location2 
 																	set loyal_popul = loyal_popul - ceil(loyal_popul * 0.1)
 																	where daily_checkin = false;`))
-			.then(() => global.db.none('update master_location2 set daily_checkin = false;'))
-			.then(() => {
-				console.log('OK');
-			})
-			.catch((err) => {
-				console.log(err.message);
-			});
+			.then(() => global.db.none('update master_location2 set daily_checkin = false;'));
 	}
 }
 module.exports = OccupiedLocation;
