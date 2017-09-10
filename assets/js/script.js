@@ -1053,11 +1053,11 @@ function initMap() {
 			}
 		});
 
-		socket.on('update', (data) => {
-			setupMessage('Notification', `The new location was occupied <br> Master is ${data.masterName} <br> Location name is ${data.locationName} <br> Daily message is ${data.dailyMessage}`);
-			console.log('socketData', data);
-			game.renderOccupiedLocations();
-		});
+		// socket.on('update', (data) => {
+		// 	setupMessage('Notification', `The new location was occupied <br> Master is ${data.masterName} <br> Location name is ${data.locationName} <br> Daily message is ${data.dailyMessage}`);
+		// 	console.log('socketData', data);
+		// 	game.renderOccupiedLocations();
+		// });
 
 
 		map.data.setStyle((feature) => {
@@ -1150,8 +1150,8 @@ function createMessage(title, body) {
 function positionMessage(elem) {
 	elem.style.position = 'absolute';
 	const scroll = document.documentElement.scrollTop || document.body.scrollTop;
-	elem.style.top = `${scroll + 200  }px`;
-	elem.style.right = `${20  }px`;
+	elem.style.top = `${scroll + 200 }px`;
+	elem.style.right = `${20 }px`;
 }
 
 // Running
@@ -1159,7 +1159,7 @@ function setupMessage(title, body) {
 	const messageElem = createMessage(title, body);
 	positionMessage(messageElem);
 	document.body.appendChild(messageElem);
-	setTimeout(() => { 
-		messageElem.parentNode.removeChild(messageElem) 
+	setTimeout(() => {
+		messageElem.parentNode.removeChild(messageElem);
 	}, 5000);
 }
