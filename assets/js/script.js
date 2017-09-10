@@ -27,6 +27,7 @@ class Game {
 		this.occupiedLocationsArray = [];
 		this.occupiedLocationsMapFeatures = {};
 		this.occupiedLocationsGroundOverlays = {};
+		this.occupiedLocationsIcons = {};
 		this.showUserLocationsBtn = document.getElementById('showUserLocationsButton');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
@@ -121,6 +122,7 @@ class Game {
 
 		this.occupiedLocationsMapFeatures[locId] = this.getAndRenderFeatureByLocObj(location);
 		this.occupiedLocationsGroundOverlays[locId] = this.getAndRenderGroundOverlayByLocObj(location);
+		this.occupiedLocationsIcons[locId] = this.getAndRenderIconByLocObj(location);
 	}
 
 	getAndRenderFeatureByLocObj(location) {
@@ -160,6 +162,32 @@ class Game {
 		groundOverlay.setMap(this.map);
 
 		return groundOverlay;
+	}
+
+	getAndRenderIconByLocObj(location) {
+		const locId = location.locationId;
+		if (!locId) return false;
+
+		let icon;
+		if (location.isMaster) {
+			icon = 'img/icon_master.png';
+		} else {
+			icon = 'img/icon.png';
+		}
+		const marker = new google.maps.Marker({
+			position: {
+				lat: (location.mapFeatureCoords[0].lat + location.mapFeatureCoords[1].lat) / 2,
+				lng: (location.mapFeatureCoords[2].lng + location.mapFeatureCoords[0].lng) / 2
+			},
+			map: this.map,
+			icon
+		});
+
+		marker.addListener('click', () => {
+			this.centerMapByUserGeoData(marker.position.lat(), marker.position.lng(), 17);
+		  });
+
+		return marker;
 	}
 
 	get mapFeaturesStyles() {
@@ -332,6 +360,30 @@ class Game {
 			const locId = location.locationId;
 			this.map.data.remove(this.occupiedLocationsMapFeatures[locId]);
 			this.occupiedLocationsGroundOverlays[locId].setMap(null);
+		});
+	}
+	clearGroundOverlays() {
+		this.occupiedLocationsArray.forEach((location) => {
+			const locId = location.locationId;
+			this.occupiedLocationsGroundOverlays[locId].setMap(null);
+		});
+	}
+	clearIcons() {
+		this.occupiedLocationsArray.forEach((location) => {
+			const locId = location.locationId;
+			this.occupiedLocationsIcons[locId].setMap(null);
+		});
+	}
+	showGroundOverlays() {
+		this.occupiedLocationsArray.forEach((location) => {
+			const locId = location.locationId;
+			this.occupiedLocationsGroundOverlays[locId].setMap(this.map);
+		});
+	}
+	showIcons() {
+		this.occupiedLocationsArray.forEach((location) => {
+			const locId = location.locationId;
+			this.occupiedLocationsIcons[locId].setMap(this.map);
 		});
 	}
 
@@ -993,10 +1045,10 @@ class Game {
 			});
 	}
 
-	centerMapByUserGeoData() {
-		const lat = this.userGeoData.lat;
-		const lng = this.userGeoData.lng;
-		this.map.setZoom(15);
+	centerMapByUserGeoData(latUser, lngUser, zoomUser) {
+		const lat = latUser || this.userGeoData.lat;
+		const lng = lngUser || this.userGeoData.lng;
+		this.map.setZoom(zoomUser || 15);
 		this.map.setCenter({ lat, lng });
 	}
 
@@ -1085,6 +1137,15 @@ function initMap() {
 		});
 
 		document.addEventListener('occloc-ready', initMapInteraction);
+		map.addListener('zoom_changed', () => {
+			if (map.getZoom() < 14) {
+				game.showIcons();
+				game.clearGroundOverlays();
+			} else {
+				game.showGroundOverlays();
+				game.clearIcons();
+			}
+		});
 
 		game.renderOccupiedLocations();
 		// setTimeout(() => {
