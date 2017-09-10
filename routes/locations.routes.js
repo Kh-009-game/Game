@@ -1,6 +1,7 @@
 const express = require('express');
 const OccupiedLocation = require('../models/occupiedLocation');
 const locAuth = require('../middleware/locAuth');
+const sockets = require('../services/sockets');
 const svgTemplate = require('../views/svg-tmpl');
 
 const router = express.Router();
@@ -49,6 +50,7 @@ router.post('/create', (req, res, next) => {
 		.then((createdLocation) => {
 			createdLocation.isMaster = true;
 			res.json(createdLocation);
+			sockets.sendMessage('update', {'masterName': createdLocation.masterName, 'locationName': createdLocation.locationName, 'dailyMessage': createdLocation.dailyMessage});
 		})
 		.catch(err => next(err));
 });

@@ -1,5 +1,7 @@
 'use strict';
 
+// const socket = io();
+
 class Game {
 	constructor(options) {
 		// use template for output
@@ -707,6 +709,7 @@ class Game {
 			})
 			.then(() => {
 				this.hideOccupationForm();
+				socket.emit('change', 'new location data');
 			})
 			.catch((err) => {
 				console.log(err);
@@ -1048,6 +1051,12 @@ function initMap() {
 			}
 		});
 
+		socket.on('update', (data) => {			
+			setupMessage('Notification', `The new location was occupied <br> Master is ${data.masterName} <br> Location name is ${data.locationName} <br> Daily message is ${data.dailyMessage}`);
+			console.log('socketData', data);							
+			game.renderOccupiedLocations();
+		});
+
 
 		map.data.setStyle((feature) => {
 			const defaultStyles = game.mapFeaturesStyles.defaultStyles;
@@ -1123,4 +1132,32 @@ function initMap() {
 			document.removeEventListener('occloc-ready', initMapInteraction);
 		}
 	};
+}
+// The function creates a notification with the specified body and header.
+
+function createMessage(title, body) {
+	const container = document.createElement('div');
+	container.innerHTML = `<div class="my-message"> \
+    <div class="my-message-title"> ${title} </div> \
+    <div class="my-message-body"> ${body} </div> \
+  </div>`;
+	return container.firstChild;
+}
+
+// Position
+function positionMessage(elem) {
+	elem.style.position = 'absolute';
+	const scroll = document.documentElement.scrollTop || document.body.scrollTop;
+	elem.style.top = scroll + 200 + 'px';
+	elem.style.right = 20 + 'px';
+}
+
+// Running
+function setupMessage(title, body) {
+	const messageElem = createMessage(title, body);
+	positionMessage(messageElem);
+	document.body.appendChild(messageElem);
+	setTimeout(function(){ 
+		messageElem.parentNode.removeChild(messageElem) 
+	}, 5000);
 }
