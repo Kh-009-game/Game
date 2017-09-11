@@ -62,14 +62,16 @@ class Game {
 			}
 			if (target.closest('#occupy-btn')) {
 				target = target.closest('#occupy-btn');
-				// a restriction
-				if (this.checkAbilityToOccupyLocation(this.currentLocation)) {
-					console.log('can be occupied');
-					this.showOccupationForm();
-				} else {
-					// set pop-up or smth if cannot occupy
-					console.log('cannot be occupied, out of bounds');
-				}
+				this.checkAbilityToOccupyLocation(this.currentLocation)
+					.then((isAble) => {
+						if (isAble) {
+							console.log('can be occupied');
+							this.showOccupationForm();
+						} else {
+							// set pop-up or smth if cannot occupy
+							console.log('cannot be occupied, out of bounds');
+						}
+					});
 				return;
 			}
 			if (target.closest('#occupy-click-btn')) {
@@ -623,56 +625,21 @@ class Game {
 
 	// LOCATION INTERACTION METHODS	
 
-	defineBoundsOfATerritoryToBeOccupied() {
-		const northWest = {
-			lat: 50.067,
-			lng: 36.12672
-		};
-		const distance = {
-			lat: 0.1692,
-			lng: 0.3000
-		};
-		return this.coordsWhichRestrictTerritory(northWest, distance);
-	}
-
 	checkAbilityToOccupyLocation(location) {
-		const polygonObjWhithinCanSaveLoc = this.defineBoundsOfATerritoryToBeOccupied();
-		const northWestLocCoords = location.northWest;
-		const conditions = [
-			northWestLocCoords.lat >= polygonObjWhithinCanSaveLoc.northWest.lat,
-			northWestLocCoords.lat <= polygonObjWhithinCanSaveLoc.southWest.lat,
-			northWestLocCoords.lng >= polygonObjWhithinCanSaveLoc.northEast.lng,
-			northWestLocCoords.lng <= polygonObjWhithinCanSaveLoc.northWest.lng
-		];
-		let check = true;
-		conditions.forEach((cond) => {
-			if (cond) {
-				check = false;
-			}
+		return new Promise((res, rej) => {
+			const xhttpr = new XMLHttpRequest();
+			xhttpr.open('GET', `/api/grid/checkOccupy?lat=${location.northWest.lat}&lng=${location.northWest.lng}`);
+			xhttpr.send();
+			xhttpr.addEventListener('load', (e) => {
+				const xhr = e.srcElement;
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res(JSON.parse(xhr.response));
+			});
 		});
-		return check;
 	}
 
-	coordsWhichRestrictTerritory(northWest, distance) {
-		class RestrictCoordsObj {
-			constructor() {
-				this.northWest = northWest;
-				this.northEast = {
-					lat: northWest.lat,
-					lng: northWest.lng + distance.lng
-				};
-				this.southWest = {
-					lat: northWest.lat - distance.lat,
-					lng: northWest.lng
-				};
-				this.southEast = {
-					lat: this.southWest.lat,
-					lng: this.northEast.lng
-				};
-			}
-		}
-		return new RestrictCoordsObj();
-	}
 	showOccupationForm() {
 		this.getLocOccupFormHTML()
 			.then((response) => {
@@ -1219,7 +1186,7 @@ function createMessageElement(title, body) {
 
 // Running
 function setupMessageElement(title, body) {
-	const messageElem = createMessageElement(title, body);	
+	const messageElem = createMessageElement(title, body);
 	document.body.appendChild(messageElem);
 	setTimeout(() => {
 		messageElem.parentNode.removeChild(messageElem);
