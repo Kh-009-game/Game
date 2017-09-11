@@ -48,8 +48,14 @@ router.post('/create', (req, res, next) => {
 	const newLocation = new OccupiedLocation(newLocationData);
 	newLocation.saveLocation()
 		.then(() => {
-			res.sendStatus(200);			
-			sockets.sendMessage('update', {'type': 'msgCreateLoc', 'text': `The new location was occupied <br> Master name is ${req.decoded.name} <br> Location name is ${newLocationData.locationName} <br> Daily message is ${newLocationData.dailyMessage}`});		
+			res.sendStatus(200);
+			sockets.sendMessage('update', {
+				type: 'msgCreateLoc',
+				text: `The new location was occupied <br> 
+							 Master name is ${req.decoded.name} <br> 
+							 Location name is ${newLocationData.locationName} <br> 
+							 Daily message is ${newLocationData.dailyMessage}`
+			});
 		})
 		.catch(err => next(err));
 });
