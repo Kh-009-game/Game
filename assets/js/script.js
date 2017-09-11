@@ -1113,7 +1113,8 @@ function initMap() {
 		});
 
 		socket.on('update', (data) => {
-			setupMessage('Notification', `The new location was occupied <br> Location name is ${data.locationName} <br> Daily message is ${data.dailyMessage}`);
+			// текст сообщения перенести в сокет.текст
+			setupMessageElement('Notification', data.text);
 			console.log('socketData', data);
 			game.renderOccupiedLocations();
 			console.log(game.occupiedLocationsMapFeatures);
@@ -1206,27 +1207,19 @@ function initMap() {
 }
 // The function creates a notification with the specified body and header.
 
-function createMessage(title, body) {
+function createMessageElement(title, body) {
 	const container = document.createElement('div');
-	container.innerHTML = `<div class="my-message"> \
-    <div class="my-message-title"> ${title} </div> \
-    <div class="my-message-body"> ${body} </div> \
+	// текст на сервер в сокет передавать
+	container.innerHTML = `<div class="my-message"> 
+    <div class="my-message-title"> ${title} </div> 
+    <div class="my-message-body"> ${body} </div> 
   </div>`;
 	return container.firstChild;
 }
 
-// Position
-function positionMessage(elem) {
-	elem.style.position = 'absolute';
-	const scroll = document.documentElement.scrollTop || document.body.scrollTop;
-	elem.style.top = `${scroll + 200}px`;
-	elem.style.right = `20px`;
-}
-
 // Running
-function setupMessage(title, body) {
-	const messageElem = createMessage(title, body);
-	positionMessage(messageElem);
+function setupMessageElement(title, body) {
+	const messageElem = createMessageElement(title, body);	
 	document.body.appendChild(messageElem);
 	setTimeout(() => {
 		messageElem.parentNode.removeChild(messageElem);

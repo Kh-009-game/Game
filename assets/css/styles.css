@@ -478,6 +478,9 @@ nav{
   color: #e53935;
 }
 .my-message {
+  position: fixed;
+  top: 100px;
+  right: 20px;
    width:300px;
    min-height:80px;   
    background-color:var(--if-color);   
