@@ -48,12 +48,8 @@ router.post('/create', (req, res, next) => {
 	const newLocation = new OccupiedLocation(newLocationData);
 	newLocation.saveLocation()
 		.then(() => {
-			res.sendStatus(200);
-			sockets.sendMessage('update', {
-				masterName: newLocationData.userId,
-				locationName: newLocationData.locationName,
-				dailyMessage: newLocationData.dailyMessage
-			});
+			res.sendStatus(200);			
+			sockets.sendMessage('update', newLocationData);			
 		})
 		.catch(err => next(err));
 });

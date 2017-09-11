@@ -752,7 +752,7 @@ class Game {
 			// 	return Promise.all(promises);
 			// })
 			.then(() => {
-				alert('Congrats! You\'ve occupied the location!');
+				console.log('Congrats! You\'ve occupied the location!');
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
@@ -1113,7 +1113,7 @@ function initMap() {
 		});
 
 		socket.on('update', (data) => {
-			setupMessage('Notification', `The new location was occupied <br> Master is ${data.masterName} <br> Location name is ${data.locationName} <br> Daily message is ${data.dailyMessage}`);
+			setupMessage('Notification', `The new location was occupied <br> Location name is ${data.locationName} <br> Daily message is ${data.dailyMessage}`);
 			console.log('socketData', data);
 			game.renderOccupiedLocations();
 			console.log(game.occupiedLocationsMapFeatures);
@@ -1220,7 +1220,7 @@ function positionMessage(elem) {
 	elem.style.position = 'absolute';
 	const scroll = document.documentElement.scrollTop || document.body.scrollTop;
 	elem.style.top = `${scroll + 200}px`;
-	elem.style.right = `${20}px`;
+	elem.style.right = `20px`;
 }
 
 // Running
@@ -1230,5 +1230,5 @@ function setupMessage(title, body) {
 	document.body.appendChild(messageElem);
 	setTimeout(() => {
 		messageElem.parentNode.removeChild(messageElem);
-	}, 5000);
+	}, 10000);
 }
