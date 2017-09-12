@@ -1092,19 +1092,27 @@ class Game {
 	}
 	// The function creates a notification with the specified body and header.
 
-	createMessageElement(title, body) {
+	createMessageElement(data) {
+        const type = data.type;
 		const container = document.createElement('div');
-		// текст на сервер в сокет передавать
+        let typeClass;
+        if (type === 'msgCreateLoc') {
+            typeClass = 'create-loc-msg';
+        } else if (type === 'msgDeleteLoc') {
+            typeClass = 'del-loc-msg';
+        } else {
+            typeClass = 'update-loc-msg';
+        }
 		container.innerHTML = `<div class="my-message"> 
-	    <div class="my-message-title"> ${title} </div> 
-	    <div class="my-message-body"> ${body} </div> 
+	    <div class="my-message-title ${typeClass}"> Notification </div> 
+	    <div class="my-message-body"> ${data.text} </div> 
 	  </div>`;
 		return container.firstChild;
 	}
 
 	// Running
-	setupMessageElement(title, body) {
-		const messageElem = this.createMessageElement(title, body);
+	setupMessageElement(data) {
+		const messageElem = this.createMessageElement(data);
 		document.body.appendChild(messageElem);
 		setTimeout(() => {
 			messageElem.parentNode.removeChild(messageElem);
@@ -1322,7 +1330,7 @@ function initMap() {
 
 		socket.on('update', (data) => {
 			// текст сообщения перенести в сокет.текст
-			game.setupMessageElement('Notification', data.text);
+			game.setupMessageElement(data);
 			console.log('socketData', data);
 			game.refreshOccupiedLocations();
 			console.log(game.occupiedLocationsMapFeatures);

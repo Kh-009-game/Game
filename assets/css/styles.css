@@ -490,9 +490,17 @@ nav{
 }
 .my-message-title {
   height:20px;
-  font-size:120%;
-  background-color:chocolate;
+  font-size:120%; 
 }
+.create-loc-msg {
+  background-color:green;
+}
+.del-loc-msg {
+  background-color:red;
+}
+.update-loc-msg {
+    background-color:darkorange;
+}    
 .my-message-body {
   padding: 5px;
   min-height: 50px;
