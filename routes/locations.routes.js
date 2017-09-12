@@ -117,9 +117,8 @@ router.put('/:id', (req, res, next) => {
 			.then(() => {
 				res.sendStatus(200);
 				sockets.sendMessage('update', {
-					masterName: req.reqLocation.masterId,
-					locationName: req.reqLocation.locationName,
-					dailyMessage: req.reqLocation.dailyMessage
+					type: 'msgUpdateLoc',
+					text: `The location ${req.reqLocation.locationName} was changed`
 				});
 			})
 			.catch((err) => {
@@ -146,9 +145,9 @@ router.delete('/:id', (req, res, next) => {
 			.then(() => {
 				res.sendStatus(200);
 				sockets.sendMessage('update', {
-					masterName: req.reqLocation.masterId,
-					locationName: req.reqLocation.locationName,
-					dailyMessage: req.reqLocation.dailyMessage
+					type: 'msgDeleteLoc',
+					text: `The location ${req.reqLocation.locationName} was deleted <br> 
+						     Master name is ${req.decoded.name} `
 				});
 			})
 			.catch((err) => {
@@ -180,9 +179,8 @@ router.put('/:id/get-bank', (req, res, next) => {
 			.then(() => {
 				res.sendStatus(200);
 				sockets.sendMessage('update', {
-					masterName: req.reqLocation.masterId,
-					locationName: req.reqLocation.locationName,
-					dailyMessage: req.reqLocation.dailyMessage
+					type: 'msgUpdateLoc',
+					text: `The location ${req.reqLocation.locationName} was changed`
 				});
 			})
 			.catch((err) => {
@@ -199,9 +197,8 @@ router.put('/:id/restore-population', (req, res, next) => {
 			.then(() => {
 				res.sendStatus(200);
 				sockets.sendMessage('update', {
-					masterName: req.reqLocation.masterId,
-					locationName: req.reqLocation.locationName,
-					dailyMessage: req.reqLocation.dailyMessage
+					type: 'msgUpdateLoc',
+					text: `The location ${req.reqLocation.locationName} was changed`
 				});
 			})
 			.catch((err) => {
