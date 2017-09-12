@@ -2,6 +2,7 @@
 
 // const socket = io();
 
+
 class Game {
 	constructor(options) {
 		// use template for output
@@ -24,9 +25,10 @@ class Game {
 		this.currentLocationMapFeature = null;
 		this.highlightedLocation = null;
 		this.highlightedMapFeature = null;
-		this.occupiedLocationsArray = null;
+		this.occupiedLocationsArray = [];
 		this.occupiedLocationsMapFeatures = {};
 		this.occupiedLocationsGroundOverlays = {};
+		this.occupiedLocationsIcons = {};
 		this.showUserLocationsBtn = document.getElementById('showUserLocationsButton');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
@@ -61,14 +63,16 @@ class Game {
 			}
 			if (target.closest('#occupy-btn')) {
 				target = target.closest('#occupy-btn');
-				// a restriction
-				if (this.checkAbilityToOccupyLocation(this.currentLocation)) {
-					console.log('can be occupied');
-					this.showOccupationForm();
-				} else {
-					// set pop-up or smth if cannot occupy
-					console.log('cannot be occupied, out of bounds');
-				}
+				this.checkAbilityToOccupyLocation(this.currentLocation)
+					.then((isAble) => {
+						if (isAble) {
+							console.log('can be occupied');
+							this.showOccupationForm();
+						} else {
+							// set pop-up or smth if cannot occupy
+							console.log('cannot be occupied, out of bounds');
+						}
+					});
 				return;
 			}
 			if (target.closest('#occupy-click-btn')) {
@@ -83,7 +87,7 @@ class Game {
 			}
 			if (target.closest('#edit-loc-btn')) {
 				target = target.closest('#edit-loc-btn');
-				// this.showEditingLocForm();
+				 this.showEditingLocForm();
 				return;
 			}
 			if (target.closest('#money-btn')) {
@@ -120,16 +124,22 @@ class Game {
 		if (!locId) return;
 
 		this.occupiedLocationsMapFeatures[locId] = this.getAndRenderFeatureByLocObj(location);
-		this.occupiedLocationsGroundOverlays[locId] = this.getAndRenderGroundOverlayByLocObj(location);
+		if (this.map.getZoom() < 16) {
+			this.occupiedLocationsGroundOverlays[locId] = this.getAndRenderGroundOverlayByLocObj(location, null);
+			this.occupiedLocationsIcons[locId] = this.getAndRenderIconByLocObj(location, this.map);
+		} else {
+			this.occupiedLocationsGroundOverlays[locId] = this.getAndRenderGroundOverlayByLocObj(location, this.map);
+			this.occupiedLocationsIcons[locId] = this.getAndRenderIconByLocObj(location, null);
+		}
 	}
 
 	getAndRenderFeatureByLocObj(location) {
 		// remove old one feature if it is already present
-		if (this.occupiedLocationsMapFeatures[location.locationId]) {
-			this.map.data.remove(
-				this.occupiedLocationsMapFeatures[location.locationId]
-			);
-		}
+		// if (this.occupiedLocationsMapFeatures[location.locationId]) {
+		// 	this.map.data.remove(
+		// 		this.occupiedLocationsMapFeatures[location.locationId]
+		// 	);
+		// }
 		const properties = this.getMapFeatureProperties(location);
 
 		const locationGeoObj = {
@@ -142,24 +152,55 @@ class Game {
 		return this.map.data.add(locationGeoObj);
 	}
 
-	getAndRenderGroundOverlayByLocObj(location) {
+	getAndRenderGroundOverlayByLocObj(location, map) {
 		const locId = location.locationId;
 		if (!locId) return false;
 
-		if (this.occupiedLocationsGroundOverlays[locId]) {
-			this.occupiedLocationsGroundOverlays[locId].setMap(null);
-		}
+		// if (this.occupiedLocationsGroundOverlays[locId]) {
+		// 	this.occupiedLocationsGroundOverlays[locId].setMap(null);
+		// }
 
 		const groundOverlay = new google.maps.GroundOverlay(
-			`/api/locations/${location.locationId}/svg`,	{
+			`/api/locations/${location.locationId}/svg?${new Date()}`,	{
 				north: location.mapFeatureCoords[0].lat,
 				south: location.mapFeatureCoords[1].lat,
 				east: location.mapFeatureCoords[2].lng,
 				west: location.mapFeatureCoords[0].lng
 			});
-		groundOverlay.setMap(this.map);
+		groundOverlay.setMap(map);
 
 		return groundOverlay;
+	}
+
+	getAndRenderIconByLocObj(location, map) {
+		const locId = location.locationId;
+		if (!locId) return false;
+
+		let icon;
+		if (location.isMaster) {
+			icon = 'img/icon_master.png';
+		} else {
+			icon = 'img/icon.png';
+		}
+		const marker = new google.maps.Marker({
+			position: {
+				lat: (location.mapFeatureCoords[0].lat + location.mapFeatureCoords[1].lat) / 2,
+				lng: (location.mapFeatureCoords[2].lng + location.mapFeatureCoords[0].lng) / 2
+			},
+			icon
+		});
+
+		marker.setMap(map);
+
+		marker.addListener('click', () => {
+			this.centerMapByUserGeoData(marker.position.lat(), marker.position.lng(), 17);
+			if (locId) {
+				this.highlightOccupiedLocation(location);
+				this.renderHighlightedLocationTextInfo();
+			}
+		});
+
+		return marker;
 	}
 
 	get mapFeaturesStyles() {
@@ -252,20 +293,12 @@ class Game {
 					rej(srcXHR.response);
 				}
 			});
-		})
-			.then(locArray => new Promise((res) => {
-				this.occupiedLocationsArray = locArray;
-				res();
-			}));
+		});
 	}
 
 	// get current location info (returns empty or occupied locations on the current point)
 
-	getCurrentLocation() {
-		const geoCoords = {
-			lat: this.userGeoData.lat,
-			lng: this.userGeoData.lng
-		};
+	getLocationByCoords(geoCoords) {
 		return new Promise((res, rej) => {
 			const gridXHR = new XMLHttpRequest();
 			gridXHR.open('GET', `/api/locations/check-location?lat=${geoCoords.lat}&lng=${geoCoords.lng}`);
@@ -318,16 +351,105 @@ class Game {
 
 	renderOccupiedLocations() {
 		this.getOccupiedLocations()
-			.then(() => {
+			.then((locArray) => {
+				this.occupiedLocationsArray = locArray;
 				this.occupiedLocationsArray.forEach((location) => {
 					this.renderFullLocation(location);
 				});
-
 				document.dispatchEvent(this.occLocRenderedEvent);
 			})
 			.catch((err) => {
 				console.log(err);
 			});
+	}
+
+	refreshOccupiedLocations() {
+		this.getOccupiedLocations()
+			.then((locArray) => {
+				console.dir(locArray);
+				this.clearMap();
+				locArray.forEach((location, i) => {
+					location = this.getAndExtendLoadedLocationById(location);
+					locArray[i] = location;
+				});
+				this.occupiedLocationsArray = locArray;
+
+				this.occupiedLocationsArray.forEach((location) => {
+					this.renderFullLocation(location);
+				});
+
+				return this.renderCurrentLocationInfo();
+			})
+			.then(() => this.refreshHighlightedLocation())
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
+	refreshHighlightedLocation() {
+		this.getLocationByCoords(this.highlightedLocation.northWest)
+			.then((location) => {
+				this.removeHighlight();
+				const locId = location.locationId;
+				const lat = location.northWest.lat;
+				const lng = location.northWest.lng;
+				if (
+					this.currentLocation.northWest.lat === lat &&
+					this.currentLocation.northWest.lng === lng
+				) {
+					if (locId) {
+						this.highlightOccupiedLocation(this.currentLocation);
+					} else {
+						this.hightlightCurrentEmptyLocation();
+					}
+					return this.renderHighlightedLocationTextInfo();
+				}
+				if (location.locationId) {
+					this.highlightOccupiedLocation(location);
+					return this.renderHighlightedLocationTextInfo();
+				}
+				this.highlightEmptyLocation(location);
+				return this.renderHighlightedLocationTextInfo();
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
+	clearMap() {
+		this.occupiedLocationsArray.forEach((location) => {
+			const locId = location.locationId;
+			this.map.data.remove(this.occupiedLocationsMapFeatures[locId]);
+			this.occupiedLocationsGroundOverlays[locId].setMap(null);
+			this.occupiedLocationsIcons[locId].setMap(null);
+		});
+		this.occupiedLocationsMapFeatures = {};
+		this.occupiedLocationsGroundOverlays = {};
+		this.occupiedLocationsIcons = {};
+	}
+	clearGroundOverlays() {
+		this.occupiedLocationsArray.forEach((location) => {
+			const locId = location.locationId;
+			this.occupiedLocationsGroundOverlays[locId].setMap(null);
+		});
+	}
+	clearIcons() {
+		this.occupiedLocationsArray.forEach((location) => {
+			const locId = location.locationId;
+			this.occupiedLocationsIcons[locId].setMap(null);
+		});
+	}
+	showGroundOverlays() {
+		this.occupiedLocationsArray.forEach((location) => {
+			const locId = location.locationId;
+			this.occupiedLocationsGroundOverlays[locId].setMap(this.map);
+		});
+	}
+	showIcons() {
+		this.occupiedLocationsArray.forEach((location) => {
+			const locId = location.locationId;
+			this.occupiedLocationsIcons[locId].setMap(this.map);
+		});
 	}
 
 	// all user locations rendering method
@@ -336,6 +458,7 @@ class Game {
 		const userLocations = [];
 		const bounds = new google.maps.LatLngBounds();
 		console.dir(bounds);
+		// no need to send request!
 		this.getOccupiedLocations()
 			.then(() => {
 				this.occupiedLocationsArray.forEach((location) => {
@@ -366,7 +489,10 @@ class Game {
 	// CURRENT LOCATION RENDER METHODS
 
 	renderCurrentLocationInfo() {
-		return this.getCurrentLocation()
+		return this.getLocationByCoords({
+			lat: this.userGeoData.lat,
+			lng: this.userGeoData.lng
+		})
 			.then((currentLocation) => {
 				console.log(currentLocation);
 				this.removeCurrentHighlight();
@@ -416,7 +542,18 @@ class Game {
 	removeCurrentHighlight() {
 		if (this.currentLocationMapFeature) {
 			const currentLocId = this.currentLocationMapFeature.getId();
-			if (currentLocId || this.currentLocationMapFeature.getProperty('info').isHighlighted) {
+			let check = this.currentLocationMapFeature.getProperty('info').isHighlighted;
+
+			if (currentLocId) {
+				check = false;
+				for (let i = 0, len = this.occupiedLocationsArray.length; i < len; i += 1) {
+					if (this.occupiedLocationsArray[i].locationId === currentLocId) {
+						check = true;
+					}
+				}
+			}
+
+			if (check) {
 				this.currentLocation.isCurrent = undefined;
 				const featureProps = this.getMapFeatureProperties(this.currentLocation);
 				this.map.data.overrideStyle(
@@ -434,7 +571,9 @@ class Game {
 		return this.getLocInfoHTML(this.currentLocation)
 			.then((response) => {
 				this.currentLocInfo.innerHTML = response;
-				this.locInfoContainer.className = 'loc-info show-current';
+                if (this.locInfoContainer.className === 'loc-info') {
+				    this.locInfoContainer.className = 'loc-info show-current';
+                }
 			});
 	}
 
@@ -497,23 +636,6 @@ class Game {
 				return this.renderHighlightedLocationTextInfo();
 			});
 	}
-	// renderEmptyLocationInfo(event) {
-	// 	this.getGridByGeoCoords({
-	// 		lat: event.latLng.lat(),
-	// 		lng: event.latLng.lng()
-	// 	})
-	// 		.then((clickedLocation) => {
-	// 			if (this.checkAbilityToOccupyLocation(clickedLocation)) {
-	// 				console.log('can be occupied');
-	// 				clickedLocation.locationName = 'Empty Location';
-	// 				this.highlightEmptyLocation(clickedLocation);
-	// 				this.renderHighlightedLocationTextInfo();
-	// 			} else {
-	// 				// set styles if cannot occupy
-	// 				console.dir(`cannot be occupied, out of bounds${clickedLocation.northWest}`);
-	// 			}
-	// 		});
-	// }
 
 	highlightEmptyLocation(clickedLocation) {
 		this.removeHighlight();
@@ -554,72 +676,39 @@ class Game {
 	// SEARCH LOCATION IN LOADED LOCATIONS ARRAY AND UPDATE
 
 	getAndExtendLoadedLocationById(newLocData) {
-		let location;
+		let location = {};
 		this.occupiedLocationsArray.forEach((item) => {
 			if (item.locationId === newLocData.locationId) {
-				location = Object.assign(item, newLocData);
+				location = item;
 			}
 		});
+		location = Object.assign(location, newLocData);
 		return location;
 	}
 
 	// LOCATION INTERACTION METHODS	
 
-	defineBoundsOfATerritoryToBeOccupied() {
-		const northWest = {
-			lat: 50.067,
-			lng: 36.12672
-		};
-		const distance = {
-			lat: 0.1692,
-			lng: 0.3000
-		};
-		return this.coordsWhichRestrictTerritory(northWest, distance);
-	}
-
 	checkAbilityToOccupyLocation(location) {
-		const polygonObjWhithinCanSaveLoc = this.defineBoundsOfATerritoryToBeOccupied();
-		const northWestLocCoords = location.northWest;
-		const conditions = [
-			northWestLocCoords.lat >= polygonObjWhithinCanSaveLoc.northWest.lat,
-			northWestLocCoords.lat <= polygonObjWhithinCanSaveLoc.southWest.lat,
-			northWestLocCoords.lng >= polygonObjWhithinCanSaveLoc.northEast.lng,
-			northWestLocCoords.lng <= polygonObjWhithinCanSaveLoc.northWest.lng
-		];
-		let check = true;
-		conditions.forEach((cond) => {
-			if (cond) {
-				check = false;
-			}
+		return new Promise((res, rej) => {
+			const xhttpr = new XMLHttpRequest();
+			xhttpr.open('GET', `/api/grid/checkOccupy?lat=${location.northWest.lat}&lng=${location.northWest.lng}`);
+			xhttpr.send();
+			xhttpr.addEventListener('load', (e) => {
+				const xhr = e.srcElement;
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res(JSON.parse(xhr.response));
+			});
 		});
-		return check;
 	}
 
-	coordsWhichRestrictTerritory(northWest, distance) {
-		class RestrictCoordsObj {
-			constructor() {
-				this.northWest = northWest;
-				this.northEast = {
-					lat: northWest.lat,
-					lng: northWest.lng + distance.lng
-				};
-				this.southWest = {
-					lat: northWest.lat - distance.lat,
-					lng: northWest.lng
-				};
-				this.southEast = {
-					lat: this.southWest.lat,
-					lng: this.northEast.lng
-				};
-			}
-		}
-		return new RestrictCoordsObj();
-	}
 	showOccupationForm() {
 		this.getLocOccupFormHTML()
 			.then((response) => {
 				this.occupyFormContainer.innerHTML = response;
 				this.locInfoContainer.className = 'loc-info show-form';
+				document.getElementById('loc-name-field').focus();
 			})
 			.catch((err) => {
 				console.log(err);
@@ -631,6 +720,7 @@ class Game {
 			.then((response) => {
 				this.occupyFormContainer.innerHTML = response;
 				this.locInfoContainer.className = 'loc-info show-form';
+				document.getElementById('loc-name-field').focus();
 			})
 			.catch((err) => {
 				console.log(err);
@@ -675,25 +765,8 @@ class Game {
 
 	occupyCurrentLocation() {
 		this.occupyLocation(this.currentLocation)
-			.then((newLocation) => {
-				const currentIsHighlighted = this.currentLocation.isHighlighted;
-
-				this.occupiedLocationsArray.push(newLocation);
-				this.renderFullLocation(newLocation);
-				this.renderCurrentOccupiedLocation(newLocation);
-
-				const promises = [
-					this.renderCurrentLocationTextInfo()
-				];
-
-				if (currentIsHighlighted) {
-					this.highlightOccupiedLocation(newLocation);
-					promises.push(this.renderHighlightedLocationTextInfo());
-				}
-
-				return Promise.all(promises);
-			})
 			.then(() => {
+				console.log('Congrats! You\'ve occupied the location!');
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
@@ -703,15 +776,9 @@ class Game {
 
 	occupyHighlightedLocation() {
 		this.occupyLocation(this.highlightedLocation)
-			.then((newLocation) => {
-				this.occupiedLocationsArray.push(newLocation);
-				this.renderFullLocation(newLocation);
-				this.highlightOccupiedLocation(newLocation);
-				return this.renderHighlightedLocationTextInfo();
-			})
 			.then(() => {
+				alert('Congrats! You\'ve occupied the location!');
 				this.hideOccupationForm();
-				socket.emit('change', 'new location data');
 			})
 			.catch((err) => {
 				console.log(err);
@@ -730,18 +797,22 @@ class Game {
 				if (xhr.status !== 200) {
 					rej(xhr.response);
 				}
-				res(JSON.parse(xhr.response));
+				res();
 			});
 		});
 	}
 
-	// showEditingLocForm() {
-	// 	this.locInfoContainer.className = 'loc-info';
-	// 	this.locInfoContainer.classList.add('show-form');
-	// 	this.occupyFormContainer.innerHTML = this.getLocOccupFormHTML(
-	// 		this.highlightedLocation || this.currentLocation
-	// 	);
-	// }
+	 showEditingLocForm() {
+	 	this.locInfoContainer.className = 'loc-info';
+	 	this.locInfoContainer.classList.add('show-form');
+	 	this.getLocOccupFormHTML(
+	 		this.highlightedLocation
+	 	)
+         .then((response) => {
+            this.occupyFormContainer.innerHTML = response;
+            document.getElementById('loc-name-field').focus();
+         });
+	 }
 
 	// editLocationInfoHandler(event) {
 	// 	event.preventDefault();
@@ -786,7 +857,7 @@ class Game {
 		this.deleteHighlightedLocation()
 			.then(() => {
 				// need refresh locations method
-				console.log('refresh the page');
+				console.log('You\'ve deleted location');
 			})
 			.catch((err) => {
 				console.log(err);
@@ -874,7 +945,7 @@ class Game {
 			});
 	}
 
-	// TEMPLATES
+	// GET TEMPLATES
 
 	getLocOccupFormHTML(location) {
 		return new Promise((res, rej) => {
@@ -986,10 +1057,10 @@ class Game {
 			});
 	}
 
-	centerMapByUserGeoData() {
-		const lat = this.userGeoData.lat;
-		const lng = this.userGeoData.lng;
-		this.map.setZoom(15);
+	centerMapByUserGeoData(latUser, lngUser, zoomUser) {
+		const lat = latUser || this.userGeoData.lat;
+		const lng = lngUser || this.userGeoData.lng;
+		this.map.setZoom(zoomUser || 15);
 		this.map.setCenter({ lat, lng });
 	}
 
@@ -1028,13 +1099,226 @@ class Game {
 	setUserGeoData(userCoord) {
 		this.userGeoData = userCoord;
 	}
+	// The function creates a notification with the specified body and header.
+
+	createMessageElement(data) {
+        const type = data.type;
+		const container = document.createElement('div');
+        let typeClass;
+        if (type === 'msgCreateLoc') {
+            typeClass = 'create-loc-msg';
+        } else if (type === 'msgDeleteLoc') {
+            typeClass = 'del-loc-msg';
+        } else {
+            typeClass = 'update-loc-msg';
+        }
+		container.innerHTML = `<div class="my-message"> 
+	    <div class="my-message-title ${typeClass}"> Notification </div> 
+	    <div class="my-message-body"> ${data.text} </div> 
+	  </div>`;
+		return container.firstChild;
+	}
+
+	// Running
+	setupMessageElement(data) {
+		const messageElem = this.createMessageElement(data);
+		document.body.appendChild(messageElem);
+		setTimeout(() => {
+			messageElem.parentNode.removeChild(messageElem);
+		}, 10000);
+	}
 }
 
 function initMap() {
 	const map = new google.maps.Map(document.getElementById('map'), {
 		zoom: 12,
 		center: { lat: 49.9891, lng: 36.2322 },
-		clickableIcons: false
+		clickableIcons: false,
+		styles: [
+			{
+				featureType: 'water',
+				elementType: 'geometry.fill',
+				stylers: [
+					{
+						color: '#d3d3d3'
+					}
+				]
+			},
+			{
+				featureType: 'transit',
+				stylers: [
+					{
+						color: '#808080'
+					},
+					{
+						visibility: 'off'
+					}
+				]
+			},
+			{
+				featureType: 'road.highway',
+				elementType: 'geometry.stroke',
+				stylers: [
+					{
+						visibility: 'on'
+					},
+					{
+						color: '#b3b3b3'
+					}
+				]
+			},
+			{
+				featureType: 'road.highway',
+				elementType: 'geometry.fill',
+				stylers: [
+					{
+						color: '#ffffff'
+					}
+				]
+			},
+			{
+				featureType: 'road.local',
+				elementType: 'geometry.fill',
+				stylers: [
+					{
+						visibility: 'on'
+					},
+					{
+						color: '#ffffff'
+					},
+					{
+						weight: 1.8
+					}
+				]
+			},
+			{
+				featureType: 'road.local',
+				elementType: 'geometry.stroke',
+				stylers: [
+					{
+						color: '#d7d7d7'
+					}
+				]
+			},
+			{
+				featureType: 'poi',
+				elementType: 'geometry.fill',
+				stylers: [
+					{
+						visibility: 'on'
+					},
+					{
+						color: '#ebebeb'
+					}
+				]
+			},
+			{
+				featureType: 'administrative',
+				elementType: 'geometry',
+				stylers: [
+					{
+						color: '#a7a7a7'
+					}
+				]
+			},
+			{
+				featureType: 'road.arterial',
+				elementType: 'geometry.fill',
+				stylers: [
+					{
+						color: '#ffffff'
+					}
+				]
+			},
+			{
+				featureType: 'road.arterial',
+				elementType: 'geometry.fill',
+				stylers: [
+					{
+						color: '#ffffff'
+					}
+				]
+			},
+			{
+				featureType: 'landscape',
+				elementType: 'geometry.fill',
+				stylers: [
+					{
+						visibility: 'on'
+					},
+					{
+						color: '#efefef'
+					}
+				]
+			},
+			{
+				featureType: 'road',
+				elementType: 'labels.text.fill',
+				stylers: [
+					{
+						color: '#696969'
+					}
+				]
+			},
+			{
+				featureType: 'administrative',
+				elementType: 'labels.text.fill',
+				stylers: [
+					{
+						visibility: 'on'
+					},
+					{
+						color: '#737373'
+					}
+				]
+			},
+			{
+				featureType: 'poi',
+				elementType: 'labels.icon',
+				stylers: [
+					{
+						visibility: 'off'
+					}
+				]
+			},
+			{
+				featureType: 'poi',
+				elementType: 'labels',
+				stylers: [
+					{
+						visibility: 'off'
+					}
+				]
+			},
+			{
+				featureType: 'road.arterial',
+				elementType: 'geometry.stroke',
+				stylers: [
+					{
+						color: '#d6d6d6'
+					}
+				]
+			},
+			{
+				featureType: 'road',
+				elementType: 'labels.icon',
+				stylers: [
+					{
+						visibility: 'off'
+					}
+				]
+			},
+			{},
+			{
+				featureType: 'poi',
+				elementType: 'geometry.fill',
+				stylers: [
+					{
+						color: '#dadada'
+					}
+				]
+			}
+		]
 	});
 
 
@@ -1053,11 +1337,13 @@ function initMap() {
 			}
 		});
 
-		// socket.on('update', (data) => {
-		// 	setupMessage('Notification', `The new location was occupied <br> Master is ${data.masterName} <br> Location name is ${data.locationName} <br> Daily message is ${data.dailyMessage}`);
-		// 	console.log('socketData', data);
-		// 	game.renderOccupiedLocations();
-		// });
+		socket.on('update', (data) => {
+			// текст сообщения перенести в сокет.текст
+			game.setupMessageElement(data);
+			console.log('socketData', data);
+			game.refreshOccupiedLocations();
+			console.log(game.occupiedLocationsMapFeatures);
+		});
 
 
 		map.data.setStyle((feature) => {
@@ -1077,6 +1363,15 @@ function initMap() {
 		});
 
 		document.addEventListener('occloc-ready', initMapInteraction);
+		map.addListener('zoom_changed', () => {
+			if (map.getZoom() < 16) {
+				game.showIcons();
+				game.clearGroundOverlays();
+			} else {
+				game.showGroundOverlays();
+				game.clearIcons();
+			}
+		});
 
 		game.renderOccupiedLocations();
 		// setTimeout(() => {
@@ -1134,32 +1429,4 @@ function initMap() {
 			document.removeEventListener('occloc-ready', initMapInteraction);
 		}
 	};
-}
-// The function creates a notification with the specified body and header.
-
-function createMessage(title, body) {
-	const container = document.createElement('div');
-	container.innerHTML = `<div class="my-message"> \
-    <div class="my-message-title"> ${title} </div> \
-    <div class="my-message-body"> ${body} </div> \
-  </div>`;
-	return container.firstChild;
-}
-
-// Position
-function positionMessage(elem) {
-	elem.style.position = 'absolute';
-	const scroll = document.documentElement.scrollTop || document.body.scrollTop;
-	elem.style.top = `${scroll + 200 }px`;
-	elem.style.right = `${20 }px`;
-}
-
-// Running
-function setupMessage(title, body) {
-	const messageElem = createMessage(title, body);
-	positionMessage(messageElem);
-	document.body.appendChild(messageElem);
-	setTimeout(() => {
-		messageElem.parentNode.removeChild(messageElem);
-	}, 5000);
 }

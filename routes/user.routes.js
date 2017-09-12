@@ -26,7 +26,7 @@ router.route('/login')
 		global.db.one(`SELECT * FROM users
 		WHERE email = '${email}';`)
 			.then((data) => {
-				if (!data.password) {
+				if (data.password !== password) {
 					res.redirect('/login');
 				}
 				if (data.password === password) {

@@ -47,13 +47,14 @@ router.post('/create', (req, res, next) => {
 	}, req.body);
 	const newLocation = new OccupiedLocation(newLocationData);
 	newLocation.saveLocation()
-		.then((createdLocation) => {
-			createdLocation.isMaster = true;
-			res.json(createdLocation);
+		.then(() => {
+			res.sendStatus(200);
 			sockets.sendMessage('update', {
-				masterName: createdLocation.masterName,
-				locationName: createdLocation.locationName,
-				dailyMessage: createdLocation.dailyMessage
+				type: 'msgCreateLoc',
+				text: `The new location was occupied <br> 
+							 Master name is ${req.decoded.name} <br> 
+							 Location name is ${newLocationData.locationName} <br> 
+							 Daily message is ${newLocationData.dailyMessage}`
 			});
 		})
 		.catch(err => next(err));
@@ -108,6 +109,14 @@ router.get('/:id/svg', (req, res) => {
 		.send(svgTemplate(req.reqLocation));
 });
 
+router.get('/:id/edit', (req, res, next) => {
+	res.render('loc-form', {
+		location: req.reqLocation,
+		clicked: true,
+		isAdmin: req.decoded.isAdmin
+	});
+});
+
 router.put('/:id', (req, res, next) => {
 	if (req.reqLocation.isMaster || req.decoded.isAdmin) {
 		const editedLocation = Object.assign(req.reqLocation, req.body);
@@ -115,6 +124,10 @@ router.put('/:id', (req, res, next) => {
 		editedLocation.editLocation()
 			.then(() => {
 				res.sendStatus(200);
+				sockets.sendMessage('update', {
+					type: 'msgUpdateLoc',
+					text: `The location ${req.reqLocation.locationName} was changed`
+				});
 			})
 			.catch((err) => {
 				next(err);
@@ -139,6 +152,11 @@ router.delete('/:id', (req, res, next) => {
 		req.reqLocation.deleteLocation()
 			.then(() => {
 				res.sendStatus(200);
+				sockets.sendMessage('update', {
+					type: 'msgDeleteLoc',
+					text: `The location ${req.reqLocation.locationName} was deleted <br> 
+						     Master name is ${req.decoded.name} `
+				});
 			})
 			.catch((err) => {
 				next(err);
@@ -168,6 +186,10 @@ router.put('/:id/get-bank', (req, res, next) => {
 		req.reqLocation.takeDailyBank()
 			.then(() => {
 				res.sendStatus(200);
+				sockets.sendMessage('update', {
+					type: 'msgUpdateLoc',
+					text: `The location ${req.reqLocation.locationName} was changed`
+				});
 			})
 			.catch((err) => {
 				next(err);
@@ -182,6 +204,10 @@ router.put('/:id/restore-population', (req, res, next) => {
 		req.reqLocation.restoreLoyalPopulation()
 			.then(() => {
 				res.sendStatus(200);
+				sockets.sendMessage('update', {
+					type: 'msgUpdateLoc',
+					text: `The location ${req.reqLocation.locationName} was changed`
+				});
 			})
 			.catch((err) => {
 				next(err);
