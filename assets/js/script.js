@@ -1090,6 +1090,26 @@ class Game {
 	setUserGeoData(userCoord) {
 		this.userGeoData = userCoord;
 	}
+	// The function creates a notification with the specified body and header.
+
+	createMessageElement(title, body) {
+		const container = document.createElement('div');
+		// текст на сервер в сокет передавать
+		container.innerHTML = `<div class="my-message"> 
+	    <div class="my-message-title"> ${title} </div> 
+	    <div class="my-message-body"> ${body} </div> 
+	  </div>`;
+		return container.firstChild;
+	}
+
+	// Running
+	setupMessageElement(title, body) {
+		const messageElem = this.createMessageElement(title, body);
+		document.body.appendChild(messageElem);
+		setTimeout(() => {
+			messageElem.parentNode.removeChild(messageElem);
+		}, 10000);
+	}
 }
 
 function initMap() {
@@ -1302,7 +1322,7 @@ function initMap() {
 
 		socket.on('update', (data) => {
 			// текст сообщения перенести в сокет.текст
-			setupMessageElement('Notification', data.text);
+			game.setupMessageElement('Notification', data.text);
 			console.log('socketData', data);
 			game.refreshOccupiedLocations();
 			console.log(game.occupiedLocationsMapFeatures);
@@ -1392,24 +1412,4 @@ function initMap() {
 			document.removeEventListener('occloc-ready', initMapInteraction);
 		}
 	};
-}
-// The function creates a notification with the specified body and header.
-
-function createMessageElement(title, body) {
-	const container = document.createElement('div');
-	// текст на сервер в сокет передавать
-	container.innerHTML = `<div class="my-message"> 
-    <div class="my-message-title"> ${title} </div> 
-    <div class="my-message-body"> ${body} </div> 
-  </div>`;
-	return container.firstChild;
-}
-
-// Running
-function setupMessageElement(title, body) {
-	const messageElem = createMessageElement(title, body);
-	document.body.appendChild(messageElem);
-	setTimeout(() => {
-		messageElem.parentNode.removeChild(messageElem);
-	}, 10000);
 }
