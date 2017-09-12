@@ -35,7 +35,7 @@
 <% if ((location.isMaster || (isAdmin && location.locationId)) && location.isHighlighted) { %>
   <button class="btn delete-loc-btn" id="delete-loc-btn">Delete location</button>
 <% } %>
-<% if (location.isMaster && ( location.isCurrent || isAdmin ) && location.dailyBank) { %> 
+<% if (location.isMaster && location.isCurrent && location.dailyBank) { %> 
   <button class="btn money-btn" id="money-btn">Take money</button>
 <% } %>
 <% if (( location.isMaster || isAdmin ) && !location.isCurrent && ( location.loyalPopulation < location.population )) { %>
