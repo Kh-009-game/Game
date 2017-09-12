@@ -109,6 +109,14 @@ router.get('/:id/svg', (req, res) => {
 		.send(svgTemplate(req.reqLocation));
 });
 
+router.get('/:id/edit', (req, res, next) => {
+	res.render('loc-form', {
+		location: req.reqLocation,
+		clicked: true,
+		isAdmin: req.decoded.isAdmin
+	});
+});
+
 router.put('/:id', (req, res, next) => {
 	if (req.reqLocation.isMaster || req.decoded.isAdmin) {
 		const editedLocation = Object.assign(req.reqLocation, req.body);

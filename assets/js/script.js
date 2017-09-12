@@ -87,7 +87,7 @@ class Game {
 			}
 			if (target.closest('#edit-loc-btn')) {
 				target = target.closest('#edit-loc-btn');
-				// this.showEditingLocForm();
+				 this.showEditingLocForm();
 				return;
 			}
 			if (target.closest('#money-btn')) {
@@ -568,7 +568,9 @@ class Game {
 		return this.getLocInfoHTML(this.currentLocation)
 			.then((response) => {
 				this.currentLocInfo.innerHTML = response;
-				this.locInfoContainer.className = 'loc-info show-current';
+                if (this.locInfoContainer.className === 'loc-info') {
+				    this.locInfoContainer.className = 'loc-info show-current';
+                }
 			});
 	}
 
@@ -797,13 +799,17 @@ class Game {
 		});
 	}
 
-	// showEditingLocForm() {
-	// 	this.locInfoContainer.className = 'loc-info';
-	// 	this.locInfoContainer.classList.add('show-form');
-	// 	this.occupyFormContainer.innerHTML = this.getLocOccupFormHTML(
-	// 		this.highlightedLocation || this.currentLocation
-	// 	);
-	// }
+	 showEditingLocForm() {
+	 	this.locInfoContainer.className = 'loc-info';
+	 	this.locInfoContainer.classList.add('show-form');
+	 	this.getLocOccupFormHTML(
+	 		this.highlightedLocation
+	 	)
+         .then((response) => {
+            this.occupyFormContainer.innerHTML = response;
+            document.getElementById('loc-name-field').focus();
+         });
+	 }
 
 	// editLocationInfoHandler(event) {
 	// 	event.preventDefault();
