@@ -21,6 +21,12 @@ class Conf {
 			}
 		};
 	}
+	static get email() {
+		return 'gamekh009@gmail.com';
+	}
+	static get emailPass() {
+		return 'SoftServe';
+	}
 }
 
 module.exports = Conf;
