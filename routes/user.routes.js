@@ -2,14 +2,15 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const nodemailer = require('nodemailer');
+const Config = require('../config');
 
 const router = express.Router();
 
 const transporter = nodemailer.createTransport({
 	service: 'gmail',
 	auth: {
-		user: process.env.SERVICE_EMAIL,
-		pass: process.env.SERVICE_EMAIL_PASS
+		user: process.env.SERVICE_EMAIL || Config.email,
+		pass: process.env.SERVICE_EMAIL_PASS || Config.emailPass
 	}
 });
 
@@ -65,6 +66,7 @@ router.post('/register', (req, res) => {
 		pass
 	};
 	const newUser = new User(userData);
+	console.log(newUser);
 	newUser.saveNewUser();
 	const letter = newUser.createLetter(newUser.email);
 	newUser.sendMail(letter, transporter);

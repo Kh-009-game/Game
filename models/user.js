@@ -10,14 +10,14 @@ class User {
 
 	saveNewUser() {
 		global.db.none('insert into users(email, password, reg_date, cash, name, is_admin)' +
-		`values('${this.email}', '${this.pass}', '${this.registrationDate}', '${this.cash}', '${this.name}'), '${this.isAdmin}'`)
+		`values('${this.email}', '${this.pass}', '${this.registrationDate}', '${this.cash}', '${this.name}', ${this.isAdmin})`)
 			.then(() => console.log('New user was added to db'))
 			.catch(error => console.log('error:', error));
 	}
 
 	createLetter() {
 		return {
-			from: '"Game team" <daisydespair111@gmail.com>', // sender address
+			from: '"Game team" <gamekh009@gmail.com>', // sender address
 			to: this.email, // receivers
 			subject: 'Hello! new user! ✔', // Subject line
 			text: 'Hello! We are glad that you joined our game', // plain text body
