@@ -71,8 +71,16 @@ app.use((err, req, res) => {
 	// res.render('error');
 });
 
+// default last daily event time
+global.lastDailyEvent = new Date();
+global.lastDailyEvent.setHours(3, 0, 0, 0);
+if (global.lastDailyEvent > new Date()) {
+	global.lastDailyEvent.setDate(global.lastDailyEvent.getDate() - 1);
+}
+
 schedule.scheduleJob('0 0 3 * * *', () => {
 	console.log('daily event!');
+	global.lastDailyEvent = new Date();
 	OccupiedLocation.recalcLocationsLifecycle()
 		.then(() => {
 			sockets.sendMessage('update', {
