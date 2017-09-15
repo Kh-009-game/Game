@@ -42,12 +42,11 @@ class OccupiedLocation extends EmptyLocation {
 					this.locationId = data.loc_id;
 					return t1.tx(t2 => t2.batch([
 						t2.none(
-							`insert into master_location2 (user_id, loc_id, loyal_popul, daily_checkin)
+							`insert into master_location2 (user_id, loc_id, loyal_popul)
 									values(
 										${this.masterId},
 										${this.locationId},
-										${this.loyalPopulation},
-										${this.dailyCheckin}
+										${this.loyalPopulation}
 									)`
 						),
 						t2.none(
@@ -131,12 +130,10 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	static getAllLocations() {
-		return global.db.any(`
-			select * from locations2
-			join master_location2 ON locations2.loc_id = master_location2.loc_id
-			join location_checkin on locations2.loc_id = location_checkin.loc_id
-			JOIN users on users.id = master_location2.user_id;
-		`)
+		return global.db.any(`select * from locations2
+													join master_location2 ON locations2.loc_id = master_location2.loc_id
+													join location_checkin on locations2.loc_id = location_checkin.loc_id
+													JOIN users on users.id = master_location2.user_id;`)
 			.then(locations => new Promise((res) => {
 				const occupiedLocations = [];
 				locations.forEach((item) => {
@@ -152,7 +149,7 @@ class OccupiedLocation extends EmptyLocation {
 						population: item.population,
 						dailyBank: item.daily_bank,
 						dailyMessage: item.daily_msg,
-						loyalPopulation: item.loyal_pop,
+						loyalPopulation: item.loyal_popul,
 						dailyCheckin: (global.lastDailyEvent - new Date(item.checkin_date)) < 0,
 						creationDate: item.creation_date
 					}));
@@ -196,13 +193,13 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	static getLocationById(id) {
-		return global.db.one(`
-			select * from locations2
-			join master_location2 ON locations2.loc_id = master_location2.loc_id
-			join location_checkin on locations2.loc_id = location_checkin.loc_id
-			JOIN users on users.id = master_location2.user_id	
-			where locations2.loc_id = $1
-		`, id)
+		return global.db.one(
+			`select * from locations2
+			full join master_location2 on locations2.loc_id = master_location2.loc_id
+			full join users on master_location2.user_id = users.id
+			full join location_checkin on locations2.user_id = location_checkin.id			
+			where locations2.loc_id = $1`, id
+		)
 			.then(foundLocation => new Promise((res) => {
 				res(new OccupiedLocation({
 					northWest: {
@@ -226,13 +223,11 @@ class OccupiedLocation extends EmptyLocation {
 	static checkLocationOnCoords(coords) {
 		const location = new EmptyLocation(coords);
 
-		return global.db.oneOrNone(`
-			select * from locations2
-			join master_location2 ON locations2.loc_id = master_location2.loc_id
-			join location_checkin on locations2.loc_id = location_checkin.loc_id
-			JOIN users on users.id = master_location2.user_id	
-			where locations2.lat = ${location.northWest.lat} and locations2.lng = ${location.northWest.lng}
-		`)
+		return global.db.oneOrNone(`select * from locations2
+						full join master_location2 on locations2.loc_id = master_location2.loc_id
+						full join users on master_location2.user_id = users.id
+						full join location_checkin on locations2.user_id = location_checkin.id
+						where locations2.lat = ${location.northWest.lat} and locations2.lng = ${location.northWest.lng}`)
 			.then(foundLocation => new Promise((res) => {
 				if (!foundLocation) {
 					res(location);
@@ -259,25 +254,37 @@ class OccupiedLocation extends EmptyLocation {
 
 	static recalcLocationsLifecycle() {
 		return global.db.tx(t => t.batch([
-			t.none(`delete from locations2
-							where loc_id IN (
-								SELECT loc_id from location_checkin
-								WHERE (now() - checkin_date) > '1 day';
-							);`),
-			t.none(`delete from master_location2
-							where loyal_popul = 0;`)
+			t.none(`
+				delete from locations2
+				where loc_id IN (
+					SELECT loc_id from location_checkin
+					WHERE (now() - checkin_date) > '24 hours'
+				) AND loc_id IN (
+					select loc_id from master_location2
+					where loyal_popul = 0
+				);
+			`),
+			t.none(`
+				delete from master_location2
+				where loyal_popul = 0;
+			`)
 		]))
-			.then(() => global.db.none(`update locations2
-																	set daily_bank = loyal_popul
-																	from master_location2
-																	where locations2.loc_id = master_location2.loc_id;`))
-			.then(() => global.db.none(`update master_location2 
-																	set loyal_popul = loyal_popul - ceil(loyal_popul * 0.1)
-																  where loc_id IN (
-																		SELECT loc_id from location_checkin
-																		WHERE (now() - checkin_date) > '1 day';
-																	);`
-			));
+			.then(() => global.db.none(`
+				update locations2
+				set daily_bank = loyal_popul
+				from master_location2
+				where locations2.loc_id = master_location2.loc_id;
+			`)
+			)
+			.then(() => global.db.none(`
+				update master_location2 
+				set loyal_popul = loyal_popul - ceil(loyal_popul * 0.1)
+				where loc_id IN (
+					SELECT loc_id from location_checkin
+					WHERE (now() - checkin_date) > '1 day'
+				);
+			`)
+			);
 	}
 }
 module.exports = OccupiedLocation;

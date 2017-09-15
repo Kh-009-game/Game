@@ -17,6 +17,7 @@ const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
 const schedule = require('node-schedule');
 const sockets = require('./services/sockets');
+const LogMessage = require('./services/log-service');
 require('dotenv').config();
 
 const app = express();
@@ -72,16 +73,13 @@ app.use((err, req, res) => {
 });
 
 // default last daily event time
-global.lastDailyEvent = new Date();
-global.lastDailyEvent.setHours(3, 0, 0, 0);
-if (global.lastDailyEvent > new Date()) {
-	global.lastDailyEvent.setDate(global.lastDailyEvent.getDate() - 1);
-}
+LogMessage.getLastDailyEventDate()
+	.then((data) => {
+		global.lastDailyEvent = data.max;
+	});
 
-console.log(new Date(global.lastDailyEvent));
+
 schedule.scheduleJob('0 0 3 * * *', () => {
-	console.log('daily event!');
-	global.lastDailyEvent = new Date();
 	OccupiedLocation.recalcLocationsLifecycle()
 		.then(() => {
 			sockets.sendMessage('update', {
@@ -89,7 +87,15 @@ schedule.scheduleJob('0 0 3 * * *', () => {
 				locationName: '???',
 				dailyMessage: '???'
 			});
-			console.log('OK');
+			return new LogMessage({
+				type: 'system',
+				status: 'daily-event',
+				msg: 'New day begins!'
+			}).saveToLog();
+		})
+		.then(() => LogMessage.getLastDailyEventDate())
+		.then((data) => {
+			global.lastDailyEvent = data.max;
 		})
 		.catch((err) => {
 			console.log(err);
