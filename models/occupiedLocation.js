@@ -10,7 +10,7 @@ class OccupiedLocation extends EmptyLocation {
 		this.population = locationData.population || 10;
 		this.dailyBank = locationData.dailyBank || 0;
 		this.loyalPopulation = locationData.loyalPopulation || 10;
-		// this.dailyCheckin = locationData.dailyCheckin === undefined ? true : locationData.dailyCheckin;
+		this.dailyCheckin = locationData.dailyCheckin === undefined ? true : locationData.dailyCheckin;
 		this.creationDate = locationData.creationDate || new Date().toISOString();
 		this.locationName = locationData.locationName || null;
 		this.dailyMessage = locationData.dailyMessage || null;
@@ -131,9 +131,9 @@ class OccupiedLocation extends EmptyLocation {
 
 	static getAllLocations() {
 		return global.db.any(`select * from locations2
-													full join master_location2 ON locations2.loc_id = master_location2.loc_id													 
-													full join users on master_location2.user_id = users.id
-													full join location_checkin on locations2.user_id = location_checkin.id;`)
+													join master_location2 ON locations2.loc_id = master_location2.loc_id
+													join location_checkin on locations2.loc_id = location_checkin.loc_id
+													JOIN users on users.id = master_location2.user_id;`)
 			.then(locations => new Promise((res) => {
 				const occupiedLocations = [];
 				locations.forEach((item) => {
@@ -145,6 +145,7 @@ class OccupiedLocation extends EmptyLocation {
 						locationId: item.loc_id,
 						locationName: item.loc_name,
 						userId: item.user_id,
+						userName: item.name,
 						population: item.population,
 						dailyBank: item.daily_bank,
 						dailyMessage: item.daily_msg,
