@@ -42,11 +42,12 @@ class OccupiedLocation extends EmptyLocation {
 					this.locationId = data.loc_id;
 					return t1.tx(t2 => t2.batch([
 						t2.none(
-							`insert into master_location2 (user_id, loc_id, loyal_popul)
+							`insert into master_location2 (user_id, loc_id, loyal_popul, daily_checkin)
 									values(
 										${this.masterId},
 										${this.locationId},
-										${this.loyalPopulation}
+										${this.loyalPopulation},
+										${this.dailyCheckin}
 									)`
 						),
 						t2.none(
@@ -130,10 +131,12 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	static getAllLocations() {
-		return global.db.any(`select * from locations2
-													join master_location2 ON locations2.loc_id = master_location2.loc_id
-													join location_checkin on locations2.loc_id = location_checkin.loc_id
-													JOIN users on users.id = master_location2.user_id;`)
+		return global.db.any(`
+			select * from locations2
+			join master_location2 ON locations2.loc_id = master_location2.loc_id
+			join location_checkin on locations2.loc_id = location_checkin.loc_id
+			JOIN users on users.id = master_location2.user_id;
+		`)
 			.then(locations => new Promise((res) => {
 				const occupiedLocations = [];
 				locations.forEach((item) => {
@@ -193,13 +196,13 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	static getLocationById(id) {
-		return global.db.one(
-			`select * from locations2
-			full join master_location2 on locations2.loc_id = master_location2.loc_id
-			full join users on master_location2.user_id = users.id
-			full join location_checkin on locations2.user_id = location_checkin.id			
-			where locations2.loc_id = $1`, id
-		)
+		return global.db.one(`
+			select * from locations2
+			join master_location2 ON locations2.loc_id = master_location2.loc_id
+			join location_checkin on locations2.loc_id = location_checkin.loc_id
+			JOIN users on users.id = master_location2.user_id	
+			where locations2.loc_id = $1
+		`, id)
 			.then(foundLocation => new Promise((res) => {
 				res(new OccupiedLocation({
 					northWest: {
@@ -223,11 +226,13 @@ class OccupiedLocation extends EmptyLocation {
 	static checkLocationOnCoords(coords) {
 		const location = new EmptyLocation(coords);
 
-		return global.db.oneOrNone(`select * from locations2
-						full join master_location2 on locations2.loc_id = master_location2.loc_id
-						full join users on master_location2.user_id = users.id
-						full join location_checkin on locations2.user_id = location_checkin.id
-						where locations2.lat = ${location.northWest.lat} and locations2.lng = ${location.northWest.lng}`)
+		return global.db.oneOrNone(`
+			select * from locations2
+			join master_location2 ON locations2.loc_id = master_location2.loc_id
+			join location_checkin on locations2.loc_id = location_checkin.loc_id
+			JOIN users on users.id = master_location2.user_id	
+			where locations2.lat = ${location.northWest.lat} and locations2.lng = ${location.northWest.lng}
+		`)
 			.then(foundLocation => new Promise((res) => {
 				if (!foundLocation) {
 					res(location);

@@ -85,11 +85,6 @@ router.get('/check-location', (req, res, next) => {
 			if (locationObj.masterId === req.decoded.id) {
 				locationObj.isMaster = true;
 			}
-			// else {
-			// 	locationObj.dailyCheckin = undefined;
-			// 	locationObj.dailyBank = undefined;
-			// 	locationObj.loyalPopulation = undefined;
-			// }
 			console.log(JSON.stringify(locationObj));
 			res.json(locationObj);
 		})
@@ -109,7 +104,7 @@ router.get('/:id/svg', (req, res) => {
 		.send(svgTemplate(req.reqLocation));
 });
 
-router.get('/:id/edit', (req, res, next) => {
+router.get('/:id/edit', (req, res) => {
 	res.render('loc-form', {
 		location: req.reqLocation,
 		clicked: true,
@@ -118,6 +113,7 @@ router.get('/:id/edit', (req, res, next) => {
 });
 
 router.put('/:id', (req, res, next) => {
+	// invert
 	if (req.reqLocation.isMaster || req.decoded.isAdmin) {
 		const editedLocation = Object.assign(req.reqLocation, req.body);
 

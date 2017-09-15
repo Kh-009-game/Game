@@ -78,6 +78,7 @@ if (global.lastDailyEvent > new Date()) {
 	global.lastDailyEvent.setDate(global.lastDailyEvent.getDate() - 1);
 }
 
+console.log(new Date(global.lastDailyEvent));
 schedule.scheduleJob('0 0 3 * * *', () => {
 	console.log('daily event!');
 	global.lastDailyEvent = new Date();
