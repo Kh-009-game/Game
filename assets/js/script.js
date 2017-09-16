@@ -87,7 +87,7 @@ class Game {
 			}
 			if (target.closest('#edit-loc-btn')) {
 				target = target.closest('#edit-loc-btn');
-				 this.showEditingLocForm();
+				this.showEditingLocForm();
 				return;
 			}
 			if (target.closest('#money-btn')) {
@@ -802,30 +802,33 @@ class Game {
 		});
 	}
 
-	 showEditingLocForm() {
-	 	this.locInfoContainer.className = 'loc-info';
-	 	this.locInfoContainer.classList.add('show-form');
-	 	this.getLocOccupFormHTML(
-	 		this.highlightedLocation
-	 	)
-         .then((response) => {
-            this.occupyFormContainer.innerHTML = response;
-            document.getElementById('loc-name-field').focus();
-         });
-	 }
+	showEditingLocForm() {
+		this.locInfoContainer.className = 'loc-info';
+		this.locInfoContainer.classList.add('show-form');
+		this.getLocOccupFormHTML(
+			this.highlightedLocation
+		)
+			.then((response) => {
+				this.occupyFormContainer.innerHTML = response;
+				document.getElementById('loc-name-field').focus();
+			});
+	}
 
-	// editLocationInfoHandler(event) {
-	// 	event.preventDefault();
-	// 	const form = event.target;
-	// 	const locName = form['location-name'].value;
-	// 	const dailyMsg = form['daily-msg'].value;
-	// 	const location = form['daily-msg'].value;
+	editLocationInfoHandler(event) {
+		event.preventDefault();
+		const form = event.target;
+		const locName = form['location-name'].value;
+		const dailyMsg = form['daily-msg'].value;
+		const locID = this.currentLocation.locationId;
+		console.log(locName, dailyMsg);
 
-	// 	this.currentLocation.locationName = locName;
-	// 	this.currentLocation.dailyMessage = dailyMsg;
-
-	// 	this.occupyCurrentLocation();
-	// }
+		socket.emit('updateLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
+		
+		this.currentLocation.locationName = locName;
+		this.currentLocation.dailyMessage = dailyMsg;
+		this.hideOccupationForm();
+		// this.occupyCurrentLocation();
+	}
 
 	deleteLocation(location) {
 		return new Promise((res, rej) => {
