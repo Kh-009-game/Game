@@ -1,4 +1,5 @@
 const OccupiedLocation = require('../models/occupiedLocation');
+const db = require('../services/db-transport');
 
 module.exports = (req, res, next) => {
 	OccupiedLocation.getLocationById(req.params.id)
@@ -19,7 +20,7 @@ module.exports = (req, res, next) => {
 					next();
 				}
 			} else if (req.decoded.isAdmin) {
-				global.db.one(
+				db.one(
 					`select is_admin from users
 					 where id = ${req.decoded.id}`
 				)
