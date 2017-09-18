@@ -18,6 +18,7 @@ router.get('/loc-info', (req, res) => {
 		lat: req.query.lat,
 		lng: req.query.lng
 	});
+	emptyLoc.isAllowed = 
 	emptyLoc.isHighlighted = req.query.highlighted;
 	emptyLoc.isCurrent = req.query.current;
 	res.render('loc-info', {
@@ -46,10 +47,10 @@ router.get('/checkOccupy', (req, res) => {
 				lat: northWest.lat - distance.lat,
 				lng: northWest.lng
 			};
-			this.southEast = {
-				lat: this.southWest.lat,
-				lng: this.northEast.lng
-			};
+			// this.southEast = {
+			// 	lat: this.southWest.lat,
+			// 	lng: this.northEast.lng
+			// };
 		}
 	}
 	const saveLocTerritory = new RestrictCoords(northWestBound, distance);
