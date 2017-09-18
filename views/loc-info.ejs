@@ -2,7 +2,8 @@
   <button class="close-btn" id="close-btn"><i class="material-icons">cancel</i></button>
 <% } %>
 <div>
-  <h2 class="info-heading">
+  <div class="info-heading">
+    <h2>
     <% if (location.locationName) { %>
       <%= location.locationName %>
     <% } else { %>
@@ -11,16 +12,23 @@
     <% if (location.masterName) { %>
        (<%= location.masterName %>)
     <% } %>
-  </h2>							
-  <% if (location.dailyMessage) { %> 
-    <span><i class="material-icons">textsms</i> <%= location.dailyMessage %></span>
-  <% } %>  									
+  </h2>		
+  <div class="icons-info">
   <% if (location.population) { %>
-    <span><i class="material-icons">face</i> <%= location.loyalPopulation %>/<%= location.population %></span>
-  <% } %>
-  <% if (location.dailyBank !== undefined) { %>
-    <span><i class="material-icons">attach_money</i> <%= location.dailyBank %></span>
+      <span class="icons-item"><i class="material-icons">face</i> <span><%= location.loyalPopulation %>/<%= location.population %></span></span>
+    <% } %>
+    <% if (location.dailyBank !== undefined) { %>
+      <span class="icons-item"><i class="material-icons">account_balance</i><span> <%= location.dailyBank %></span></span>
+    <% } %>  
+  </div>	
+</div>				
+  									
+  
+  <div>
+    <% if (location.dailyMessage) { %> 
+    <span><i class="material-icons">textsms</i> <%= location.dailyMessage %></span>
   <% } %>  
+  </div>
   <% if(isAdmin)  { %> 
     <span>Location coords: <%= location.northWest.lat %> <%= location.northWest.lng %></span>
   <% } %>
