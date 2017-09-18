@@ -1,5 +1,7 @@
 'use strict';
 
+require('dotenv').config();
+
 const sslRedirect = require('heroku-ssl-redirect');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -17,7 +19,6 @@ const indexRoutes = require('./routes/index.routes');
 const schedule = require('node-schedule');
 const logService = require('./services/log-service');
 const ormDB = require('./services/orm-service');
-require('dotenv').config();
 
 const app = express();
 // const port = process.env.PORT || 8080;
