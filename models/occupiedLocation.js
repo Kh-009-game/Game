@@ -100,18 +100,18 @@ class OccupiedLocation extends EmptyLocation {
 
 	deleteLocation() {
 		return db.tx(t => t.batch([
-			t.none(
-				`delete from locations2
-				 where loc_id = ${this.locationId}`
-			),
-			t.none(
-				`delete from master_location2
-				 where loc_id = ${this.locationId}`
-			),
 			t.none(`
-			delete from location_checkin				 
-			where loc_id = ${this.locationId}			
-		`)
+				delete from locations2
+				where loc_id = ${this.locationId}
+			`),
+			t.none(`
+				delete from master_location2
+				where loc_id = ${this.locationId}
+			`),
+			t.none(`
+				delete from location_checkin				 
+				where loc_id = ${this.locationId}			
+			`)
 		]));
 	}
 
@@ -137,14 +137,20 @@ class OccupiedLocation extends EmptyLocation {
 
 	static getAllLocations() {
 		return db.any(`
-				select * from locations2
+				select *, (
+					checkin_date - (
+						SELECT max( TIME ) as last_event FROM log_messages
+						WHERE status = 'daily-event'
+						AND TYPE = 'system'
+					) > '0'
+				) as daily_checkin
+				from locations2
 				join master_location2 ON locations2.loc_id = master_location2.loc_id
 				join location_checkin on locations2.loc_id = location_checkin.loc_id
 				JOIN users on users.id = master_location2.user_id;
 			`)
 			.then(locations => new Promise((res) => {
 				const occupiedLocations = [];
-				const lastDailyEventTime = logService.logStorage.lastDailyEventTime;
 				locations.forEach((item) => {
 					occupiedLocations.push(new OccupiedLocation({
 						northWest: {
@@ -159,7 +165,7 @@ class OccupiedLocation extends EmptyLocation {
 						dailyBank: item.daily_bank,
 						dailyMessage: item.daily_msg,
 						loyalPopulation: item.loyal_popul,
-						dailyCheckin: (lastDailyEventTime - new Date(item.checkin_date)) < 0,
+						dailyCheckin: item.daily_checkin,
 						creationDate: item.creation_date
 					}));
 				});
@@ -202,15 +208,21 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	static getLocationById(id) {
-		return db.one(
-			`select * from locations2
-			full join master_location2 on locations2.loc_id = master_location2.loc_id
-			full join users on master_location2.user_id = users.id
-			full join location_checkin on locations2.loc_id = location_checkin.loc_id			
-			where locations2.loc_id = $1`, id
-		)
+		return db.one(`
+			select *, (
+				checkin_date - (
+					SELECT max( TIME ) as last_event FROM log_messages
+					WHERE status = 'daily-event'
+					AND TYPE = 'system'
+				) > '0'
+			) as daily_checkin
+			from locations2
+			join master_location2 ON locations2.loc_id = master_location2.loc_id
+			join location_checkin on locations2.loc_id = location_checkin.loc_id
+			JOIN users on users.id = master_location2.user_id
+			where locations2.loc_id = $1
+		`, id)
 			.then(foundLocation => new Promise((res) => {
-				const lastDailyEventTime = logService.logStorage.lastDailyEventTime;
 				res(new OccupiedLocation({
 					northWest: {
 						lat: foundLocation.lat,
@@ -222,7 +234,7 @@ class OccupiedLocation extends EmptyLocation {
 					population: foundLocation.population,
 					dailyBank: foundLocation.daily_bank,
 					loyalPopulation: foundLocation.loyal_popul,
-					dailyCheckin: (lastDailyEventTime - new Date(foundLocation.checkin_date)) < 0,
+					dailyCheckin: foundLocation.daily_checkin,
 					creationDate: foundLocation.creation_date,
 					dailyMessage: foundLocation.daily_msg,
 					locationName: foundLocation.loc_name
@@ -233,16 +245,25 @@ class OccupiedLocation extends EmptyLocation {
 	static checkLocationOnCoords(coords) {
 		const location = new EmptyLocation(coords);
 
-		return db.oneOrNone(`select * from locations2
-						full join master_location2 on locations2.loc_id = master_location2.loc_id
-						full join users on master_location2.user_id = users.id
-						full join location_checkin on locations2.loc_id = location_checkin.loc_id
-						where locations2.lat = ${location.northWest.lat} and locations2.lng = ${location.northWest.lng}`)
+		return db.oneOrNone(`
+			select *, (
+				checkin_date - (
+					SELECT max( TIME ) as last_event FROM log_messages
+					WHERE status = 'daily-event'
+					AND TYPE = 'system'
+				) > '0'
+			) as daily_checkin
+			from locations2
+			join master_location2 ON locations2.loc_id = master_location2.loc_id
+			join location_checkin on locations2.loc_id = location_checkin.loc_id
+			JOIN users on users.id = master_location2.user_id
+			where locations2.lat = ${location.northWest.lat} 
+			and locations2.lng = ${location.northWest.lng}
+		`)
 			.then(foundLocation => new Promise((res) => {
 				if (!foundLocation) {
 					res(location);
 				} else {
-					const lastDailyEventTime = logService.logStorage.lastDailyEventTime;
 					res(new OccupiedLocation({
 						northWest: {
 							lat: foundLocation.lat,
@@ -254,7 +275,7 @@ class OccupiedLocation extends EmptyLocation {
 						population: foundLocation.population,
 						dailyBank: foundLocation.daily_bank,
 						loyalPopulation: foundLocation.loyal_popul,
-						dailyCheckin: (lastDailyEventTime - new Date(foundLocation.checkin_date)) < 0,
+						dailyCheckin: foundLocation.daily_checkin,
 						creationDate: foundLocation.creation_date,
 						dailyMessage: foundLocation.daily_msg,
 						locationName: foundLocation.loc_name

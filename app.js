@@ -16,6 +16,7 @@ const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
 const schedule = require('node-schedule');
 const logService = require('./services/log-service');
+const ormDB = require('./services/orm-service');
 require('dotenv').config();
 
 const app = express();
