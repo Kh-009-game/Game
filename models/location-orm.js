@@ -12,12 +12,20 @@ const Location = sequelize.define('location', {
 	lat: {
 		type: Sequelize.DECIMAL,
 		unique: 'coords',
-		allowNull: false
+		allowNull: false,
+		validate: {
+			min: -90,
+			max: 90
+		}
 	},
 	lng: {
 		type: Sequelize.DECIMAL,
 		unique: 'coords',
-		allowNull: false
+		allowNull: false,
+		validate: {
+			min: -180,
+			max: 180
+		}
 	},
 	name: {
 		type: Sequelize.STRING,
