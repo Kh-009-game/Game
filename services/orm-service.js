@@ -22,7 +22,7 @@ const sequelize = new Sequelize(database, user, password, {
 	}
 });
 
-const User = sequelize.define('other_user', {
+const logMessage = sequelize.define('log_message', {
 	id: {
 		type: Sequelize.INTEGER,
 		autoIncrement: true,
@@ -30,40 +30,65 @@ const User = sequelize.define('other_user', {
 		allowNull: false,
 		primaryKey: true
 	},
-	name: {
+	type: {
 		type: Sequelize.STRING,
-		unique: true,
-		allowNull: false
-	},
-	email: {
-		type: Sequelize.STRING,
-		unique: true,
-		allowNull: false
-	},
-	password: {
-		type: Sequelize.STRING,
-		allowNull: false
-	},
-	cash: {
-		type: Sequelize.INTEGER,
 		allowNull: false,
-		defaultValue: 150
+		values: ['error', 'system']
 	},
-	is_admin: {
-		type: Sequelize.BOOLEAN,
-		allowNull: false,
-		defaultValue: false
+	status: {
+		type: Sequelize.STRING
+	},
+	message: {
+		type: Sequelize.TEXT
 	}
 });
 
-// force: true will drop the table if it already exists
-User.sync({ force: true }).then(() =>
-	// Table created
-	User.create({
-		name: 'John',
-		email: '123123@123.com',
-		password: '123'
-	})
-);
+logMessage.create({
+	type: 'system',
+	status: 'ORM OK!',
+	message: 'hi'
+});
+
+// const User = sequelize.define('other_user', {
+// 	id: {
+// 		type: Sequelize.INTEGER,
+// 		autoIncrement: true,
+// 		unique: true,
+// 		allowNull: false,
+// 		primaryKey: true
+// 	},
+// 	name: {
+// 		type: Sequelize.STRING,
+// 		unique: true,
+// 		allowNull: false
+// 	},
+// 	email: {
+// 		type: Sequelize.STRING,
+// 		unique: true,
+// 		allowNull: false
+// 	},
+// 	password: {
+// 		type: Sequelize.STRING,
+// 		allowNull: false
+// 	},
+// 	cash: {
+// 		type: Sequelize.INTEGER,
+// 		allowNull: false,
+// 		defaultValue: 150
+// 	},
+// 	is_admin: {
+// 		type: Sequelize.BOOLEAN,
+// 		allowNull: false,
+// 		defaultValue: false
+// 	}
+// });
+
+// User.sync({ force: true }).then(() =>
+// 	User.create({
+// 		name: 'John',
+// 		email: '123123@123.com',
+// 		password: '123'
+// 	})
+// );
 
 module.exports = sequelize;
