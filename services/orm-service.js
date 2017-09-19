@@ -22,33 +22,6 @@ const sequelize = new Sequelize(database, user, password, {
 	}
 });
 
-const logMessage = sequelize.define('log_message', {
-	id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		unique: true,
-		allowNull: false,
-		primaryKey: true
-	},
-	type: {
-		type: Sequelize.STRING,
-		allowNull: false,
-		values: ['error', 'system']
-	},
-	status: {
-		type: Sequelize.STRING
-	},
-	message: {
-		type: Sequelize.TEXT
-	}
-});
-
-logMessage.create({
-	type: 'system',
-	status: 'ORM OK!',
-	message: 'hi'
-});
-
 // const User = sequelize.define('other_user', {
 // 	id: {
 // 		type: Sequelize.INTEGER,
