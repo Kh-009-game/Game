@@ -30,6 +30,7 @@ class Game {
 		this.occupiedLocationsGroundOverlays = {};
 		this.occupiedLocationsIcons = {};
 		this.showUserLocationsBtn = document.getElementById('showUserLocationsButton');
+		// this.gameBounds = options.gameBounds || this.getGameBounds(userDefinedBounds);
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
 			// let target = event.target;
@@ -278,6 +279,21 @@ class Game {
 
 	// GET LOCATIONS INFO FROM DB METHODS	
 
+	getGameBounds(coords) {
+		return new Promise((res, rej) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('POST', '/api/grid/bounds');
+			xhr.send(JSON.stringify({coords: coords}));
+			xhr.addEventListener('load', (e) => {
+				const xhttp = e.target;
+				if(xhttp.status === 200) {
+					res(JSON.parse(xhttp.response));
+				} else {
+					rej(xhttp.response);
+				}
+			});
+		});
+	}
 	// get ALL occupied locations short info from db
 	getOccupiedLocations() {
 		return new Promise((res, rej) => {
@@ -630,7 +646,7 @@ class Game {
 			lng: event.latLng.lng()
 		})
 			.then((clickedLocation) => {
-				console.log(clickedLocation);
+				console.log('click'+clickedLocation);
 				clickedLocation.locationName = 'Empty Location';
 				this.highlightEmptyLocation(clickedLocation);
 				return this.renderHighlightedLocationTextInfo();
@@ -1374,9 +1390,25 @@ function initMap() {
 		});
 
 		game.renderOccupiedLocations();
-		// setTimeout(() => {
-		// 	game.renderOccupiedLocations();
-		// }, 5000);
+		let boundsCoords = [
+			{lat: 50.0004, lng: 36.14592},
+			{lat: 50.123, lng: 36.14592},
+			{lat: 50.0004, lng: 36.14592},
+			{lat: 50.0004, lng: 36.14592},
+			{lat: 50.0004, lng: 36.14592},
+		]
+		let gameBounds = new google.maps.Polyline({
+			path: boundsCoords,
+			geodesic: true,
+			strokeColor: '#FF0000',
+			strokeOpacity: 1.0,
+			strokeWeight: 2
+		});
+
+		gameBounds.setMap(map);
+		setTimeout(() => {
+			game.renderOccupiedLocations();
+		}, 5000);
 
 		function initMapInteraction() {
 			navigator.geolocation.getCurrentPosition((position) => {

@@ -13,28 +13,33 @@ router.get('/', (req, res) => {
 	res.json(location);
 });
 
+router.post('/bounds', (req, res) => {
+	const userDefinedBounds = req.body.coords;
+	
+})
+
 router.get('/loc-info', (req, res) => {
 	const emptyLoc = new EmptyLocation({
 		lat: req.query.lat,
 		lng: req.query.lng
 	});
-	// !!! const bounds = config.occupyBounds;
+	// const bounds = config.userBounds;
 
-	const conditions = [
-		emptyLoc.lat >= bounds[0].lat,
-		emptyLoc.lat <= bounds[4].lat,
-		emptyLoc.lng >= bounds[2].lng,
-		emptyLoc.lng <= bounds[0].lng
-	];
-	// do for Each!!!
-	let isAllowed = true;
-	conditions.forEach((cond) => {
-		if(cond) {
-			isAllowed = false;
-			break;
-		}
-	})
-	emptyLoc.isAllowed = isAllowed;
+	// const conditions = [
+	// 	emptyLoc.lat >= bounds[0].lat,
+	// 	emptyLoc.lat <= bounds[4].lat,
+	// 	emptyLoc.lng >= bounds[2].lng,
+	// 	emptyLoc.lng <= bounds[0].lng
+	// ];
+	// // do for Each!!!
+	// let isAllowed = true;
+	// conditions.forEach((cond) => {
+	// 	if(cond) {
+	// 		isAllowed = false;
+			
+	// 	}
+	// })
+	// emptyLoc.isAllowed = isAllowed;
 	emptyLoc.isHighlighted = req.query.highlighted;
 	emptyLoc.isCurrent = req.query.current;
 	res.render('loc-info', {
