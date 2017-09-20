@@ -6,7 +6,7 @@ const sockets = require('../services/sockets');
 const db = require('../services/db-transport');
 
 
-class OccupiedLocation extends EmptyLocation {
+class LocationService extends EmptyLocation {
 	constructor(locationData) {
 		super(locationData.northWest);
 
@@ -71,4 +71,4 @@ class OccupiedLocation extends EmptyLocation {
 	static recalcLocationsLifecycle() {
 	}
 }
-module.exports = OccupiedLocation;
+module.exports = LocationService;
