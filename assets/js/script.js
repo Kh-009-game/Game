@@ -822,12 +822,10 @@ class Game {
 		const locID = this.currentLocation.locationId;
 		console.log(locName, dailyMsg);
 
-		socket.emit('updateLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
-		
-		this.currentLocation.locationName = locName;
-		this.currentLocation.dailyMessage = dailyMsg;
-		this.hideOccupationForm();
-		// this.occupyCurrentLocation();
+		socket.emit('editLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
+		// this.currentLocation.locationName = locName;
+		// this.currentLocation.dailyMessage = dailyMsg;
+		// this.hideOccupationForm();
 	}
 
 	deleteLocation(location) {

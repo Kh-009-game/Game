@@ -1,10 +1,7 @@
 const io = require('socket.io');
+const OccupiedLocation = require('../models/occupiedLocation');
 
 class Sockets {
-	constructor() {
-		// this.activeSocketService = 'Hello';
-	}
-
 	init(server) {
 		this.io = this.io || io.listen(server);
 		this.io.sockets.on('connection', (socket) => {
@@ -12,14 +9,24 @@ class Sockets {
 			socket.on('disconnect', () => {
 				console.log('user disconnected');
 			});
-			socket.on('updateLocationWS', (data) => {
-				console.log('SSSSSoket', data);				
-				global.db.any(
-					`update locations2
-					set loc_name = '${data.locationName}',
-					daily_msg = '${data.dailyMessage}'
-					where loc_id = ${data.locationId}`
-				);
+			socket.on('editLocationWS', (data) => {
+				console.log('SSSSSoket', data);
+				const promise = new Promise((resolve, reject) => {
+					const location = OccupiedLocation.getLocationById(data.locationId);
+					resolve(location);
+				});
+				promise.then((location) => {
+					console.log('IIIIIIIIIIIIII', location);
+					console.log('EEEE', data);
+					location.editLocationWS(data);
+					this.io.sockets.emit('update', {
+						type: 'EditLoc',
+						text: `The location with id ${data.locationId} was renamed`
+					});
+				})
+					.catch((err) => {
+						console.log('error', err);
+					});
 			});
 		});
 	}
@@ -41,8 +48,7 @@ class Sockets {
 	// 			);
 	// 		});
 	// 	});
-	// }
-	
+	// }	
 }
 module.exports = new Sockets();
 
