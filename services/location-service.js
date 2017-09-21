@@ -21,7 +21,10 @@ class LocationService extends GridService {
 	}
 
 	static createClientLocationObjectByIdForUser(locationId, userId) {
+		return Location.findById(locationId)
+			.then((location) => {
 
+			});
 	}
 
 	static getAllLocationsForUser(userId) {
