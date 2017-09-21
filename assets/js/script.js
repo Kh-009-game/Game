@@ -287,8 +287,12 @@ class Game {
 			xhr.addEventListener('load', (e) => {
 				const xhttp = e.target;
 				if (xhttp.status === 200) {
-					console.log(`290 ${xhttp.response}`);
-					res(JSON.parse(xhttp.response));
+					const response = JSON.parse(xhttp.response);
+					const pointsArr = [];
+					for (let i = 0; i < response.length; i++) {
+						pointsArr.push(response[i]);
+					}
+					res(pointsArr);
 				} else {
 					rej(xhttp.response);
 				}
@@ -1391,34 +1395,55 @@ function initMap() {
 		});
 
 		game.renderOccupiedLocations();
-		let boundsCoords = [ { lat: 50.112, lng: 36.23832 },
-			{ lat: 50.112, lng: 36.23808 },
-			{ lat: 50.1111, lng: 36.23808 },
-			{ lat: 50.1111, lng: 36.22784 },
-			{ lat: 50.1102, lng: 36.22784 },
-			{ lat: 50.1102, lng: 36.2176 },
-			{ lat: 50.1093, lng: 36.2176 },
-			{ lat: 50.1093, lng: 36.20736 },
-			{ lat: 50.1084, lng: 36.20736 },
-			{ lat: 50.1084, lng: 36.19712 },
-			{ lat: 50.10750000000001, lng: 36.19712 },
-			{ lat: 50.1075, lng: 36.18688 },
-			{ lat: 50.1066, lng: 36.18688 },
-			{ lat: 50.1066, lng: 36.17664 },
-			{ lat: 50.1057, lng: 36.17664 },
-			{ lat: 50.1057, lng: 36.1664 },
-			{ lat: 50.1048, lng: 36.1664 } ]
-		  
-		// const boundsCoords = game.getGameBounds();
-		const gameBounds = new google.maps.Polyline({
-			path: boundsCoords,
-			geodesic: true,
-			strokeColor: '#FF0000',
-			strokeOpacity: 1.0,
-			strokeWeight: 2
-		});
+		// const boundsCoords = [{ lat: 50.112, lng: 36.23832 },
+		// 	{ lat: 50.112, lng: 36.23808 },
+		// 	{ lat: 50.1111, lng: 36.23808 },
+		// 	{ lat: 50.1111, lng: 36.22784 },
+		// 	{ lat: 50.1102, lng: 36.22784 },
+		// 	{ lat: 50.1102, lng: 36.2176 },
+		// 	{ lat: 50.1093, lng: 36.2176 },
+		// 	{ lat: 50.1093, lng: 36.20736 },
+		// 	{ lat: 50.1084, lng: 36.20736 },
+		// 	{ lat: 50.1084, lng: 36.19712 },
+		// 	{ lat: 50.10750000000001, lng: 36.19712 },
+		// 	{ lat: 50.1075, lng: 36.18688 },
+		// 	{ lat: 50.1066, lng: 36.18688 },
+		// 	{ lat: 50.1066, lng: 36.17664 },
+		// 	{ lat: 50.1057, lng: 36.17664 },
+		// 	{ lat: 50.1057, lng: 36.1664 },
+		// 	{ lat: 50.1048, lng: 36.1664 },
+		// 	{ lat: 50.1048, lng: 36.15616 },
+		// 	{ lat: 50.1039, lng: 36.15616 },
+		// 	{ lat: 50.1039, lng: 36.14592 },
+		// 	{ lat: 50.10300000000001, lng: 36.14592 },
+		// 	{ lat: 50.103, lng: 36.13568 },
+		// 	{ lat: 50.1021, lng: 36.13568 },
+		// 	{ lat: 50.1021, lng: 36.12544 },
+		// 	{ lat: 50.1012, lng: 36.12544 },
+		// 	{ lat: 50.1012, lng: 36.1152 },
+		// 	{ lat: 50.1003, lng: 36.1152 },
+		// 	{ lat: 50.1003, lng: 36.10496 },
+		// 	{ lat: 50.0994, lng: 36.10496 },
+		// 	{ lat: 50.0994, lng: 36.09472 },
+		// 	{ lat: 50.0985, lng: 36.09472 }];
 
-		gameBounds.setMap(map);
+
+		game.getGameBounds()
+			.then((resArray) => {
+				const gameBounds = new google.maps.Polyline({
+					path: resArray,
+					geodesic: true,
+					strokeColor: '#FF0000',
+					strokeOpacity: 1.0,
+					strokeWeight: 2
+				});
+
+				gameBounds.setMap(map);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+
 		setTimeout(() => {
 			game.renderOccupiedLocations();
 		}, 5000);

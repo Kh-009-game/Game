@@ -41,17 +41,19 @@ router.get('/bounds', (req, res) => {
 
 	pointsArr.push(startPointLoc.northWest);
 	console.dir(pointsArr);
-	let check = 0;
+	// let check = 0;
 	// while (startPointLoc.northWest.lat !== endPointLoc.northWest.lat) {
-		while (pointsArr.length <= 15) {
+	while (true) {
 		startPointLoc = assemblePoints(checkDirection(startPointLoc.northWest, endPointLoc.northWest), startPointLoc, pointsArr);
-		// assemblePoints(checkDirection(startPointLoc.northWest, endPointLoc.northWest), startPointLoc, pointsArr);
+		// startPointLoc = assemblePoints('toTheSouthWest', startPointLoc, pointsArr);
+		if (!startPointLoc) break;
 		console.log(`47 ${startPointLoc.northWest.lng}`);
-		check += 1;
-		console.log('length'+pointsArr.length)
-		if (check >= 100) break;
+		// check += 1;
+		console.log(`length${pointsArr.length}`);
+		// if (check >= 1000) break;
 	}
-	console.log(typeof pointsArr)
+	pointsArr.push(endPointLoc.northWest);
+	console.log(pointsArr);
 	res.json(pointsArr);
 });
 
@@ -61,21 +63,26 @@ function assemblePoints(direction, startPLoc, pointsArr) {
 	switch (direction) {
 		case 'toTheSouthWest': {
 			console.log(`59 ${startPLoc.northWest.lng}`);
-			let newLng = startPLoc.northWest.lng - 0.01;
+			const newLng = startPLoc.northWest.lng - 0.001;
 			startPLoc.northWest.lng = newLng;
 			console.log(`61 ${startPLoc.northWest.lng}`);
 			const newPoint = { lat: startPLoc.northWest.lat, lng: newLng };
-			console.log(`63 ${newPoint}`);
+			console.log(`63 ${newPoint.lng}`);
 			startPLoc = new EmptyLocation(newPoint);
 			console.log(`65 ${startPLoc.northWest.lng}`);
 			pointsArr.push(startPLoc.northWest);
 			// south west
+			console.log(`mapFeature${startPLoc.getMapFeatureCoords()[1]}`);
 			pointsArr.push(startPLoc.getMapFeatureCoords()[1]);
-			console.log(startPLoc.getMapFeatureCoords()[1])
-			startPLoc.northWest = startPLoc.getMapFeatureCoords()[1];
+			console.log(startPLoc.getMapFeatureCoords()[1]);
+			const newNorthWest = startPLoc.getMapFeatureCoords()[1];
+			startPLoc.northWest = newNorthWest;
 			console.log(`70 ${startPLoc.northWest.lng}`);
-			
+
 			return startPLoc;
+		}
+		case 'stop': {
+			return false;
 		}
 		default:
 			break;
@@ -84,8 +91,11 @@ function assemblePoints(direction, startPLoc, pointsArr) {
 function checkDirection(p1, p2) {
 	let direction = '';
 	if (p1.lat >= p2.lat) {
-		if (p1.lng >= p2.lng) {
+		if (p1.lng > p2.lng) {
 			direction = 'toTheSouthWest';
+			if (p1.lng == p2.lng) {
+				direction = 'stop';
+			}
 		} else {
 			direction = 'toTheSouthEast';
 		}
