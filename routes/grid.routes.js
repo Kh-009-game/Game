@@ -1,6 +1,8 @@
+'use strict';
+
 const express = require('express');
 const EmptyLocation = require('../models/emptyLocation');
-const config = require('../config');
+const Config = require('../config');
 
 const router = express.Router();
 // '/grid?lat=xxx&lng=xxx'
@@ -13,11 +15,83 @@ router.get('/', (req, res) => {
 	res.json(location);
 });
 
-router.post('/bounds', (req, res) => {
-	const userDefinedBounds = req.body.coords;
-	
-})
+router.get('/bounds', (req, res) => {
+	// const bounds = req.body.coords;
+	// const bounds = Config.gameBounds;
+	// const directions = []
+	// for (let i = 0; i < bounds.length; i++) {
+	// const startPointLoc = new EmptyLocation(bounds[i]);
+	// const startNorthW = startPointLoc.northWest;
+	// const endPointLoc = new EmptyLocation(bounds[i + 1]);
+	// const endNorthW = endPointLoc.northWest;
+	// let case = endNorthW - startNorthW;
 
+	// const directions = {
+	// 	'toTheSouthWest':
+	// 	[[startNorthW.lng -= 0.01], []],
+	// 	'toTheSouthEast':,
+	// 	'toTheNorthWest':,
+	// 	'toTheNorthEast':
+	// }
+	// }
+	let startPointLoc = new EmptyLocation({ lat: 50.112, lng: 36.249 });
+	console.log(`startP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ${startPointLoc.northWest.lng}`);
+	const endPointLoc = new EmptyLocation({ lat: 49.890, lng: 36.098 });
+	const pointsArr = [];
+
+	pointsArr.push(startPointLoc.northWest);
+	console.dir(pointsArr);
+	let check = 0;
+	while (startPointLoc.northWest.lat !== endPointLoc.northWest.lat) {
+		startPointLoc = assemblePoints(checkDirection(startPointLoc.northWest, endPointLoc.northWest), startPointLoc, pointsArr);
+		console.log(`47 ${startPointLoc.northWest.lng}`);
+		check += 1;
+		if (check >= 100) break;
+	}
+	res.json(pointsArr);
+});
+
+function assemblePoints(direction, startPLoc, pointsArr) {
+	// const pointsArr = [];
+	// !!! pointsArr.push(startPLoc.northWest);
+	switch (direction) {
+		case 'toTheSouthWest': {
+			console.log(`59 ${startPLoc.northWest.lng}`);
+			startPLoc.northWest.lng -= 0.01;
+			console.log(`61 ${startPLoc.northWest.lng}`);
+			const newPoint = { lat: startPLoc.northWest.lat, lng: startPLoc.northWest.lng };
+			console.log(`63 ${newPoint}`);
+			startPLoc = new EmptyLocation(newPoint);
+			console.log(`65 ${startPLoc.northWest.lng}`);
+			pointsArr.push(startPLoc.northWest);
+			// south west
+			pointsArr.push(startPLoc.getMapFeatureCoords()[1]);
+			startPLoc.northWest = startPLoc.getMapFeatureCoords()[1];
+			console.log(`70 ${startPLoc.northWest.lng}`);
+
+			return startPLoc;
+		}
+		default:
+			break;
+	}
+}
+function checkDirection(p1, p2) {
+	let direction = '';
+	if (p1.lat >= p2.lat) {
+		if (p1.lng >= p2.lng) {
+			direction = 'toTheSouthWest';
+		} else {
+			direction = 'toTheSouthEast';
+		}
+	} else if (p1.lat < p2.lat) {
+		if (p1.lng >= p2.lng) {
+			direction = 'toTheNorthWest';
+		} else {
+			direction = 'toTheNorthEast';
+		}
+	}
+	return direction;
+}
 router.get('/loc-info', (req, res) => {
 	const emptyLoc = new EmptyLocation({
 		lat: req.query.lat,
@@ -36,7 +110,7 @@ router.get('/loc-info', (req, res) => {
 	// conditions.forEach((cond) => {
 	// 	if(cond) {
 	// 		isAllowed = false;
-			
+
 	// 	}
 	// })
 	// emptyLoc.isAllowed = isAllowed;
@@ -54,8 +128,8 @@ router.get('/checkOccupy', (req, res) => {
 		lng: +req.query.lng
 	};
 
-	const northWestBound = config.restrictOccupyingSettings.northWest;
-	const distance = config.restrictOccupyingSettings.distance;
+	const northWestBound = Config.restrictOccupyingSettings.northWest;
+	const distance = Config.restrictOccupyingSettings.distance;
 
 	class RestrictCoords {
 		constructor(northWest, distance) {

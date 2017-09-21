@@ -279,14 +279,15 @@ class Game {
 
 	// GET LOCATIONS INFO FROM DB METHODS	
 
-	getGameBounds(coords) {
+	getGameBounds() {
 		return new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest();
-			xhr.open('POST', '/api/grid/bounds');
-			xhr.send(JSON.stringify({coords: coords}));
+			xhr.open('GET', '/api/grid/bounds');
+			xhr.send();
 			xhr.addEventListener('load', (e) => {
 				const xhttp = e.target;
-				if(xhttp.status === 200) {
+				if (xhttp.status === 200) {
+					console.log(`290 ${xhttp.response}`);
 					res(JSON.parse(xhttp.response));
 				} else {
 					rej(xhttp.response);
@@ -587,9 +588,9 @@ class Game {
 		return this.getLocInfoHTML(this.currentLocation)
 			.then((response) => {
 				this.currentLocInfo.innerHTML = response;
-                if (this.locInfoContainer.className === 'loc-info') {
+				if (this.locInfoContainer.className === 'loc-info') {
 				    this.locInfoContainer.className = 'loc-info show-current';
-                }
+				}
 			});
 	}
 
@@ -646,7 +647,7 @@ class Game {
 			lng: event.latLng.lng()
 		})
 			.then((clickedLocation) => {
-				console.log('click'+clickedLocation);
+				console.log(`click${clickedLocation}`);
 				clickedLocation.locationName = 'Empty Location';
 				this.highlightEmptyLocation(clickedLocation);
 				return this.renderHighlightedLocationTextInfo();
@@ -824,10 +825,10 @@ class Game {
 	 	this.getLocOccupFormHTML(
 	 		this.highlightedLocation
 	 	)
-         .then((response) => {
-            this.occupyFormContainer.innerHTML = response;
-            document.getElementById('loc-name-field').focus();
-         });
+			.then((response) => {
+				this.occupyFormContainer.innerHTML = response;
+				document.getElementById('loc-name-field').focus();
+			});
 	 }
 
 	// editLocationInfoHandler(event) {
@@ -1118,16 +1119,16 @@ class Game {
 	// The function creates a notification with the specified body and header.
 
 	createMessageElement(data) {
-        const type = data.type;
+		const type = data.type;
 		const container = document.createElement('div');
-        let typeClass;
-        if (type === 'msgCreateLoc') {
-            typeClass = 'create-loc-msg';
-        } else if (type === 'msgDeleteLoc') {
-            typeClass = 'del-loc-msg';
-        } else {
-            typeClass = 'update-loc-msg';
-        }
+		let typeClass;
+		if (type === 'msgCreateLoc') {
+			typeClass = 'create-loc-msg';
+		} else if (type === 'msgDeleteLoc') {
+			typeClass = 'del-loc-msg';
+		} else {
+			typeClass = 'update-loc-msg';
+		}
 		container.innerHTML = `<div class="my-message"> 
 	    <div class="my-message-title ${typeClass}"> Notification </div> 
 	    <div class="my-message-body"> ${data.text} </div> 
@@ -1390,14 +1391,15 @@ function initMap() {
 		});
 
 		game.renderOccupiedLocations();
-		let boundsCoords = [
-			{lat: 50.0004, lng: 36.14592},
-			{lat: 50.123, lng: 36.14592},
-			{lat: 50.0004, lng: 36.14592},
-			{lat: 50.0004, lng: 36.14592},
-			{lat: 50.0004, lng: 36.14592},
-		]
-		let gameBounds = new google.maps.Polyline({
+		// let boundsCoords = [
+		// 	{lat: 50.0004, lng: 36.14592},
+		// 	{lat: 50.123, lng: 36.14592},
+		// 	{lat: 50.0004, lng: 36.14592},
+		// 	{lat: 50.0004, lng: 36.14592},
+		// 	{lat: 50.0004, lng: 36.14592},
+		// ]
+		const boundsCoords = game.getGameBounds();
+		const gameBounds = new google.maps.Polyline({
 			path: boundsCoords,
 			geodesic: true,
 			strokeColor: '#FF0000',
