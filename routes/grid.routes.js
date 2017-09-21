@@ -34,9 +34,15 @@ router.get('/bounds', (req, res) => {
 	// 	'toTheNorthEast':
 	// }
 	// }
-	let startPointLoc = new EmptyLocation({ lat: 50.112, lng: 36.249 });
-	console.log(`startP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ${startPointLoc.northWest.lng}`);
-	const endPointLoc = new EmptyLocation({ lat: 49.890, lng: 36.098 });
+	// let startPointLoc = new EmptyLocation({ lat: 50.112, lng: 36.249 });
+	// console.log(`startP!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   ${startPointLoc.northWest.lng}`);
+	// const endPointLoc = new EmptyLocation({ lat: 49.890, lng: 36.098 });
+	// let startPointLoc = new EmptyLocation({ lat: 49.883, lng: 36.442 });
+	// const endPointLoc = new EmptyLocation({ lat: 50.112, lng: 36.249 });
+	// let startPointLoc = new EmptyLocation({ lat: 50.112, lng: 36.249 });
+	// const endPointLoc = new EmptyLocation({ lat: 49.883, lng: 36.442 });
+	let startPointLoc = new EmptyLocation({ lat: 49.890, lng: 36.098 });
+	const endPointLoc = new EmptyLocation({ lat: 50.112, lng: 36.249 });
 	const pointsArr = [];
 
 	pointsArr.push(startPointLoc.northWest);
@@ -62,22 +68,58 @@ function assemblePoints(direction, startPLoc, pointsArr) {
 	// !!! pointsArr.push(startPLoc.northWest);
 	switch (direction) {
 		case 'toTheSouthWest': {
-			console.log(`59 ${startPLoc.northWest.lng}`);
 			const newLng = startPLoc.northWest.lng - 0.001;
-			startPLoc.northWest.lng = newLng;
-			console.log(`61 ${startPLoc.northWest.lng}`);
 			const newPoint = { lat: startPLoc.northWest.lat, lng: newLng };
-			console.log(`63 ${newPoint.lng}`);
 			startPLoc = new EmptyLocation(newPoint);
-			console.log(`65 ${startPLoc.northWest.lng}`);
 			pointsArr.push(startPLoc.northWest);
 			// south west
-			console.log(`mapFeature${startPLoc.getMapFeatureCoords()[1]}`);
 			pointsArr.push(startPLoc.getMapFeatureCoords()[1]);
-			console.log(startPLoc.getMapFeatureCoords()[1]);
 			const newNorthWest = startPLoc.getMapFeatureCoords()[1];
 			startPLoc.northWest = newNorthWest;
-			console.log(`70 ${startPLoc.northWest.lng}`);
+
+			return startPLoc;
+		}
+		case 'toTheSouthEast': {
+			pointsArr.push(startPLoc.getMapFeatureCoords()[3]);
+			pointsArr.push(startPLoc.getMapFeatureCoords()[2]);
+			// go to East
+			const newLng = startPLoc.getMapFeatureCoords()[3].lng + 0.001;
+
+			const newPoint = { lat: startPLoc.getMapFeatureCoords()[2].lat, lng: newLng };
+			startPLoc = new EmptyLocation(newPoint);
+			// pointsArr.push(startPLoc.northWest);
+			// // south west
+			// pointsArr.push(startPLoc.getMapFeatureCoords()[1]);
+			// const newNorthWest = startPLoc.getMapFeatureCoords()[1];
+			// startPLoc.northWest = newNorthWest;
+
+			return startPLoc;
+		}
+		case 'toTheNorthWest': {
+			const newLng = startPLoc.northWest.lng - 0.001;
+			const newLat = startPLoc.northWest.lat + 0.001;
+			const newPoint = { lat: newLat, lng: newLng };
+			startPLoc = new EmptyLocation(newPoint);
+			// north east
+			pointsArr.push(startPLoc.getMapFeatureCoords()[3]);
+			pointsArr.push(startPLoc.northWest);
+			// const newNorthWest = startPLoc.getMapFeatureCoords()[1];
+			// startPLoc.northWest = newNorthWest;
+
+			return startPLoc;
+		}
+		case 'toTheNorthEast': {
+			const newLng = startPLoc.getMapFeatureCoords()[3].lng + 0.001;
+			const newLat = startPLoc.northWest.lat + 0.001;
+			const newPoint = { lat: newLat, lng: newLng };
+			startPLoc = new EmptyLocation(newPoint);
+
+			pointsArr.push(startPLoc.northWest);
+			// north East
+			pointsArr.push(startPLoc.getMapFeatureCoords()[3]);
+
+			// const newNorthWest = startPLoc.getMapFeatureCoords()[1];
+			// startPLoc.northWest = newNorthWest;
 
 			return startPLoc;
 		}
@@ -90,21 +132,24 @@ function assemblePoints(direction, startPLoc, pointsArr) {
 }
 function checkDirection(p1, p2) {
 	let direction = '';
-	if (p1.lat >= p2.lat) {
+	if (p1.lat > p2.lat) {
 		if (p1.lng > p2.lng) {
 			direction = 'toTheSouthWest';
-			if (p1.lng == p2.lng) {
-				direction = 'stop';
-			}
-		} else {
+		} else if (p1.lng < p2.lng) {
 			direction = 'toTheSouthEast';
+		} else {
+			direction = 'stop';
 		}
 	} else if (p1.lat < p2.lat) {
-		if (p1.lng >= p2.lng) {
+		if (p1.lng > p2.lng) {
 			direction = 'toTheNorthWest';
-		} else {
+		} else if (p1.lng < p2.lng) {
 			direction = 'toTheNorthEast';
+		} else {
+			direction = 'stop';
 		}
+	} else {
+		direction = 'stop';
 	}
 	return direction;
 }
