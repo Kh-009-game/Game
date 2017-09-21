@@ -45,13 +45,18 @@ router.get('/bounds', (req, res) => {
 	// const endPointLoc = new EmptyLocation({ lat: 50.112, lng: 36.249 });
 	// let startPointLoc = new EmptyLocation({ lat: 49.890, lng: 36.098 });
 	// const endPointLoc = new EmptyLocation({ lat: 49.883, lng: 36.442 });
+	// const boundsCoords = [
+	// 	{ lat: 49.890, lng: 36.098 },
+	// 	{ lat: 50.112, lng: 36.249 },
+	// 	{ lat: 49.883, lng: 36.442 }
+
+	// ];
 	const boundsCoords = [
-		{ lat: 49.890, lng: 36.098 },
-		{ lat: 50.112, lng: 36.249 },
-		{ lat: 49.883, lng: 36.442 }
-
+		{ lat: 49.864, lng: 36.118 },
+		{ lat: 50.106, lng: 36.118 },
+		{ lat: 50.106, lng: 36.422 },
+		{ lat: 49.864, lng: 36.422 }
 	];
-
 	const pointsArr = [];
 	for (let i = 0; i < boundsCoords.length; i++) {
 		let startPointLoc = new EmptyLocation(boundsCoords[i]);
@@ -62,8 +67,6 @@ router.get('/bounds', (req, res) => {
 		} else {
 			endPointLoc = new EmptyLocation(boundsCoords[i + 1]);
 		}
-
-
 		pointsArr.push(startPointLoc.northWest);
 		// console.dir(pointsArr);
 		// let check = 0;

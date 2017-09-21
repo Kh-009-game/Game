@@ -30,9 +30,10 @@ class Conf {
 
 	static get gameBounds() {
 		return [
-			{ lat: 49.890, lng: 36.098 },
-			{ lat: 50.112, lng: 36.249 },
-			{ lat: 49.894, lng: 36.475 }
+			{ lat: 49.864, lng: 36.118 },
+			{ lat: 50.106, lng: 36.118 },
+			{ lat: 50.106, lng: 36.422 },
+			{ lat: 49.864, lng: 36.422 }
 		];
 	}
 }
