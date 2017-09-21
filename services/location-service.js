@@ -1,12 +1,10 @@
 const Location = require('../models/location-orm');
 
-const EmptyLocation = require('../models/emptyLocation');
+const GridService = require('../services/grid-service');
 const logService = require('../services/log-service');
-const sockets = require('../services/sockets');
-const db = require('../services/db-transport');
 
 
-class LocationService extends EmptyLocation {
+class LocationService extends GridService {
 	constructor(locationData) {
 		super(locationData.northWest);
 
@@ -22,17 +20,16 @@ class LocationService extends EmptyLocation {
 		this.dailyMessage = locationData.dailyMessage || null;
 	}
 
-	doCheckin() {
+	static createClientLocationObjectByIdForUser(locationId, userId) {
+
 	}
 
-	takeDailyBank() {
+	static getAllLocationsForUser(userId) {
+
 	}
 
-	restoreLoyalPopulation() {
-	}
-
-	static getAllLocationsGeoJSON() {
-		return OccupiedLocation.getAllLocations()
+	static getAllLocationsGeoJSONForUser(userId) {
+		return LocationService.getAllLocationsForUser(userId)
 			.then(locArray => new Promise((res) => {
 				const geoObj = {
 					type: 'FeatureCollection',
@@ -60,12 +57,47 @@ class LocationService extends EmptyLocation {
 					});
 				});
 				res(geoObj);
-			})
-
-			);
+			}));
 	}
 
-	static checkLocationOnCoords(coords) {
+	static occupyLocationByUser(userId, locData) {
+
+	}
+
+	static getLocationOnPointForUser(userId, geoData) {
+
+	}
+
+	static checkOwnerOrAdminPermission(locationId, userId, isAdmin) {
+
+	}
+
+	static checkIsCurrentOrAdminPermission(locationId, userId, isAdmin) {
+
+	}
+
+	static checkOccupationOrAdminPermission(locationData, userGeodata, isAdmin) {
+
+	}
+
+	static updateLocation(locationNewData) {
+
+	}
+
+	static deleteLocation(locationId) {
+
+	}
+
+	static doCheckin(locationId) {
+
+	}
+
+	static takeDailyBank(locationId) {
+
+	}
+
+	static restoreLoyalPopulation(locationId) {
+
 	}
 
 	static recalcLocationsLifecycle() {

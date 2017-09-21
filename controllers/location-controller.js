@@ -27,7 +27,7 @@ module.exports.getOccupyForm = (req, res) => {
 };
 
 module.exports.occupyLocation = (req, res, next) => {
-	LocationService.occupyLocation(req)
+	LocationService.occupyLocationByUser(req.decoded.userId, req.body)
 		.then(() => {
 			res.sendStatus(200);
 			// emit update event in service
@@ -36,8 +36,8 @@ module.exports.occupyLocation = (req, res, next) => {
 };
 
 // '/check-location?lat=xxx&lng=xxx'
-module.exports.checkLocationOnPoint = (req, res, next) => {
-	LocationService.checkLocationOnCoordsForUser(
+module.exports.getLocationOnPoint = (req, res, next) => {
+	LocationService.getLocationOnPointForUser(
 		req.decoded.userId, {
 			lat: +req.query.lat,
 			lng: +req.query.lng

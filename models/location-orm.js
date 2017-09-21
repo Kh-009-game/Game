@@ -51,7 +51,7 @@ const Location = sequelize.define('location', {
 		allowNull: false,
 		defaultValue: 10
 	},
-	daily_bank: {
+	bank_take_date: {
 		type: Sequelize.INTEGER,
 		allowNull: false,
 		defaultValue: 0
