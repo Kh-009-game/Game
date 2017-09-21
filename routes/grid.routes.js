@@ -41,25 +41,49 @@ router.get('/bounds', (req, res) => {
 	// const endPointLoc = new EmptyLocation({ lat: 50.112, lng: 36.249 });
 	// let startPointLoc = new EmptyLocation({ lat: 50.112, lng: 36.249 });
 	// const endPointLoc = new EmptyLocation({ lat: 49.883, lng: 36.442 });
-	let startPointLoc = new EmptyLocation({ lat: 49.890, lng: 36.098 });
-	const endPointLoc = new EmptyLocation({ lat: 50.112, lng: 36.249 });
-	const pointsArr = [];
+	// let startPointLoc = new EmptyLocation({ lat: 49.890, lng: 36.098 });
+	// const endPointLoc = new EmptyLocation({ lat: 50.112, lng: 36.249 });
+	// let startPointLoc = new EmptyLocation({ lat: 49.890, lng: 36.098 });
+	// const endPointLoc = new EmptyLocation({ lat: 49.883, lng: 36.442 });
+	const boundsCoords = [
+		{ lat: 49.890, lng: 36.098 },
+		{ lat: 50.112, lng: 36.249 },
+		{ lat: 49.883, lng: 36.442 }
 
-	pointsArr.push(startPointLoc.northWest);
-	console.dir(pointsArr);
-	// let check = 0;
-	// while (startPointLoc.northWest.lat !== endPointLoc.northWest.lat) {
-	while (true) {
-		startPointLoc = assemblePoints(checkDirection(startPointLoc.northWest, endPointLoc.northWest), startPointLoc, pointsArr);
-		// startPointLoc = assemblePoints('toTheSouthWest', startPointLoc, pointsArr);
-		if (!startPointLoc) break;
-		console.log(`47 ${startPointLoc.northWest.lng}`);
+	];
+
+	const pointsArr = [];
+	for (let i = 0; i < boundsCoords.length; i++) {
+		let startPointLoc = new EmptyLocation(boundsCoords[i]);
+		let endPointLoc;
+		if (!boundsCoords[i + 1]) {
+			startPointLoc = new EmptyLocation(boundsCoords[0]);
+			endPointLoc = new EmptyLocation(boundsCoords[boundsCoords.length - 1]);
+		} else {
+			endPointLoc = new EmptyLocation(boundsCoords[i + 1]);
+		}
+
+
+		pointsArr.push(startPointLoc.northWest);
+		// console.dir(pointsArr);
+		// let check = 0;
+		// while (startPointLoc.northWest.lat !== endPointLoc.northWest.lat) {
+
+		while (true) {
+			const direction = checkDirection(startPointLoc.northWest, endPointLoc.northWest);
+			// let startPointLoc = boundsCoords[i];
+			startPointLoc = assemblePoints(direction, startPointLoc, pointsArr);
+			// startPointLoc = assemblePoints('toTheSouthWest', startPointLoc, pointsArr);
+			if (!startPointLoc) break;
+		// console.log(`47 ${startPointLoc.northWest.lng}`);
 		// check += 1;
-		console.log(`length${pointsArr.length}`);
+		// console.log(`length${pointsArr.length}`);
 		// if (check >= 1000) break;
+		}
+		pointsArr.push(endPointLoc.northWest);
 	}
-	pointsArr.push(endPointLoc.northWest);
-	console.log(pointsArr);
+
+	// console.log(pointsArr);
 	res.json(pointsArr);
 });
 
@@ -127,7 +151,7 @@ function assemblePoints(direction, startPLoc, pointsArr) {
 			return false;
 		}
 		default:
-			break;
+			return false;
 	}
 }
 function checkDirection(p1, p2) {
