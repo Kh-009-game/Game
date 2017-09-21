@@ -66,7 +66,7 @@ body {
 }
 
 .location-menu {
-  position: absolute;
+  position: fixed;
   background-color: #fff;
   bottom: 0;
   left: 0;
@@ -74,6 +74,11 @@ body {
   color: #4c4c4c;
   padding: 10px 0 0;
   box-shadow: 0 0 7px 0px rgba(0,0,0,.2);
+  transform: translateY(100%);
+  transition: transform .4s ease-in-out;
+}
+.location-menu.open {
+  transform: translateY(0);
 }
 .location-menu h2 {
   margin: 0;
@@ -119,9 +124,20 @@ body {
   position: absolute;
   right: 10px;
   bottom: 100%;
-  transform: translateY(40px);
+  transform: translateY(0);
   display: flex;
   flex-direction: column;
+  transition: transform .4s ease-in-out;
+}
+.location-menu.open .main-btns {
+  transform: translateY(40px);
+}
+.hide-btn {
+  transform: rotate(180deg);
+  transition: transform .4s ease-in-out;
+}
+.location-menu.open .hide-btn {
+  transform: rotate(0);
 }
 .main-btns .btn {
   width: 1.5em;
@@ -149,8 +165,17 @@ body {
 .user-info {
   display: none;
 }
+.user-info a {
+  color: #4c4c4c;
+  text-decoration: none;
+}
+.user-info a:hover,
+.user-info a:focus,
+.user-info a:active {
+  color: #7e76bc;
+}
 
-@media screen and (min-width: 768px) {
+@media screen and (min-width: 769px) {
   .main-block {
     position: absolute;
     left: 10px;
@@ -158,12 +183,14 @@ body {
     bottom:10px;
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
   }
   .header-menu,
   .location-menu  {
     position: static;
   }
   .location-menu {
+    transform: none;
   }
   .main-btns {
     position: fixed;
@@ -180,6 +207,9 @@ body {
     box-shadow: 0 0 7px 0px rgba(0,0,0,.2);
   }
   .header-menu .btn {
+    display: none;
+  }
+  .main-btns .hide-btn {
     display: none;
   }
 }
