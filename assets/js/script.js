@@ -819,8 +819,7 @@ class Game {
 		const form = event.target;
 		const locName = form['location-name'].value;
 		const dailyMsg = form['daily-msg'].value;
-		const locID = this.currentLocation.locationId;
-		console.log(locName, dailyMsg);
+		const locID = this.highlightedLocation.locationId;		
 
 		socket.emit('editLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
 		// this.currentLocation.locationName = locName;
