@@ -1,14 +1,7 @@
 const Sequelize = require('sequelize');
-const sequelize = require('../services/orm-service');
+const sequelize = require('../services/db-service-orm');
 
 const Location = sequelize.define('location', {
-	loc_id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		unique: true,
-		allowNull: false,
-		primaryKey: true
-	},
 	lat: {
 		type: Sequelize.DECIMAL,
 		unique: 'coords',
@@ -36,10 +29,7 @@ const Location = sequelize.define('location', {
 	},
 	daily_msg: {
 		type: Sequelize.TEXT,
-		defaultValue: '',
-		validate: {
-			isAlphanumeric: true
-		}
+		defaultValue: ''
 	},
 	population: {
 		type: Sequelize.INTEGER,
@@ -52,15 +42,17 @@ const Location = sequelize.define('location', {
 		defaultValue: 10
 	},
 	bank_take_date: {
-		type: Sequelize.INTEGER,
+		type: Sequelize.DATE,
 		allowNull: false,
-		defaultValue: 0
+		defaultValue: Sequelize.NOW
 	},
 	checkin_date: {
 		type: Sequelize.DATE,
 		allowNull: false,
 		defaultValue: Sequelize.NOW
 	}
+}, {
+	underscored: true
 });
 
 module.exports = Location;

@@ -1,14 +1,14 @@
 const Sequelize = require('sequelize');
-const sequelize = require('../services/orm-service');
+const sequelize = require('../services/db-service-orm');
 
 const User = sequelize.define('user', {
-	id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		unique: true,
-		allowNull: false,
-		primaryKey: true
-	},
+	// id: {
+	// 	type: Sequelize.INTEGER,
+	// 	autoIncrement: true,
+	// 	unique: true,
+	// 	allowNull: false,
+	// 	primaryKey: true
+	// },
 	name: {
 		type: Sequelize.STRING,
 		unique: true,
@@ -45,6 +45,8 @@ const User = sequelize.define('user', {
 		allowNull: false,
 		defaultValue: false
 	}
+}, {
+	underscored: true
 });
 
 module.exports = User;

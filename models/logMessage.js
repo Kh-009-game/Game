@@ -1,14 +1,7 @@
 const Sequelize = require('sequelize');
-const sequelize = require('../services/orm-service');
+const sequelize = require('../services/db-service-orm');
 
 const logMessage = sequelize.define('log_message', {
-	id: {
-		type: Sequelize.INTEGER,
-		autoIncrement: true,
-		unique: true,
-		allowNull: false,
-		primaryKey: true
-	},
 	type: {
 		type: Sequelize.STRING,
 		allowNull: false,
@@ -20,6 +13,8 @@ const logMessage = sequelize.define('log_message', {
 	message: {
 		type: Sequelize.TEXT
 	}
+}, {
+	underscored: true
 });
 
 module.exports = logMessage;
