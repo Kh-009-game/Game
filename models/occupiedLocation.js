@@ -62,21 +62,12 @@ class OccupiedLocation extends EmptyLocation {
 	}
 
 	editLocation() {
-		return global.db(
-			`update locations2
-			 set loc_name = '${this.locationName}',
-						daily_msg = '${this.dailyMessage}'
-			 where loc_id = ${this.locationId}`
-		);
-	}
-
-	editLocationWS(data) {
-		return global.db.none(
-			`update locations2
-			set loc_name = '${data.locationName}',
-			daily_msg = '${data.dailyMessage}'
-			where loc_id = ${data.locationId}`
-		);
+		return global.db.none(`
+			update locations2
+			set loc_name = '${this.locationName}',
+			daily_msg = '${this.dailyMessage}'
+			where loc_id = ${this.locationId}
+		`);
 	}
 
 	doCheckin() {
