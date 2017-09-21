@@ -1,5 +1,5 @@
 <% if (location.isHighlighted) { %> 
-  <button class="close-btn" id="close-btn">X</button>
+  <button class="close-btn" id="close-btn"><i class="material-icons">cancel</i></button>
 <% } %>
 <div>
   <h2 class="info-heading">
@@ -13,16 +13,19 @@
     <% } %>
   </h2>							
   <% if (location.dailyMessage) { %> 
-    <span><%= location.dailyMessage %></span>
+    <span><i class="material-icons">textsms</i> <%= location.dailyMessage %></span>
   <% } %>  									
   <% if (location.population) { %>
-    <span>Loyalty: <%= location.loyalPopulation %>/<%= location.population %></span>
+    <span><i class="material-icons">face</i> <%= location.loyalPopulation %>/<%= location.population %></span>
   <% } %>
   <% if (location.dailyBank !== undefined) { %>
-    <span>Bank: <%= location.dailyBank %></span>
+    <span><i class="material-icons">attach_money</i> <%= location.dailyBank %></span>
   <% } %>  
-  <span>Location coords: <%= location.northWest.lat %> <%= location.northWest.lng %></span>
+  <% if(isAdmin)  { %> 
+    <span>Location coords: <%= location.northWest.lat %> <%= location.northWest.lng %></span>
+  <% } %>
 </div>
+<div class="form-btns">
 <% if (!location.masterId && location.isCurrent) { %>
   <button class="btn" id="occupy-btn">Occupy</button>
 <% } %>
@@ -41,3 +44,4 @@
 <% if (( location.isMaster || isAdmin ) && !location.isCurrent && ( location.loyalPopulation < location.population )) { %>
   <button class="btn feed-btn" id="feed-btn">Feed</button>
 <% } %>
+</div>

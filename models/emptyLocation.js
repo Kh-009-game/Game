@@ -1,3 +1,5 @@
+'use strict';
+
 class EmptyLocation {
 	constructor(geoData) {
 		this.northWest = {};

@@ -27,6 +27,15 @@ class Conf {
 	static get emailPass() {
 		return 'SoftServe';
 	}
+
+	static get gameBounds() {
+		return [
+			{ lat: 49.864, lng: 36.118 },
+			{ lat: 50.106, lng: 36.118 },
+			{ lat: 50.106, lng: 36.422 },
+			{ lat: 49.864, lng: 36.422 }
+		];
+	}
 }
 
 module.exports = Conf;

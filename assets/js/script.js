@@ -30,6 +30,7 @@ class Game {
 		this.occupiedLocationsGroundOverlays = {};
 		this.occupiedLocationsIcons = {};
 		this.showUserLocationsBtn = document.getElementById('showUserLocationsButton');
+		// this.gameBounds = options.gameBounds || this.getGameBounds(userDefinedBounds);
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
 			// let target = event.target;
@@ -278,6 +279,26 @@ class Game {
 
 	// GET LOCATIONS INFO FROM DB METHODS	
 
+	getGameBounds() {
+		return new Promise((res, rej) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', '/api/grid/bounds');
+			xhr.send();
+			xhr.addEventListener('load', (e) => {
+				const xhttp = e.target;
+				if (xhttp.status === 200) {
+					const response = JSON.parse(xhttp.response);
+					const pointsArr = [];
+					for (let i = 0; i < response.length; i++) {
+						pointsArr.push(response[i]);
+					}
+					res(pointsArr);
+				} else {
+					rej(xhttp.response);
+				}
+			});
+		});
+	}
 	// get ALL occupied locations short info from db
 	getOccupiedLocations() {
 		return new Promise((res, rej) => {
@@ -571,9 +592,9 @@ class Game {
 		return this.getLocInfoHTML(this.currentLocation)
 			.then((response) => {
 				this.currentLocInfo.innerHTML = response;
-                if (this.locInfoContainer.className === 'loc-info') {
+				if (this.locInfoContainer.className === 'loc-info') {
 				    this.locInfoContainer.className = 'loc-info show-current';
-                }
+				}
 			});
 	}
 
@@ -630,7 +651,7 @@ class Game {
 			lng: event.latLng.lng()
 		})
 			.then((clickedLocation) => {
-				console.log(clickedLocation);
+				console.log(`click${clickedLocation}`);
 				clickedLocation.locationName = 'Empty Location';
 				this.highlightEmptyLocation(clickedLocation);
 				return this.renderHighlightedLocationTextInfo();
@@ -819,7 +840,7 @@ class Game {
 		const form = event.target;
 		const locName = form['location-name'].value;
 		const dailyMsg = form['daily-msg'].value;
-		const locID = this.highlightedLocation.locationId;		
+		const locID = this.highlightedLocation.locationId;
 
 		socket.emit('editLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
 		// this.currentLocation.locationName = locName;
@@ -1102,16 +1123,16 @@ class Game {
 	// The function creates a notification with the specified body and header.
 
 	createMessageElement(data) {
-        const type = data.type;
+		const type = data.type;
 		const container = document.createElement('div');
-        let typeClass;
-        if (type === 'msgCreateLoc') {
-            typeClass = 'create-loc-msg';
-        } else if (type === 'msgDeleteLoc') {
-            typeClass = 'del-loc-msg';
-        } else {
-            typeClass = 'update-loc-msg';
-        }
+		let typeClass;
+		if (type === 'msgCreateLoc') {
+			typeClass = 'create-loc-msg';
+		} else if (type === 'msgDeleteLoc') {
+			typeClass = 'del-loc-msg';
+		} else {
+			typeClass = 'update-loc-msg';
+		}
 		container.innerHTML = `<div class="my-message"> 
 	    <div class="my-message-title ${typeClass}"> Notification </div> 
 	    <div class="my-message-body"> ${data.text} </div> 
@@ -1374,9 +1395,26 @@ function initMap() {
 		});
 
 		game.renderOccupiedLocations();
-		// setTimeout(() => {
-		// 	game.renderOccupiedLocations();
-		// }, 5000);
+
+		game.getGameBounds()
+			.then((resArray) => {
+				const gameBounds = new google.maps.Polyline({
+					path: resArray,
+					geodesic: true,
+					strokeColor: '#FF0000',
+					strokeOpacity: 1.0,
+					strokeWeight: 2
+				});
+
+				gameBounds.setMap(map);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+
+		setTimeout(() => {
+			game.renderOccupiedLocations();
+		}, 5000);
 
 		function initMapInteraction() {
 			navigator.geolocation.getCurrentPosition((position) => {
