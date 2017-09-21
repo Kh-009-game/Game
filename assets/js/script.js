@@ -1391,14 +1391,25 @@ function initMap() {
 		});
 
 		game.renderOccupiedLocations();
-		// let boundsCoords = [
-		// 	{lat: 50.0004, lng: 36.14592},
-		// 	{lat: 50.123, lng: 36.14592},
-		// 	{lat: 50.0004, lng: 36.14592},
-		// 	{lat: 50.0004, lng: 36.14592},
-		// 	{lat: 50.0004, lng: 36.14592},
-		// ]
-		const boundsCoords = game.getGameBounds();
+		let boundsCoords = [ { lat: 50.112, lng: 36.23832 },
+			{ lat: 50.112, lng: 36.23808 },
+			{ lat: 50.1111, lng: 36.23808 },
+			{ lat: 50.1111, lng: 36.22784 },
+			{ lat: 50.1102, lng: 36.22784 },
+			{ lat: 50.1102, lng: 36.2176 },
+			{ lat: 50.1093, lng: 36.2176 },
+			{ lat: 50.1093, lng: 36.20736 },
+			{ lat: 50.1084, lng: 36.20736 },
+			{ lat: 50.1084, lng: 36.19712 },
+			{ lat: 50.10750000000001, lng: 36.19712 },
+			{ lat: 50.1075, lng: 36.18688 },
+			{ lat: 50.1066, lng: 36.18688 },
+			{ lat: 50.1066, lng: 36.17664 },
+			{ lat: 50.1057, lng: 36.17664 },
+			{ lat: 50.1057, lng: 36.1664 },
+			{ lat: 50.1048, lng: 36.1664 } ]
+		  
+		// const boundsCoords = game.getGameBounds();
 		const gameBounds = new google.maps.Polyline({
 			path: boundsCoords,
 			geodesic: true,
