@@ -41,7 +41,7 @@ const Location = sequelize.define('location', {
 		allowNull: false,
 		defaultValue: 10
 	},
-	bank_take_date: {
+	taking_bank_date: {
 		type: Sequelize.DATE,
 		allowNull: false,
 		defaultValue: Sequelize.NOW

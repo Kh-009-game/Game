@@ -1,3 +1,4 @@
+const Sequelize = require('sequelize');
 const sequelize = require('./db-service-orm');
 const Location = require('../models/location-orm');
 const User = require('../models/user-orm');
@@ -21,16 +22,19 @@ User.sync({ force: true })
 	}, {
 		include: [User]
 	}))
-	.then(() => {
-
-	});
-
-// Location.sync()
-// 	.then(() => {
-// 		Location.create({
-// 			lat: 50.002,
-// 			lng: 60.003,
-// 			name: 'Merry ABC',
-// 			daily_msg: 'Hi-ish'
-// 		});
-// 	});
+	.then(() => User.findById(1))
+	.then(user => Location.findById(1)
+		.then(location => user.hasLocation(location))
+		.then((result) => {
+			console.log(result);
+		})
+	)
+	.then(() => Location.update({
+		checkin_date: new Date(),
+		taking_bank_date: new Date()
+	}, {
+		where: {
+			id: 1,
+			user_id: 1
+		}
+	}));
