@@ -22,11 +22,22 @@ router.get('/bounds', (req, res) => {
 	// 	{ lat: 49.883, lng: 36.442 }
 
 	// ];
+	// const boundsCoords = [
+	// 	{ lat: 49.864, lng: 36.118 },
+	// 	{ lat: 50.106, lng: 36.118 },
+	// 	{ lat: 50.106, lng: 36.422 },
+	// 	{ lat: 49.864, lng: 36.422 }
+	// ];
 	const boundsCoords = [
-		{ lat: 49.864, lng: 36.118 },
-		{ lat: 50.106, lng: 36.118 },
-		{ lat: 50.106, lng: 36.422 },
-		{ lat: 49.864, lng: 36.422 }
+		{ lat: 49.850, lng: 36.118 },
+		{ lat: 49.900, lng: 36.125 },
+		{ lat: 49.970, lng: 36.140 },
+		{ lat: 49.999, lng: 36.178 },
+		{ lat: 50.050, lng: 36.190 },
+		{ lat: 50.100, lng: 36.400 },
+		{ lat: 49.970, lng: 36.360 },
+		{ lat: 49.900, lng: 36.300 },
+		{ lat: 49.850, lng: 36.220 }
 	];
 	const pointsArr = [];
 	for (let i = 0; i < boundsCoords.length; i++) {
@@ -85,14 +96,13 @@ function assemblePoints(direction, startPLoc, pointsArr) {
 			return startPLoc;
 		}
 		case 'toTheNorthEast': {
+			pointsArr.push(startPLoc.getMapFeatureCoords()[3]);
 			const newLng = startPLoc.getMapFeatureCoords()[3].lng + 0.001;
 			const newLat = startPLoc.northWest.lat + 0.001;
 			const newPoint = { lat: newLat, lng: newLng };
 			startPLoc = new EmptyLocation(newPoint);
 
 			pointsArr.push(startPLoc.northWest);
-			// north East
-			pointsArr.push(startPLoc.getMapFeatureCoords()[3]);
 			return startPLoc;
 		}
 		case 'stop': {
