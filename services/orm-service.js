@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('./db-service-orm');
 const Location = require('../models/location-orm');
+const LogMessage = require('../models/logMessage');
 const User = require('../models/user-orm');
 
 Location.User = Location.belongsTo(User);
@@ -22,19 +23,30 @@ User.sync({ force: true })
 	}, {
 		include: [User]
 	}))
-	.then(() => User.findById(1))
-	.then(user => Location.findById(1)
-		.then(location => user.hasLocation(location))
-		.then((result) => {
-			console.log(result);
-		})
-	)
-	.then(() => Location.update({
-		checkin_date: new Date(),
-		taking_bank_date: new Date()
-	}, {
+	.then(() => LogMessage.sync({ force: true }))
+	.then(() => LogMessage.create({
+		type: 'system',
+		status: 'daily-event',
+		message: 'OK'
+	}))
+	.then(() => LogMessage.max('created_at', {
 		where: {
-			id: 1,
-			user_id: 1
+			type: 'system',
+			status: 'daily-event'
 		}
-	}));
+	}))
+	.then(max => Location.findById(1)
+		.then((location) => {
+			console.dir(location);
+			console.dir(max);
+		})
+	);
+// .then(() => Location.update({
+// 	checkin_date: new Date(),
+// 	taking_bank_date: new Date()
+// }, {
+// 	where: {
+// 		id: 1,
+// 		user_id: 1
+// 	}
+// }));

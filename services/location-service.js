@@ -1,109 +1,117 @@
 const Location = require('../models/location-orm');
 
-const GridService = require('../services/grid-service');
+const GridObject = require('../services/grid-service');
 const logService = require('../services/log-service');
 
+function createClientLocationObjectByIdForUser(locationId, userId) {
+	return Location.findById(locationId)
+		.then((location) => {
+			return new ClientLocationObject(location.dataValues)
+		});
+}
 
-class LocationService extends GridService {
-	constructor(locationData) {
-		super(locationData.northWest);
+class ClientLocationObject() extends GridObject {
+	constructor(location, userId) {
+		super({
+			lat: location.lat,
+			lng: location.lng
+		});
 
-		this.masterId = locationData.userId;
-		this.masterName = locationData.userName;
-		this.locationId = locationData.locationId || null;
-		this.population = locationData.population || 10;
-		this.dailyBank = locationData.dailyBank || 0;
-		this.loyalPopulation = locationData.loyalPopulation || 10;
-		this.dailyCheckin = locationData.dailyCheckin === undefined ? true : locationData.dailyCheckin;
-		this.creationDate = locationData.creationDate || new Date().toISOString();
-		this.locationName = locationData.locationName || null;
-		this.dailyMessage = locationData.dailyMessage || null;
-	}
-
-	static createClientLocationObjectByIdForUser(locationId, userId) {
-		return Location.findById(locationId)
-			.then((location) => {
-
-			});
-	}
-
-	static getAllLocationsForUser(userId) {
-
-	}
-
-	static getAllLocationsGeoJSONForUser(userId) {
-		return LocationService.getAllLocationsForUser(userId)
-			.then(locArray => new Promise((res) => {
-				const geoObj = {
-					type: 'FeatureCollection',
-					features: []
-				};
-				locArray.forEach((item) => {
-					geoObj.features.push({
-						type: 'Feature',
-						id: item.locationId,
-						properties: {
-							color: 'gray',
-							background: 'gray',
-							info: {
-								masterId: item.masterId,
-								dailyBank: item.dailyBank > 0,
-								population: item.population
-							}
-						},
-						geometry: {
-							type: 'Polygon',
-							coordinates: [
-								item.mapFeatureGeometry
-							]
-						}
-					});
-				});
-				res(geoObj);
-			}));
-	}
-
-	static occupyLocationByUser(userId, locData) {
-
-	}
-
-	static getLocationOnPointForUser(userId, geoData) {
-
-	}
-
-	static checkOwnerOrAdminPermission(locationId, userId, isAdmin) {
-
-	}
-
-	static checkIsCurrentOrAdminPermission(locationId, userId, isAdmin) {
-
-	}
-
-	static checkOccupationOrAdminPermission(locationData, userGeodata, isAdmin) {
-
-	}
-
-	static updateLocation(locationNewData) {
-
-	}
-
-	static deleteLocation(locationId) {
-
-	}
-
-	static doCheckin(locationId) {
-
-	}
-
-	static takeDailyBank(locationId) {
-
-	}
-
-	static restoreLoyalPopulation(locationId) {
-
-	}
-
-	static recalcLocationsLifecycle() {
+		this.masterId = location.userId;
+		this.masterName = location.userName;
+		this.locationId = location.locationId || null;
+		this.population = location.population || 10;
+		this.hasDailyBank = location.dailyBank || 0;
+		this.loyalPopulation = location.loyalPopulation || 10;
+		this.dailyCheckin = location.dailyCheckin === undefined ? true : locationData.dailyCheckin;
+		this.creationDate = location.created_at || new Date().toISOString();
+		this.locationName = location.name || null;
+		this.dailyMessage = location.daily_msg;
+		this.isMaster = location.user_id === userId;
 	}
 }
-module.exports = LocationService;
+
+function getAllLocationsForUser(userId) {
+	return Location.findAll()
+		.then((locations) => {
+
+		});
+}
+
+function getAllLocationsGeoJSONForUser(userId) {
+	return getAllLocationsForUser(userId)
+		.then(locArray => new Promise((res) => {
+			const geoObj = {
+				type: 'FeatureCollection',
+				features: []
+			};
+			locArray.forEach((item) => {
+				geoObj.features.push({
+					type: 'Feature',
+					id: item.locationId,
+					properties: {
+						color: 'gray',
+						background: 'gray',
+						info: {
+							masterId: item.masterId,
+							dailyBank: item.dailyBank > 0,
+							population: item.population
+						}
+					},
+					geometry: {
+						type: 'Polygon',
+						coordinates: [
+							item.mapFeatureGeometry
+						]
+					}
+				});
+			});
+			res(geoObj);
+		}));
+}
+
+function occupyLocationByUser(userId, locData) {
+
+}
+
+function getLocationOnPointForUser(userId, geoData) {
+
+}
+
+function checkOwnerOrAdminPermission(locationId, userId, isAdmin) {
+
+}
+
+function checkIsCurrentOrAdminPermission(locationId, userId, isAdmin) {
+
+}
+
+function checkOccupationOrAdminPermission(locationData, userGeodata, isAdmin) {
+
+}
+
+function updateLocation(locationNewData) {
+
+}
+
+function deleteLocation(locationId) {
+
+}
+
+function doCheckin(locationId) {
+
+}
+
+function takeDailyBank(locationId) {
+
+}
+
+function restoreLoyalPopulation(locationId) {
+
+}
+
+function recalcLocationsLifecycle() {
+}
+
+module.exports.createClientLocationObjectByIdForUser = createClientLocationObjectByIdForUser;
+module.exports.createClientLocationObjectByIdForUser = createClientLocationObjectByIdForUser;
