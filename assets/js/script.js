@@ -8,10 +8,12 @@ class Game {
 		// use template for output
 		options = options || {};
 
-		this.locInfoContainer = options.locInfoContainer || document.getElementById('loc-info');
-		this.clickedLocInfo = options.locInfoContainer || document.getElementById('clicked-loc-info');
-		this.currentLocInfo = options.locInfoContainer || document.getElementById('current-loc-info');
-		this.occupyFormContainer = options.locInfoContainer || document.getElementById('occupy-form');
+		this.locInfoContainer = options.locInfoContainer || document.querySelector('.loc-info');
+		this.locInfoBlock = options.locInfoContainer || document.querySelector('.location-block');
+		this.locInfoMenu = options.locInfoContainer || document.querySelector('.location-menu');
+		this.clickedLocInfo = options.locInfoContainer || this.locInfoContainer;
+		this.currentLocInfo = options.locInfoContainer || this.locInfoContainer;
+		this.occupyFormContainer = options.locInfoContainer || document.querySelector('.form-container');
 
 		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
 			bubbles: true
@@ -29,7 +31,7 @@ class Game {
 		this.occupiedLocationsMapFeatures = {};
 		this.occupiedLocationsGroundOverlays = {};
 		this.occupiedLocationsIcons = {};
-		this.showUserLocationsBtn = document.getElementById('showUserLocationsButton');
+		this.showUserLocationsBtn = document.getElementById('show-user-location');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
 			// let target = event.target;
@@ -38,20 +40,6 @@ class Game {
 		this.locInfoContainer.addEventListener('click', (event) => {
 			let target = event.target;
 
-			if (target.closest('#hide-btn')) {
-				target = target.closest('#btn-hide');
-				this.locInfoContainer.classList.add('hide');
-				// hide #loc-info
-				return;
-			}
-
-			if (target.closest('#show-btn')) {
-				target = target.closest('#show-btn');
-				this.locInfoContainer.classList.remove('hide');
-
-				// show #loc-info
-				return;
-			}
 			if (target.closest('#close-btn')) {
 				target = target.closest('#close-btn');
 				this.removeHighlight();
@@ -100,7 +88,7 @@ class Game {
 				this.restorePopulation();
 			}
 		});
-		this.locInfoContainer.addEventListener('submit', (event) => {
+		this.occupyFormContainer.addEventListener('submit', (event) => {
 			const form = event.target;
 			if (form.getAttribute('name') === 'occup-form') {
 				this.occupySubmitHandler(event);
@@ -571,8 +559,9 @@ class Game {
 		return this.getLocInfoHTML(this.currentLocation)
 			.then((response) => {
 				this.currentLocInfo.innerHTML = response;
-                if (this.locInfoContainer.className === 'loc-info') {
-				    this.locInfoContainer.className = 'loc-info show-current';
+                if (this.locInfoBlock.className === 'location-block') {
+					this.locInfoBlock.className = 'location-block show-current';
+						this.locInfoMenu.classList.add('open');
                 }
 			});
 	}
@@ -669,7 +658,7 @@ class Game {
 		return this.getLocInfoHTML(this.highlightedLocation)
 			.then((response) => {
 				this.clickedLocInfo.innerHTML = response;
-				this.locInfoContainer.className = 'loc-info show-clicked';
+				this.locInfoBlock.className = 'location-block show-clicked';
 			});
 	}
 
@@ -707,7 +696,7 @@ class Game {
 		this.getLocOccupFormHTML()
 			.then((response) => {
 				this.occupyFormContainer.innerHTML = response;
-				this.locInfoContainer.className = 'loc-info show-form';
+				this.locInfoBlock.className = 'location-block show-form';
 				document.getElementById('loc-name-field').focus();
 			})
 			.catch((err) => {
@@ -719,7 +708,7 @@ class Game {
 		this.getClickedLocOccupFormHTML()
 			.then((response) => {
 				this.occupyFormContainer.innerHTML = response;
-				this.locInfoContainer.className = 'loc-info show-form';
+				this.locInfoBlock.className = 'location-block show-form';
 				document.getElementById('loc-name-field').focus();
 			})
 			.catch((err) => {
@@ -803,8 +792,8 @@ class Game {
 	}
 
 	 showEditingLocForm() {
-	 	this.locInfoContainer.className = 'loc-info';
-	 	this.locInfoContainer.classList.add('show-form');
+	 	this.locInfoBlock.className = 'location-block';
+	 	this.locInfoBlock.classList.add('show-form');
 	 	this.getLocOccupFormHTML(
 	 		this.highlightedLocation
 	 	)
@@ -844,7 +833,7 @@ class Game {
 
 	hideOccupationForm() {
 		const locInfoClass = this.highlightedLocation ? 'show-clicked' : 'show-current';
-		this.locInfoContainer.className = 'loc-info';
+		this.locInfoBlock.className = 'location-block';
 		this.locInfoContainer.classList.add(locInfoClass);
 		this.occupyFormContainer.innerHTML = '';
 	}
@@ -1025,7 +1014,7 @@ class Game {
 
 	// GOOGLE MAP AND HTML5 GEOLOCATION INTERACTION METHODS
 	refreshUserGeodata(coords) {
-		const locInfoClassList = this.locInfoContainer.className;
+		const locInfoClassList = this.locInfoBlock.className;
 		this.setUserGeoData(coords);
 		this.renderCurrentUserMarker();
 
@@ -1048,8 +1037,8 @@ class Game {
 			// .then(() => this.renderHighlightedLocationTextInfo())
 			.then(() => {
 				// do not change displaying element in loc-info;
-				this.locInfoContainer.className = locInfoClassList === 'loc-info' ?
-					this.locInfoContainer.className :
+				this.locInfoBlock.className = locInfoClassList === 'location-block' ?
+					this.locInfoBlock.className :
 					locInfoClassList;
 			})
 			.catch((err) => {
