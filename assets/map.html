@@ -27,34 +27,53 @@
                 <li><a href="#">Location #3</a></li>
             </ul>
         </div>
-        <div class="location-menu">
-            <div class="main-btns">
-                <button class="btn" type="button"><i class="material-icons">view_module</i></button>
-                <button class="btn" type="button"><i class="material-icons">my_location</i></button>
-                <button class="btn hide-btn" type="button"><i class="material-icons">keyboard_arrow_down</i></button>
-            </div>
-            <div class="location-info">
-                <h2>LocationName (USER)</h2>
-                <p><i class="icon material-icons">message</i> message</p>
-                <p>
-                    <span><i class="icon material-icons">accessibility</i> 7/10</span>
-                    <span><i class="icon material-icons">account_balance</i> 100</span>  
-                </p>
-            </div>
-            <div class="location-buttons">
-                <a href="#" class="bottom-menu--item">
-                    <i class="material-icons">mode_edit</i>
-                </a>
-                <a href="#" class="bottom-menu--item">
-                    <i class="material-icons">monetization_on</i>
-                </a>
-                <a href="#" class="bottom-menu--item">
-                    <i class="material-icons">shopping_basket</i>
-                </a>
-                <a href="#" class="bottom-menu--item">
-                    <i class="material-icons">delete_forever</i>
-                </a>
-            </div>
+        <div class="location-menu open">
+
+            <form action="">
+                <div class="main-btns">
+                    <button class="btn" type="button"><i class="material-icons">view_module</i></button>
+                    <button class="btn" type="button"><i class="material-icons">my_location</i></button>
+                    <button class="btn hide-btn" type="button"><i class="material-icons">keyboard_arrow_down</i></button>
+                </div>
+                <div class="location-info ">
+                    <!-- <h2>LocationName (USER)</h2>
+                    <p><i class="icon material-icons">message</i> message</p>
+                    <p>
+                        <span><i class="icon material-icons">accessibility</i> 7/10</span>
+                        <span><i class="icon material-icons">account_balance</i> 100</span>  
+                    </p> -->
+                        <div class="form-block">
+                            <div class="form-item">
+                                <label for="location-name">Location name:</label>			
+                                <input type="name" name="location-name" placeholder="Location name" value="" required>				
+                            </div>
+                            <div class="form-item">
+                                <label for="daily-msg-field">Daily message:</label>		
+                                <textarea name="daily-msg" id="daily-msg-field" placeholder="Your message here ..."></textarea>
+                            </div>		
+                        </div>
+                </div>
+                <div class="location-buttons">
+                        
+                        <div class="form-btns">
+                            <button class="btn">Occupy</button>
+                            <button type="reset" class="btn">Cancel</button>
+                        </div>
+                    <!-- <a href="#" class="bottom-menu--item">
+                        <i class="material-icons">mode_edit</i>
+                    </a>
+                    <a href="#" class="bottom-menu--item">
+                        <i class="material-icons">monetization_on</i>
+                    </a>
+                    <a href="#" class="bottom-menu--item">
+                        <i class="material-icons">shopping_basket</i>
+                    </a>
+                    <a href="#" class="bottom-menu--item">
+                        <i class="material-icons">delete_forever</i>
+                    </a> -->
+                </div>
+
+            </form>
         </div>
     </div>
     <div id="map" class="map">
