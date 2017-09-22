@@ -161,7 +161,15 @@ body {
   background-color: #58568c;
 }
 
-
+.user-info {
+    margin: 15px 0;
+    flex: 1 1 auto;
+    display: block;
+    background-color: #fff; 
+    color: #4c4c4c;
+    padding: 10px;
+    box-shadow: 0 0 7px 0px rgba(0,0,0,.2);
+  }
 .user-info {
   display: none;
 }
@@ -189,25 +197,15 @@ body {
   .location-menu  {
     position: static;
   }
-  .location-menu {
+  .location-menu,
+  .location-menu.open,
+  .location-menu.open .main-btns {
     transform: none;
   }
   .main-btns {
     position: fixed;
     bottom: 0;
     transform: translateY(0);
-  }
-  .user-info {
-    margin: 15px 0;
-    flex: 1 1 auto;
-    display: block;
-    background-color: #fff; 
-    color: #4c4c4c;
-    padding: 10px;
-    box-shadow: 0 0 7px 0px rgba(0,0,0,.2);
-  }
-  .header-menu .btn {
-    display: none;
   }
   .main-btns .hide-btn {
     display: none;
