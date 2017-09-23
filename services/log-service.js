@@ -24,6 +24,15 @@ class LogService {
 			message: msgProps.message
 		});
 	}
+
+	static getLastLifeCycleEventDate() {
+		return LogMessage.max('created_at', {
+			where: {
+				type: 'system',
+				status: 'daily-event'
+			}
+		});
+	}
 }
 
 module.exports = LogService;

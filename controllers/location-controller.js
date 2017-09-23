@@ -2,15 +2,7 @@ const LocationService = require('../services/location-service');
 const svgTemplate = require('../views/svg-tmpl');
 
 module.exports.getAllLocations = (req, res, next) => {
-	LocationService.getAllLocationsForUser(req.decoded.userId)
-		.then((locations) => {
-			res.json(locations);
-		})
-		.catch(err => next(err));
-};
-
-module.exports.getAllLocationsGeoJSON = (req, res, next) => {
-	LocationService.getAllLocationsGeoJSONForUser(req.decoded.userId)
+	LocationService.getAllClientLocationObjectsForUser(req.decoded.userId)
 		.then((locations) => {
 			res.json(locations);
 		})

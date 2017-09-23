@@ -1,80 +1,92 @@
 const Location = require('../models/location-orm');
-
+const User = require('../models/user-orm');
 const EmptyLocation = require('../services/grid-service');
 const logService = require('../services/log-service');
 
-function createClientLocationObjectByIdForUser(locationId, userId) {
-	return Location.findById(locationId)
-		.then(location => new ClientLocationObject(location.dataValues));
-}
 
 class ClientLocationObject extends EmptyLocation {
 	constructor(location, userId) {
+		const locationData = location.dataValues;
+		const userData = location.user.dataValues;
+		const lastLifeCycleEventDate = locationData.lastLifeCycleEventDate;
+
 		super({
-			lat: location.lat,
-			lng: location.lng
+			lat: location.dataValues.lat,
+			lng: location.dataValues.lng
 		});
 
-		this.masterId = location.userId;
-		this.masterName = location.userName;
-		this.locationId = location.locationId || null;
-		this.population = location.population || 10;
-		this.hasDailyBank = location.dailyBank || 0;
-		this.loyalPopulation = location.loyalPopulation || 10;
-		this.dailyCheckin = locationData.dailyCheckin;
-		this.creationDate = location.created_at;
-		this.locationName = location.name;
-		this.dailyMessage = location.daily_msg;
-		this.isMaster = location.user_id === userId;
+		this.masterId = locationData.user_id;
+		this.masterName = userData.name;
+		this.locationId = locationData.id;
+		this.population = locationData.population;
+		this.hasDailyBank = locationData.taking_bank_date < lastLifeCycleEventDate;
+		this.loyalPopulation = locationData.loyal_population;
+		this.dailyCheckin = locationData.daily_checkin_date < lastLifeCycleEventDate;
+		this.creationDate = locationData.created_at;
+		this.locationName = locationData.name;
+		this.dailyMessage = locationData.daily_msg;
+		this.isMaster = locationData.user_id === userId;
+	}
+
+	static createClientLocationObjectByIdForUser(locationId, userId) {
+		return Location.findById(locationId, {
+			include: {
+				model: User
+			}
+		})
+			.then(location => logService.getLastLifeCycleEventDate()
+				.then((lastLifeCycleEventDate) => {
+					location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
+					return new ClientLocationObject(location, userId);
+				})
+			);
+	}
+
+	static getAllClientLocationObjectsForUser(userId) {
+		return Location.findAll({
+			include: {
+				model: User
+			}
+		})
+			.then(locations => logService.getLastLifeCycleEventDate()
+				.then((lastLifeCycleEventDate) => {
+					const clientLocationsArray = [];
+					locations.forEach((item) => {
+						item.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
+						clientLocationsArray.push(new ClientLocationObject(location, userId));
+					});
+					return clientLocationsArray;
+				})
+			);
+	}
+
+	static occupyLocationByUser(userId, locData) {
+		return Location.create({
+			lat: locData.lat,
+			lng: locData.lng,
+			name: locData.name,
+			daily_msg: locData.dailyMessage,
+			user_id: userId
+		}, {
+			include: [User]
+		});
+	}
+
+	static getLocationOnPointForUser(userId, geoData) {
+		const locNorthWest = EmptyLocation.calcNorthWestByPoint(geoData);
+
+		return Location.findOne({
+			where: {
+				lat: locNorthWest.lat,
+				lng: locNorthWest.lng
+			}
+		})
+			.then(location => (location ?
+				ClientLocationObject.createClientLocationObjectByIdForUser(location, userId) :
+				new EmptyLocation(locNorthWest)));
 	}
 }
 
-function getAllLocationsForUser(userId) {
-	return Location.findAll()
-		.then((locations) => {
-
-		});
-}
-
-function getAllLocationsGeoJSONForUser(userId) {
-	return getAllLocationsForUser(userId)
-		.then(locArray => new Promise((res) => {
-			const geoObj = {
-				type: 'FeatureCollection',
-				features: []
-			};
-			locArray.forEach((item) => {
-				geoObj.features.push({
-					type: 'Feature',
-					id: item.locationId,
-					properties: {
-						color: 'gray',
-						background: 'gray',
-						info: {
-							masterId: item.masterId,
-							dailyBank: item.dailyBank > 0,
-							population: item.population
-						}
-					},
-					geometry: {
-						type: 'Polygon',
-						coordinates: [
-							item.mapFeatureGeometry
-						]
-					}
-				});
-			});
-			res(geoObj);
-		}));
-}
-
-function occupyLocationByUser(userId, locData) {
-
-}
-
-function getLocationOnPointForUser(userId, geoData) {
-
-}
 
 function checkOwnerOrAdminPermission(locationId, userId, isAdmin) {
 
@@ -111,5 +123,4 @@ function restoreLoyalPopulation(locationId) {
 function recalcLocationsLifecycle() {
 }
 
-module.exports.createClientLocationObjectByIdForUser = createClientLocationObjectByIdForUser;
-module.exports.createClientLocationObjectByIdForUser = createClientLocationObjectByIdForUser;
+module.exports = ClientLocationObject;
