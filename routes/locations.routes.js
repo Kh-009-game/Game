@@ -1,5 +1,6 @@
 const express = require('express');
 const OccupiedLocation = require('../models/occupiedLocation');
+const locationController = require('../controllers/location-controller');
 const locAuth = require('../middleware/locAuth');
 const sockets = require('../services/sockets');
 const svgTemplate = require('../views/svg-tmpl');

@@ -1,16 +1,14 @@
 const Location = require('../models/location-orm');
 
-const GridObject = require('../services/grid-service');
+const EmptyLocation = require('../services/grid-service');
 const logService = require('../services/log-service');
 
 function createClientLocationObjectByIdForUser(locationId, userId) {
 	return Location.findById(locationId)
-		.then((location) => {
-			return new ClientLocationObject(location.dataValues)
-		});
+		.then(location => new ClientLocationObject(location.dataValues));
 }
 
-class ClientLocationObject() extends GridObject {
+class ClientLocationObject extends EmptyLocation {
 	constructor(location, userId) {
 		super({
 			lat: location.lat,
@@ -23,9 +21,9 @@ class ClientLocationObject() extends GridObject {
 		this.population = location.population || 10;
 		this.hasDailyBank = location.dailyBank || 0;
 		this.loyalPopulation = location.loyalPopulation || 10;
-		this.dailyCheckin = location.dailyCheckin === undefined ? true : locationData.dailyCheckin;
-		this.creationDate = location.created_at || new Date().toISOString();
-		this.locationName = location.name || null;
+		this.dailyCheckin = locationData.dailyCheckin;
+		this.creationDate = location.created_at;
+		this.locationName = location.name;
 		this.dailyMessage = location.daily_msg;
 		this.isMaster = location.user_id === userId;
 	}

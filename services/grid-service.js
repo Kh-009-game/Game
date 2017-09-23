@@ -1,65 +1,16 @@
-class GridService {
-	constructor(geoData) {
-		this.northWest = {};
-		this.northWest.lat = this.getNorthWestLocationLatitudeByPoint(geoData.lat);
-		this.northWest.lng = this.getNorthWestLocationLongitudeByPoint(geoData);
+
+class EmptyLocation {
+	constructor(northWestPoint) {
+		this.northWest = northWestPoint;
 		this.mapFeatureCoords = this.getMapFeatureCoords();
 	}
 
-	get lngSizeCoefficients() {
-		return this.getLatutideBreakpointsObject();
-	}
-
-	get latBreakPoints() {
-		return Object.keys(this.lngSizeCoefficients);
-	}
-
-	get equatorLength() {
-		return 40075696;
-	}
-
-	get planetRadius() {
-		return 6370997;
-	}
-
-	get meridianLength() {
-		return 20004274;
-	}
-
-	get preferableLocSideSize() {
-		return 100;
-	}
-
-	get locSideMetersSizeOnEquatorLat() {
-		return this.preferableLocSideSize * 1.5;
-	}
-
-	get minAbsoluteLatSize() {
-		return this.meridianLength / 1800000000;
-	}
-
-	get minAbsoluteLngSize() {
-		return this.equatorLength / 3600000000;
-	}
-
-	get relativeLatSize() {
-		return this.getClosestRelSize(
-			Math.round(this.preferableLocSideSize / this.minAbsoluteLatSize),
-			'lat');
-	}
-
-	get initialRelativeLngSize() {
-		return this.getClosestRelSize(
-			Math.round(this.locSideMetersSizeOnEquatorLat / this.minAbsoluteLngSize),
-			'lng');
-	}
-
 	get absoluteMercatorWidthToHeight() {
-		let width = this.recalcLngToMercator(this.mapFeatureCoords[0].lng)
-			- this.recalcLngToMercator(this.mapFeatureCoords[2].lng);
+		let width = EmptyLocation.recalcLngToMercator(this.mapFeatureCoords[0].lng)
+				- EmptyLocation.recalcLngToMercator(this.mapFeatureCoords[2].lng);
 
-		let height = this.recalcLatToMercator(this.mapFeatureCoords[0].lat)
-			- this.recalcLatToMercator(this.mapFeatureCoords[1].lat);
+		let height = EmptyLocation.recalcLatToMercator(this.mapFeatureCoords[0].lat)
+				- EmptyLocation.recalcLatToMercator(this.mapFeatureCoords[1].lat);
 
 		height = height > 0 ? height : height * -1;
 		width = width > 0 ? width : width * -1;
@@ -67,41 +18,8 @@ class GridService {
 		return width / height;
 	}
 
-	recalcLngToMercator(lng) {
-		const lngRad = (lng / 180) * Math.PI;
-		return lngRad * this.planetRadius;
-	}
-
-	recalcLatToMercator(lat) {
-		const latRad = (lat / 180) * Math.PI;
-		return this.planetRadius * Math.log(Math.tan((Math.PI / 4) + (latRad / 2)));
-	}
-
-	getRelLngSize(pointLat) {
-		let lat = pointLat || this.northWest.lat;
-		let result;
-		const lngSizeCoefficients = this.lngSizeCoefficients;
-		const breakPoints = this.latBreakPoints;
-
-		if (lat < 0) {
-			lat = (lat - (this.relativeLatSize / 10000000)) * (-1);
-		}
-
-		if (lat <= breakPoints[0]) {
-			return this.initialRelativeLngSize;
-		}
-
-		for (let i = 0, maxValue = this.latBreakPoints.length; i < maxValue; i += 1) {
-			if (
-				(lat > breakPoints[i] && this.northWest.lat <= breakPoints[i + 1]) ||
-				(lat > breakPoints[i] && !breakPoints[i + 1])
-			) {
-				result = this.initialRelativeLngSize * lngSizeCoefficients[breakPoints[i]];
-				break;
-			}
-		}
-
-		return result;
+	get relLngSize() {
+		return EmptyLocation.calcRelLngSize(this.northWest.lat);
 	}
 
 	getMapFeatureCoords() {
@@ -111,46 +29,98 @@ class GridService {
 			lng: this.northWest.lng
 		}, {
 			// south west
-			lat: ((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000,
+			lat: ((this.northWest.lat * 10000000) - EmptyLocation.relLatSize) / 10000000,
 			lng: this.northWest.lng
 		}, {
 			// south east
-			lat: ((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000,
-			lng: ((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000
+			lat: ((this.northWest.lat * 10000000) - EmptyLocation.relLatSize) / 10000000,
+			lng: ((this.northWest.lng * 10000000) + this.relLngSize) / 10000000
 		}, {
 			// north east
 			lat: this.northWest.lat,
-			lng: ((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000
+			lng: ((this.northWest.lng * 10000000) + this.relLngSize) / 10000000
 		}];
 	}
 
-	getMapFeatureGeometry() {
-		return [[
-		// north west
-			this.northWest.lng,
-			this.northWest.lat
-		], [
-		// south west
-			this.northWest.lng,
-			((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000
-		], [
-		// south east
-			((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000,
-			((this.northWest.lat * 10000000) - this.relativeLatSize) / 10000000
-			// north east
-		], [
-			((this.northWest.lng * 10000000) + this.getRelLngSize()) / 10000000,
-			this.northWest.lat
-		], [
-		// north west
-			this.northWest.lng,
-			this.northWest.lat
-		]];
+	static calcRelLatSize() {
+		return EmptyLocation.getClosestRelSize(
+			Math.round(EmptyLocation.preferableLocSideSize / EmptyLocation.minAbsoluteLatSize),
+			'lat'
+		);
 	}
 
-	getLatutideBreakpointsObject() {
+	static calcRelLngSize(pointLat) {
+		let result;
+		const lngSizeCoefficients = EmptyLocation.lngSizeCoefficients;
+		const breakPoints = EmptyLocation.latBreakPoints;
+
+		if (pointLat < 0) {
+			pointLat = (pointLat - (EmptyLocation.relLatSize / 10000000)) * (-1);
+		}
+
+		if (pointLat <= breakPoints[0]) {
+			return EmptyLocation.initialRelativeLngSize;
+		}
+
+		for (let i = 0, maxValue = EmptyLocation.latBreakPoints.length; i < maxValue; i += 1) {
+			if (
+				(pointLat > breakPoints[i] && pointLat <= breakPoints[i + 1]) ||
+					(pointLat > breakPoints[i] && !breakPoints[i + 1])
+			) {
+				result = EmptyLocation.initialRelativeLngSize * lngSizeCoefficients[breakPoints[i]];
+				break;
+			}
+		}
+
+		return result;
+	}
+
+	static createLocationByPoint(point) {
+		const northWestPoint = EmptyLocation.calcNorthWestByPoint(point);
+
+		return new EmptyLocation(northWestPoint);
+	}
+
+	static calcNorthWestByPoint(point) {
+		return {
+			lat: EmptyLocation.getNorthWestLocationLatitudeByPoint(point.lat),
+			lng: EmptyLocation.getNorthWestLocationLongitudeByPoint(point)
+		};
+	}
+
+	static getNorthWestLocationLatitudeByPoint(pointLat) {
+		const relLatSize = EmptyLocation.calcRelLatSize();
+		return (
+			Math.ceil(
+				Math.round(pointLat * 10000000) / relLatSize
+			) * relLatSize
+		) /	10000000;
+	}
+
+	static getNorthWestLocationLongitudeByPoint(point) {
+		const relLngSize = EmptyLocation.calcRelLngSize(point.lat);
+		return (
+			Math.floor(
+				Math.round(point.lng * 10000000) / relLngSize
+			) * relLngSize
+		) /	10000000;
+	}
+
+	static recalcLngToMercator(lng) {
+		const lngRad = (lng / 180) * Math.PI;
+		return lngRad * EmptyLocation.planetRadius;
+	}
+
+	static recalcLatToMercator(lat) {
+		const latRad = (lat / 180) * Math.PI;
+		return EmptyLocation.planetRadius * Math.log(Math.tan((Math.PI / 4) + (latRad / 2)));
+	}
+
+	static getLatutideBreakpointsObject() {
 		const lngSizeCoefficients = {};
-		let lngPrimeFactorsArr = this.findPrimeFactors(3600000000 / this.initialRelativeLngSize);
+		let lngPrimeFactorsArr = EmptyLocation.findPrimeFactors(
+			3600000000 / EmptyLocation.initialRelativeLngSize
+		);
 		lngPrimeFactorsArr.splice(-1);
 
 		lngPrimeFactorsArr = lngPrimeFactorsArr.map((item) => {
@@ -177,8 +147,8 @@ class GridService {
 			let lngBreakPoint = (Math.acos(1 / lngSizeCoefficient) * 180) / Math.PI;
 			lngBreakPoint = (
 				Math.floor(
-					Math.round(lngBreakPoint * 10000000) / this.relativeLatSize
-				) * this.relativeLatSize
+					Math.round(lngBreakPoint * 10000000) / EmptyLocation.relLatSize
+				) * EmptyLocation.relLatSize
 			) /	10000000;
 			lngSizeCoefficients[lngBreakPoint] = lngSizeCoefficient;
 		});
@@ -186,7 +156,7 @@ class GridService {
 		return lngSizeCoefficients;
 	}
 
-	getClosestRelSize(preferRelSize, latOrLng) {
+	static getClosestRelSize(preferRelSize, latOrLng) {
 		let maxDeg;
 		if (latOrLng === 'lat') {
 			maxDeg = 1800000000;
@@ -220,7 +190,7 @@ class GridService {
 		return preferRelSize;
 	}
 
-	findPrimeFactors(value) {
+	static findPrimeFactors(value) {
 		let tempValue = value;
 		let checker = 2;
 		const result = [];
@@ -239,22 +209,52 @@ class GridService {
 		return result;
 	}
 
-	getNorthWestLocationLatitudeByPoint(pointLat) {
-		return (
-			Math.ceil(
-				Math.round(pointLat * 10000000) / this.relativeLatSize
-			) * this.relativeLatSize
-		) /	10000000;
+	static get equatorLength() {
+		return 40075696;
 	}
 
-	getNorthWestLocationLongitudeByPoint(point) {
-		const relLngSize = this.getRelLngSize(point.lat);
-		return (
-			Math.floor(
-				Math.round(point.lng * 10000000) / relLngSize
-			) * relLngSize
-		) /	10000000;
+	static get planetRadius() {
+		return 6370997;
+	}
+
+	static get meridianLength() {
+		return 20004274;
+	}
+
+	static get preferableLocSideSize() {
+		return 100;
+	}
+
+	static get locSideMetersSizeOnEquatorLat() {
+		return EmptyLocation.preferableLocSideSize * 1.5;
+	}
+
+	static get minAbsoluteLatSize() {
+		return EmptyLocation.meridianLength / 1800000000;
+	}
+
+	static get minAbsoluteLngSize() {
+		return EmptyLocation.equatorLength / 3600000000;
+	}
+
+	static get lngSizeCoefficients() {
+		return this.getLatutideBreakpointsObject();
+	}
+
+	static get latBreakPoints() {
+		return Object.keys(EmptyLocation.lngSizeCoefficients);
+	}
+
+	static get relLatSize() {
+		return EmptyLocation.calcRelLatSize();
+	}
+
+	static get initialRelativeLngSize() {
+		return EmptyLocation.getClosestRelSize(
+			Math.round(
+				EmptyLocation.locSideMetersSizeOnEquatorLat / EmptyLocation.minAbsoluteLngSize
+			), 'lng');
 	}
 }
 
-module.exports = GridService;
+module.exports = EmptyLocation;
