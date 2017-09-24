@@ -209,6 +209,16 @@ class EmptyLocation {
 		return result;
 	}
 
+	static validateLocationCoords(point) {
+		const checkedPoint = EmptyLocation.calcNorthWestByPoint(point);
+
+		if (checkedPoint.lat === point.lat || checkedPoint.lng === point.lng) {
+			return true;
+		}
+
+		return false;
+	}
+
 	static get equatorLength() {
 		return 40075696;
 	}
