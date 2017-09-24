@@ -233,38 +233,49 @@ class ClientLocationObject extends EmptyLocation {
 			.then(() => {
 				eventEmitter.emit('daily-event');
 			});
-		// return logService.system({
-		// 	status: 'daily-event',
-		// 	message: 'Daily event '
-		// })
-		// 	.then(() => logService.getLastLifeCycleEventDate())
-		// 	.then(lastLifeCycleEventDate => Location.destroy({
-		// 		where: {
-		// 			loyal_population: 0,
-		// 			daily_checkin_date: {
-		// 				$lt: lastLifeCycleEventDate
-		// 			}
-		// 		}
-		// 	})
-		// 		.then(() => Location.update({
-		// 			loyal_population: sequelize.literal('loyal_population - ceil(loyal_population * 0.1)')
-		// 		}, {
-		// 			where: {
-		// 				daily_checkin_date: {
-		// 					$lt: lastLifeCycleEventDate
-		// 				}
-		// 			}
-		// 		}))
-		// 		.then(() => {
-
-		// 		})
-		// 	);
 	}
 
 	static checkOwnerOrAdminPermission(locationId, userId, isAdmin) {
 		if (isAdmin) return isAdmin;
 		return Location.findById(locationId)
 			.then(location => userId === location.dataValues.user_id);
+	}
+
+	static checkIsCurrentPermission(locationId, userGeodata) {
+		const properLocCoords = EmptyLocation.calcNorthWestByPoint(userGeodata);
+
+		return Location.findOne({
+			where: {
+				lat: properLocCoords.lat,
+				lng: properLocCoords.lng
+			}
+		})
+			.then((location) => {
+				if (location) {
+					return (location.dataValues.id === locationId);
+				}
+				return false;
+			});
+	}
+
+	static checkIsCurrentAndOwnerOrAdminPermission(locationId, userGeodata, userId, isAdmin) {
+		// if (isAdmin) return isAdmin;
+
+		// const properLocCoords = EmptyLocation.calcNorthWestByPoint(userGeodata);
+
+		// return Location.findOne({
+		// 	where: {
+		// 		lat: properLocCoords.lat,
+		// 		lng: properLocCoords.lng
+		// 	}
+		// })
+		// 	.then((location) => {
+		// 		if (location) {
+		// 			return ((location.dataValues.id === locationId) &&
+		// 							(location.dataValues.user_id === userId));
+		// 		}
+		// 		return false;
+		// 	});
 	}
 
 	static checkDailyBankPresenceAndPermission(locationId, userId, isAdmin) {
@@ -284,35 +295,14 @@ class ClientLocationObject extends EmptyLocation {
 			);
 	}
 
-	static checkIsCurrentAndOwnerOrAdminPermission(locationId, userGeodata, userId, isAdmin) {
+	static checkOccupationOrAdminPermission(locationData, userGeodata, isAdmin) {
 		if (isAdmin) return isAdmin;
 
 		const properLocCoords = EmptyLocation.calcNorthWestByPoint(userGeodata);
 
-		return Location.findOne({
-			where: {
-				lat: properLocCoords.lat,
-				lng: properLocCoords.lng
-			}
-		})
-			.then((location) => {
-				if (location) {
-					return ((location.dataValues.id === locationId) &&
-									(location.dataValues.user_id === userId));
-				}
-				return false;
-			});
-	}
-
-	static checkOccupationOrAdminPermission(locationData, userGeodata, isAdmin) {
-		if (isAdmin) return isAdmin;
-
-		const properLocation = new EmptyLocation(userGeodata);
-
-		return ((locationData.lng === properLocation.lng) &&
-						(locationData.lat === properLocation.lat));
+		return ((locationData.lng === properLocCoords.lng) &&
+						(locationData.lat === properLocCoords.lat));
 	}
 }
-
 
 module.exports = ClientLocationObject;
