@@ -102,7 +102,12 @@ class ClientLocationObject extends EmptyLocation {
 			where: {
 				loc_id: locationId
 			}
-		});
+		})
+			.then(() => {
+				eventEmitter.emit('location-updated', {
+					locationId
+				});
+			});
 	}
 
 	static deleteLocation(locationId) {
@@ -262,7 +267,7 @@ class ClientLocationObject extends EmptyLocation {
 			.then(location => userId === location.dataValues.user_id);
 	}
 
-	static checkDailyBankPermission(locationId, userId, isAdmin) {
+	static checkDailyBankPresenceAndPermission(locationId, userId, isAdmin) {
 		return logService.getLastLifeCycleEventDate()
 			.then(lastLifeCycleEventDate => Location.findById(locationId)
 				.then((location) => {
@@ -279,12 +284,33 @@ class ClientLocationObject extends EmptyLocation {
 			);
 	}
 
-	static checkIsCurrentAndOwnerOrAdminPermission(locationId, userId, isAdmin) {
+	static checkIsCurrentAndOwnerOrAdminPermission(locationId, userGeodata, userId, isAdmin) {
+		if (isAdmin) return isAdmin;
 
+		const properLocCoords = EmptyLocation.calcNorthWestByPoint(userGeodata);
+
+		return Location.findOne({
+			where: {
+				lat: properLocCoords.lat,
+				lng: properLocCoords.lng
+			}
+		})
+			.then((location) => {
+				if (location) {
+					return ((location.dataValues.id === locationId) &&
+									(location.dataValues.user_id === userId));
+				}
+				return false;
+			});
 	}
 
 	static checkOccupationOrAdminPermission(locationData, userGeodata, isAdmin) {
+		if (isAdmin) return isAdmin;
 
+		const properLocation = new EmptyLocation(userGeodata);
+
+		return ((locationData.lng === properLocation.lng) &&
+						(locationData.lat === properLocation.lat));
 	}
 }
 
