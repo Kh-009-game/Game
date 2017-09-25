@@ -1,4 +1,3 @@
-
 class EmptyLocation {
 	constructor(northWestPoint) {
 		this.northWest = northWestPoint;

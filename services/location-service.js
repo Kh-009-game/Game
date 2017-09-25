@@ -236,46 +236,35 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static checkOwnerOrAdminPermission(locationId, userId, isAdmin) {
-		if (isAdmin) return isAdmin;
+		if (isAdmin) {
+			return Promise.resolve({
+				isAdmin
+			});
+		}
 		return Location.findById(locationId)
-			.then(location => userId === location.dataValues.user_id);
-	}
-
-	static checkIsCurrentPermission(locationId, userGeodata) {
-		const properLocCoords = EmptyLocation.calcNorthWestByPoint(userGeodata);
-
-		return Location.findOne({
-			where: {
-				lat: properLocCoords.lat,
-				lng: properLocCoords.lng
-			}
-		})
 			.then((location) => {
-				if (location) {
-					return (location.dataValues.id === locationId);
+				if (userId === location.dataValues.user_id) {
+					throw new Error('No such rights!');
 				}
-				return false;
+				return {
+					locationData: location.dataValues
+				};
 			});
 	}
 
 	static checkIsCurrentAndOwnerOrAdminPermission(locationId, userGeodata, userId, isAdmin) {
-		// if (isAdmin) return isAdmin;
-
-		// const properLocCoords = EmptyLocation.calcNorthWestByPoint(userGeodata);
-
-		// return Location.findOne({
-		// 	where: {
-		// 		lat: properLocCoords.lat,
-		// 		lng: properLocCoords.lng
-		// 	}
-		// })
-		// 	.then((location) => {
-		// 		if (location) {
-		// 			return ((location.dataValues.id === locationId) &&
-		// 							(location.dataValues.user_id === userId));
-		// 		}
-		// 		return false;
-		// 	});
+		ClientLocationObject.checkOwnerOrAdminPermission(locationId, userId, isAdmin)
+			.then((result) => {
+				const isCurrent = ClientLocationObject.checkIsCurrentPermission(
+					result.locationData,
+					userId,
+					isAdmin
+				);
+				if (!isCurrent) {
+					throw new Error('You have to be there to do that!');
+				}
+				return result;
+			});
 	}
 
 	static checkDailyBankPresenceAndPermission(locationId, userId, isAdmin) {
@@ -295,7 +284,7 @@ class ClientLocationObject extends EmptyLocation {
 			);
 	}
 
-	static checkOccupationOrAdminPermission(locationData, userGeodata, isAdmin) {
+	static checkIsCurrentPermission(locationData, userGeodata, isAdmin) {
 		if (isAdmin) return isAdmin;
 
 		const properLocCoords = EmptyLocation.calcNorthWestByPoint(userGeodata);
