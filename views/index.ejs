@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="stylesheet" href="css/newStyles.css">
   <title>Map</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons"
   rel="stylesheet">
+  <link rel="stylesheet" href="css/newStyles.css">
 </head>
 <body>
 
@@ -21,20 +21,18 @@
             <span><i class="material-icons">account_balance_wallet</i> 200</span>
             UserLocations
             </div>
-        </div>
-        <div class="user-info">
-            <h3>See all your locations</h3>
+           <div class="navigation-menu">
             <ul>
-                <li><a href="#">Location #1</a></li>
-                <li><a href="#">Location #2</a></li>
-                <li><a href="#">Location #3</a></li>
+              <li><a href="#" id="log-out">LogOut</a></li>
             </ul>
+          </div>
         </div>
+        
         <div class="location-menu">
 
                 <div class="main-btns">
                     <button class="btn-icon" id="show-user-location" type="button"><i class="material-icons">view_module</i></button>
-                    <button class="btn-icon" type="button"><i class="material-icons">my_location</i></button>
+                    <button class="btn-icon" id="center-user-location" type="button"><i class="material-icons">my_location</i></button>
                     <button class="btn-icon show-btn" type="button"><i class="material-icons">keyboard_arrow_down</i></button>
                 </div>
                 <div class="location-block">
@@ -54,8 +52,17 @@
     showBtn.addEventListener('click', (e) => {
       e.preventDefault();
       menu.classList.toggle('open');
+    });
+
+    const burgerBtn = document.querySelector('.btn-burger');
+    const navigation = document.querySelector('.navigation-menu');
+    burgerBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigation.classList.toggle('open');
     })
+
   </script>
+  <script src="js/map-styles.js"></script>
   <script src="js/script.js"></script>
 
         <script async defer

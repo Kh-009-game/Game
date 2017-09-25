@@ -34,7 +34,7 @@
   <% if (!location.masterId && !location.isCurrent && isAdmin) { %>
     <button type="button" class="btn" id="occupy-click-btn">Occupy</button>
   <% } %>
-  <% if (location.isHighlighted && (location.isMaster || isAdmin)) { %>
+  <% if (location.isHighlighted && location.locationId && (location.isMaster || isAdmin)) { %>
     <button type="button" class="location-buttons--item" id="edit-loc-btn">
           <i class="material-icons">mode_edit</i>
      </button>

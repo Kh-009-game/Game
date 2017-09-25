@@ -5,9 +5,9 @@
   box-sizing: border-box;
 }
 .material-icons {
-  font-size: 1em;  /* Preferred icon size */
+  vertical-align: -3px;
+  font-size: 1.2em;
 }
-
 body {
     margin: 0;
     padding: 0;
@@ -49,6 +49,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  outline: none;
 }
 .header-menu .btn:hover {
   background-color: #58568c;
@@ -60,6 +61,34 @@ body {
   font-size: 1.1em;
   margin: 0;
 }
+.navigation-menu {
+    margin: 15px 0;
+    flex: 1 1 auto;
+    background-color: #fff; 
+    color: #4c4c4c;
+    padding: 10px;
+    box-shadow: 0 0 7px 0px rgba(0,0,0,.2);
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    top: 100%;
+    text-align: left;
+
+    display: none;
+  }
+.navigation-menu.open {
+  display: block;
+}
+.navigation-menu a {
+  color: #4c4c4c;
+  text-decoration: none;
+}
+.navigation-menu a:hover,
+.navigation-menu a:focus,
+.navigation-menu a:active {
+  color: #7e76bc;
+}
+
 
 .location-menu {
   position: fixed;
@@ -98,7 +127,7 @@ body {
   display: flex;
   justify-content: space-between;
   text-align: center;
-  font-size: 1.4em;
+  font-size: 1.2em;
 }
 .location-buttons > * {
   flex-grow: 1;
@@ -108,6 +137,7 @@ body {
   color: #d1d1de;
   background-color: transparent;
   border: none;
+  font-size: 1em;
 }
 .location-buttons--item:hover,
 .location-buttons--item.active {
@@ -142,7 +172,7 @@ body {
   height: 1.5em;
   background-color: #fff;
   color: #7d7abc;
-  font-size: 2em;
+  font-size: 1.7em;
   box-shadow: 0 0 20px 0px rgba(0,0,0,.2);
   line-height: 1;
   border-radius: 100px;
@@ -159,27 +189,7 @@ body {
   background-color: #f7f7f8;
 }
 
-.user-info {
-    margin: 15px 0;
-    flex: 1 1 auto;
-    display: block;
-    background-color: #fff; 
-    color: #4c4c4c;
-    padding: 10px;
-    box-shadow: 0 0 7px 0px rgba(0,0,0,.2);
-  }
-.user-info {
-  display: none;
-}
-.user-info a {
-  color: #4c4c4c;
-  text-decoration: none;
-}
-.user-info a:hover,
-.user-info a:focus,
-.user-info a:active {
-  color: #7e76bc;
-}
+
 
 .form-item {
   display: flex;
@@ -211,6 +221,7 @@ body {
   border-radius: 4px;
   box-shadow: 0 0 7px 0px rgba(0,0,0,.2);
   margin: 3px 5px;
+  outline: none;
 }
 .btn:hover {
   background-color: #58568c;
@@ -239,6 +250,11 @@ body {
   }
   .location-menu  {
     position: static;
+    opacity: 0;
+    transition: opacity .3s ease-in-out;
+  }
+  .location-menu.open {
+    opacity: 1;
   }
   .location-menu,
   .location-menu.open,

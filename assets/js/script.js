@@ -14,6 +14,9 @@ class Game {
 		this.clickedLocInfo = options.locInfoContainer || this.locInfoContainer;
 		this.currentLocInfo = options.locInfoContainer || this.locInfoContainer;
 		this.occupyFormContainer = options.locInfoContainer || document.querySelector('.form-container');
+		this.showUserLocationsBtn = document.getElementById('show-user-location');
+		this.centerUserLocationsBtn = document.getElementById('center-user-location');
+		this.logOutBtn = document.getElementById('log-out');
 
 		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
 			bubbles: true
@@ -31,11 +34,14 @@ class Game {
 		this.occupiedLocationsMapFeatures = {};
 		this.occupiedLocationsGroundOverlays = {};
 		this.occupiedLocationsIcons = {};
-		this.showUserLocationsBtn = document.getElementById('show-user-location');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
 			// let target = event.target;
 			this.showAllUserLocations();
+		});
+		this.centerUserLocationsBtn.addEventListener('click', (event) => {
+			// let target = event.target;
+			this.centerMapByUserGeoData(undefined, undefined, 16);
 		});
 		this.locInfoContainer.addEventListener('click', (event) => {
 			let target = event.target;
@@ -101,6 +107,23 @@ class Game {
 			if (form.getAttribute('name') === 'edit-loc-form') {
 				this.editLocationInfoHandler(event);
 			}
+		});
+
+		this.logOutBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			const logOutPromise = new Promise((res, rej) => {
+				const xhr = new XMLHttpRequest();
+
+				xhr.open('GET', '/user/logout');
+				xhr.send();
+				xhr.addEventListener('load', (e) => {
+					const srcXHR = e.target;
+					if (srcXHR.status !== 200) {
+						rej(srcXHR.response);
+					}
+					window.location.replace(srcXHR.responseURL);
+				});
+			});
 		});
 	}
 
@@ -190,6 +213,7 @@ class Game {
 
 		return marker;
 	}
+
 
 	get mapFeaturesStyles() {
 		return {
@@ -439,6 +463,17 @@ class Game {
 			this.occupiedLocationsIcons[locId].setMap(this.map);
 		});
 	}
+	showUserIcons() {
+		this.occupiedLocationsArray.forEach((location) => {
+			if (location.isMaster) {
+				const locId = location.locationId;
+				this.occupiedLocationsIcons[locId].setMap(this.map);
+			} else {
+				const locId = location.locationId;
+				this.occupiedLocationsIcons[locId].setMap(null);
+			}
+		});
+	}
 
 	// all user locations rendering method
 
@@ -468,6 +503,8 @@ class Game {
 					});
 					this.map.fitBounds(bounds);
 				}
+
+				this.showUserIcons();
 			})
 			.catch((err) => {
 				console.log(err);
@@ -559,10 +596,10 @@ class Game {
 		return this.getLocInfoHTML(this.currentLocation)
 			.then((response) => {
 				this.currentLocInfo.innerHTML = response;
-                if (this.locInfoBlock.className === 'location-block') {
+				if (this.locInfoBlock.className === 'location-block') {
 					this.locInfoBlock.className = 'location-block show-current';
-						this.locInfoMenu.classList.add('open');
-                }
+					this.locInfoMenu.classList.add('open');
+				}
 			});
 	}
 
@@ -797,10 +834,10 @@ class Game {
 	 	this.getLocOccupFormHTML(
 	 		this.highlightedLocation
 	 	)
-         .then((response) => {
-            this.occupyFormContainer.innerHTML = response;
-            document.getElementById('loc-name-field').focus();
-         });
+			.then((response) => {
+				this.occupyFormContainer.innerHTML = response;
+				document.getElementById('loc-name-field').focus();
+			});
 	 }
 
 	// editLocationInfoHandler(event) {
@@ -1091,16 +1128,16 @@ class Game {
 	// The function creates a notification with the specified body and header.
 
 	createMessageElement(data) {
-        const type = data.type;
+		const type = data.type;
 		const container = document.createElement('div');
-        let typeClass;
-        if (type === 'msgCreateLoc') {
-            typeClass = 'create-loc-msg';
-        } else if (type === 'msgDeleteLoc') {
-            typeClass = 'del-loc-msg';
-        } else {
-            typeClass = 'update-loc-msg';
-        }
+		let typeClass;
+		if (type === 'msgCreateLoc') {
+			typeClass = 'create-loc-msg';
+		} else if (type === 'msgDeleteLoc') {
+			typeClass = 'del-loc-msg';
+		} else {
+			typeClass = 'update-loc-msg';
+		}
 		container.innerHTML = `<div class="my-message"> 
 	    <div class="my-message-title ${typeClass}"> Notification </div> 
 	    <div class="my-message-body"> ${data.text} </div> 
@@ -1123,191 +1160,8 @@ function initMap() {
 		zoom: 12,
 		center: { lat: 49.9891, lng: 36.2322 },
 		clickableIcons: false,
-		styles: [
-			{
-				featureType: 'water',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						color: '#d3d3d3'
-					}
-				]
-			},
-			{
-				featureType: 'transit',
-				stylers: [
-					{
-						color: '#808080'
-					},
-					{
-						visibility: 'off'
-					}
-				]
-			},
-			{
-				featureType: 'road.highway',
-				elementType: 'geometry.stroke',
-				stylers: [
-					{
-						visibility: 'on'
-					},
-					{
-						color: '#b3b3b3'
-					}
-				]
-			},
-			{
-				featureType: 'road.highway',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						color: '#ffffff'
-					}
-				]
-			},
-			{
-				featureType: 'road.local',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						visibility: 'on'
-					},
-					{
-						color: '#ffffff'
-					},
-					{
-						weight: 1.8
-					}
-				]
-			},
-			{
-				featureType: 'road.local',
-				elementType: 'geometry.stroke',
-				stylers: [
-					{
-						color: '#d7d7d7'
-					}
-				]
-			},
-			{
-				featureType: 'poi',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						visibility: 'on'
-					},
-					{
-						color: '#ebebeb'
-					}
-				]
-			},
-			{
-				featureType: 'administrative',
-				elementType: 'geometry',
-				stylers: [
-					{
-						color: '#a7a7a7'
-					}
-				]
-			},
-			{
-				featureType: 'road.arterial',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						color: '#ffffff'
-					}
-				]
-			},
-			{
-				featureType: 'road.arterial',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						color: '#ffffff'
-					}
-				]
-			},
-			{
-				featureType: 'landscape',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						visibility: 'on'
-					},
-					{
-						color: '#efefef'
-					}
-				]
-			},
-			{
-				featureType: 'road',
-				elementType: 'labels.text.fill',
-				stylers: [
-					{
-						color: '#696969'
-					}
-				]
-			},
-			{
-				featureType: 'administrative',
-				elementType: 'labels.text.fill',
-				stylers: [
-					{
-						visibility: 'on'
-					},
-					{
-						color: '#737373'
-					}
-				]
-			},
-			{
-				featureType: 'poi',
-				elementType: 'labels.icon',
-				stylers: [
-					{
-						visibility: 'off'
-					}
-				]
-			},
-			{
-				featureType: 'poi',
-				elementType: 'labels',
-				stylers: [
-					{
-						visibility: 'off'
-					}
-				]
-			},
-			{
-				featureType: 'road.arterial',
-				elementType: 'geometry.stroke',
-				stylers: [
-					{
-						color: '#d6d6d6'
-					}
-				]
-			},
-			{
-				featureType: 'road',
-				elementType: 'labels.icon',
-				stylers: [
-					{
-						visibility: 'off'
-					}
-				]
-			},
-			{},
-			{
-				featureType: 'poi',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						color: '#dadada'
-					}
-				]
-			}
-		]
+		disableDefaultUI: true,
+		styles: MAP_STYLES
 	});
 
 
