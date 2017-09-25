@@ -211,7 +211,7 @@ class ClientLocationObject extends EmptyLocation {
 		return sequelize.transaction(trans => logService.LogMessage.create({
 			type: 'system',
 			status: 'daily-event',
-			message: 'Daily event '
+			message: 'New day begins!'
 		}, {
 			transaction: trans
 		})
