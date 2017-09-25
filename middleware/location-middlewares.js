@@ -58,7 +58,7 @@ module.exports.attachClientLocObject = (req, res, next) => {
 		userId
 	)
 		.then((location) => {
-			req.reqLocation = location;
+			req.body.requestedLocation = location;
 			next();
 		});
 };

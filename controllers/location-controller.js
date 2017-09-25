@@ -42,7 +42,7 @@ module.exports.getLocationOnPoint = (req, res, next) => {
 		});
 };
 
-module.exports.getLocationById = (req, res) => {
+module.exports.getLocation = (req, res) => {
 	res.json(req.body.requestedLocation);
 };
 
@@ -61,7 +61,7 @@ module.exports.getEditForm = (req, res) => {
 	});
 };
 
-module.exports.editLocationById = (req, res, next) => {
+module.exports.editLocation = (req, res, next) => {
 	LocationService.editLocationById(req.body)
 		.then(() => {
 			res.sendStatus(200);
@@ -73,7 +73,7 @@ module.exports.editLocationById = (req, res, next) => {
 };
 
 // '/:id/loc-info?current=xxx&highlighted=xxx'
-module.exports.getLocationInfoById = (req, res) => {
+module.exports.getLocationInfo = (req, res) => {
 	req.body.requestedLocation = req.query.highlighted;
 	req.body.requestedLocation = req.query.current;
 	res.render('loc-info', {
@@ -82,7 +82,7 @@ module.exports.getLocationInfoById = (req, res) => {
 	});
 };
 
-module.exports.deleteLocationInfoById = (req, res, next) => {
+module.exports.deleteLocation = (req, res, next) => {
 	LocationService.deleteLocationById(req.params.locationId)
 		.then(() => {
 			res.sendStatus(200);
