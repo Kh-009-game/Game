@@ -247,7 +247,7 @@ class ClientLocationObject extends EmptyLocation {
 					throw new Error('No such rights!');
 				}
 				return {
-					locationData: location.dataValues
+					locationData: location
 				};
 			});
 	}
@@ -255,42 +255,49 @@ class ClientLocationObject extends EmptyLocation {
 	static checkIsCurrentAndOwnerOrAdminPermission(locationId, userGeodata, userId, isAdmin) {
 		ClientLocationObject.checkOwnerOrAdminPermission(locationId, userId, isAdmin)
 			.then((result) => {
-				const isCurrent = ClientLocationObject.checkIsCurrentPermission(
-					result.locationData,
+				ClientLocationObject.checkIsCurrentPermission(
+					result.locationData.dataValues,
 					userId,
 					isAdmin
 				);
-				if (!isCurrent) {
-					throw new Error('You have to be there to do that!');
-				}
 				return result;
 			});
 	}
 
-	static checkDailyBankPresenceAndPermission(locationId, userId, isAdmin) {
-		return logService.getLastLifeCycleEventDate()
-			.then(lastLifeCycleEventDate => Location.findById(locationId)
-				.then((location) => {
-					const takingBankData = location.dataValues.taking_bank_date;
-					const masterId = location.dataValues.user_id;
-					if (takingBankData < lastLifeCycleEventDate) {
-						return false;
+	static checkDailyBankPresenceAndPermission(locationId, userGeodata, userId, isAdmin) {
+		ClientLocationObject.checkIsCurrentAndOwnerOrAdminPermission(
+			locationId,
+			userGeodata,
+			userId,
+			isAdmin
+		)
+			.then((result) => {
+				if (!result.locationData) {
+					return Location.findById(locationId);
+				}
+				return result.locationData;
+			})
+			.then(location => logService.getLastLifeCycleEventDate()
+				.then((lastLifeCycleEventDate) => {
+					const takingBankData = location.locationData.taking_bank_date;
+
+					if (takingBankData > lastLifeCycleEventDate) {
+						throw new Error('There\'s no any bank');
 					}
-					if (isAdmin) {
-						return true;
-					}
-					return masterId === userId;
-				})
-			);
+					location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
+					return location;
+				}));
 	}
 
 	static checkIsCurrentPermission(locationData, userGeodata, isAdmin) {
-		if (isAdmin) return isAdmin;
+		if (isAdmin) return;
 
 		const properLocCoords = EmptyLocation.calcNorthWestByPoint(userGeodata);
 
-		return ((locationData.lng === properLocCoords.lng) &&
-						(locationData.lat === properLocCoords.lat));
+		if ((locationData.lng !== properLocCoords.lng) ||
+				(locationData.lat !== properLocCoords.lat)) {
+			throw new Error('You have to be there to do that!');
+		}
 	}
 }
 
