@@ -16,7 +16,6 @@ const gridRoutes = require('./routes/grid.routes');
 const locationsRoutes = require('./routes/locations.routes');
 const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
-const schedule = require('node-schedule');
 const logService = require('./services/log-service');
 const ormDB = require('./services/orm-service');
 
@@ -67,8 +66,5 @@ app.use((err, req, res) => {
 	// res.render('error');
 });
 
-schedule.scheduleJob('0 0 3 * * *', () => {
-	OccupiedLocation.recalcLocationsLifecycle();
-});
 
 module.exports = app;

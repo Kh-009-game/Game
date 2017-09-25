@@ -4,6 +4,7 @@ const EmptyLocation = require('./grid-service');
 const logService = require('./log-service');
 const sequelize = require('./orm-service');
 const eventEmitter = require('./eventEmitter-service');
+const schedule = require('node-schedule');
 
 
 class ClientLocationObject extends EmptyLocation {
@@ -23,7 +24,7 @@ class ClientLocationObject extends EmptyLocation {
 		this.population = locationData.population;
 		this.hasDailyBank = locationData.taking_bank_date < lastLifeCycleEventDate;
 		this.loyalPopulation = locationData.loyal_population;
-		this.dailyCheckin = locationData.daily_checkin_date < lastLifeCycleEventDate;
+		this.dailyCheckin = locationData.checkin_date < lastLifeCycleEventDate;
 		this.creationDate = locationData.created_at;
 		this.locationName = locationData.name;
 		this.dailyMessage = locationData.daily_msg;
@@ -53,8 +54,8 @@ class ClientLocationObject extends EmptyLocation {
 			.then(locations => logService.getLastLifeCycleEventDate()
 				.then((lastLifeCycleEventDate) => {
 					const clientLocationsArray = [];
-					locations.forEach((item) => {
-						item.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
+					locations.forEach((location) => {
+						location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
 						clientLocationsArray.push(new ClientLocationObject(location, userId));
 					});
 					return clientLocationsArray;
@@ -64,9 +65,9 @@ class ClientLocationObject extends EmptyLocation {
 
 	static occupyLocationByUser(userId, locData) {
 		return Location.create({
-			lat: locData.lat,
-			lng: locData.lng,
-			name: locData.name,
+			lat: locData.northWest.lat,
+			lng: locData.northWest.lng,
+			name: locData.locationName,
 			daily_msg: locData.dailyMessage,
 			user_id: userId
 		}, {
@@ -74,8 +75,8 @@ class ClientLocationObject extends EmptyLocation {
 		})
 			.then(() => {
 				eventEmitter.emit('location-created', {
-					lat: locData.lat,
-					lng: locData.lng
+					lat: locData.northWest.lat,
+					lng: locData.northWest.lng
 				});
 			});
 	}
@@ -89,9 +90,15 @@ class ClientLocationObject extends EmptyLocation {
 				lng: locNorthWest.lng
 			}
 		})
-			.then(location => (location ?
-				ClientLocationObject.createClientLocationObjectByIdForUser(location, userId) :
-				new EmptyLocation(locNorthWest)));
+			.then((location) => {
+				if (!location) {
+					return new EmptyLocation(locNorthWest);
+				}
+				return ClientLocationObject.createClientLocationObjectByIdForUser(
+					location.dataValues.id,
+					userId
+				);
+			});
 	}
 
 	static updateLocation(locationId, newLocData) {
@@ -110,10 +117,10 @@ class ClientLocationObject extends EmptyLocation {
 			});
 	}
 
-	static deleteLocation(locationId) {
+	static deleteLocationById(locationId) {
 		return Location.destroy({
 			where: {
-				loc_id: locationId
+				id: locationId
 			}
 		})
 			.then(() => {
@@ -123,12 +130,12 @@ class ClientLocationObject extends EmptyLocation {
 			});
 	}
 
-	static doCheckin(locationId) {
+	static doCheckinById(locationId) {
 		return Location.update({
 			checkin_date: new Date()
 		}, {
 			where: {
-				loc_id: locationId
+				id: locationId
 			}
 		})
 			.then(() => {
@@ -138,8 +145,8 @@ class ClientLocationObject extends EmptyLocation {
 			});
 	}
 
-	static takeDailyBank(locationId) {
-		Location.findById(locationId)
+	static takeDailyBankById(locationId) {
+		return Location.findById(locationId)
 			.then((location) => {
 				const bank = location.dataValues.loyal_population;
 				const masterId = location.dataValues.user_id;
@@ -201,7 +208,8 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static recalcLocationsLifecycle() {
-		return sequelize.transaction(trans => logService.system({
+		return sequelize.transaction(trans => logService.LogMessage.create({
+			type: 'system',
 			status: 'daily-event',
 			message: 'Daily event '
 		}, {
@@ -211,7 +219,7 @@ class ClientLocationObject extends EmptyLocation {
 				.then(lastLifeCycleEventDate => Location.destroy({
 					where: {
 						loyal_population: 0,
-						daily_checkin_date: {
+						checkin_date: {
 							$lt: lastLifeCycleEventDate
 						}
 					},
@@ -221,7 +229,7 @@ class ClientLocationObject extends EmptyLocation {
 						loyal_population: sequelize.literal('loyal_population - ceil(loyal_population * 0.1)')
 					}, {
 						where: {
-							daily_checkin_date: {
+							checkin_date: {
 								$lt: lastLifeCycleEventDate
 							}
 						},
@@ -243,7 +251,7 @@ class ClientLocationObject extends EmptyLocation {
 		}
 		return Location.findById(locationId)
 			.then((location) => {
-				if (userId === location.dataValues.user_id) {
+				if (userId !== location.dataValues.user_id) {
 					throw new Error('No such rights!');
 				}
 				return {
@@ -253,11 +261,12 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static checkIsCurrentAndOwnerOrAdminPermission(locationId, userGeodata, userId, isAdmin) {
-		ClientLocationObject.checkOwnerOrAdminPermission(locationId, userId, isAdmin)
+		return ClientLocationObject.checkOwnerOrAdminPermission(locationId, userId, isAdmin)
 			.then((result) => {
+				const locationData = result.locationData || {};
 				ClientLocationObject.checkIsCurrentPermission(
-					result.locationData.dataValues,
-					userId,
+					locationData.dataValues,
+					userGeodata,
 					isAdmin
 				);
 				return result;
@@ -265,7 +274,7 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static checkDailyBankPresenceAndPermission(locationId, userGeodata, userId, isAdmin) {
-		ClientLocationObject.checkIsCurrentAndOwnerOrAdminPermission(
+		return ClientLocationObject.checkIsCurrentAndOwnerOrAdminPermission(
 			locationId,
 			userGeodata,
 			userId,
@@ -279,7 +288,7 @@ class ClientLocationObject extends EmptyLocation {
 			})
 			.then(location => logService.getLastLifeCycleEventDate()
 				.then((lastLifeCycleEventDate) => {
-					const takingBankData = location.locationData.taking_bank_date;
+					const takingBankData = location.dataValues.taking_bank_date;
 
 					if (takingBankData > lastLifeCycleEventDate) {
 						throw new Error('There\'s no any bank');
@@ -294,11 +303,15 @@ class ClientLocationObject extends EmptyLocation {
 
 		const properLocCoords = EmptyLocation.calcNorthWestByPoint(userGeodata);
 
-		if ((locationData.lng !== properLocCoords.lng) ||
-				(locationData.lat !== properLocCoords.lat)) {
+		if ((+locationData.lng !== properLocCoords.lng) ||
+				(+locationData.lat !== properLocCoords.lat)) {
 			throw new Error('You have to be there to do that!');
 		}
 	}
 }
+
+schedule.scheduleJob('0 0 3 * * *', () => {
+	ClientLocationObject.recalcLocationsLifecycle();
+});
 
 module.exports = ClientLocationObject;

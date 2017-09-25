@@ -18,8 +18,8 @@
   <% if (location.population) { %>
     <span>Loyalty: <%= location.loyalPopulation %>/<%= location.population %></span>
   <% } %>
-  <% if (location.dailyBank !== undefined) { %>
-    <span>Bank: <%= location.dailyBank %></span>
+  <% if (location.hasDailyBank) { %>
+    <span>Bank: <%= location.loyalPopulation %></span>
   <% } %>  
   <span>Location coords: <%= location.northWest.lat %> <%= location.northWest.lng %></span>
 </div>
@@ -35,7 +35,7 @@
 <% if ((location.isMaster || (isAdmin && location.locationId)) && location.isHighlighted) { %>
   <button class="btn delete-loc-btn" id="delete-loc-btn">Delete location</button>
 <% } %>
-<% if (location.isMaster && location.isCurrent && location.dailyBank) { %> 
+<% if (location.isMaster && location.isCurrent && location.hasDailyBank) { %> 
   <button class="btn money-btn" id="money-btn">Take money</button>
 <% } %>
 <% if (( location.isMaster || isAdmin ) && !location.isCurrent && ( location.loyalPopulation < location.population )) { %>

@@ -36,3 +36,4 @@ class LogService {
 }
 
 module.exports = LogService;
+module.exports.LogMessage = LogMessage;

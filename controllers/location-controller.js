@@ -2,7 +2,7 @@ const LocationService = require('../services/location-service');
 const svgTemplate = require('../views/svg-tmpl');
 
 module.exports.getAllLocations = (req, res, next) => {
-	LocationService.getAllClientLocationObjectsForUser(req.decoded.userId)
+	LocationService.getAllClientLocationObjectsForUser(req.decoded.id)
 		.then((locations) => {
 			res.json(locations);
 		})
@@ -19,7 +19,7 @@ module.exports.getOccupyForm = (req, res) => {
 };
 
 module.exports.occupyLocation = (req, res, next) => {
-	LocationService.occupyLocationByUser(req.decoded.userId, req.body)
+	LocationService.occupyLocationByUser(req.decoded.id, req.body.locationData)
 		.then(() => {
 			res.sendStatus(200);
 			// emit update event in service
@@ -30,7 +30,7 @@ module.exports.occupyLocation = (req, res, next) => {
 // '/check-location?lat=xxx&lng=xxx'
 module.exports.getLocationOnPoint = (req, res, next) => {
 	LocationService.getLocationOnPointForUser(
-		req.decoded.userId, {
+		req.decoded.id, {
 			lat: +req.query.lat,
 			lng: +req.query.lng
 		})
@@ -74,16 +74,17 @@ module.exports.editLocation = (req, res, next) => {
 
 // '/:id/loc-info?current=xxx&highlighted=xxx'
 module.exports.getLocationInfo = (req, res) => {
-	req.body.requestedLocation = req.query.highlighted;
-	req.body.requestedLocation = req.query.current;
+	const reqLocation = req.body.requestedLocation;
+	reqLocation.isHighlighted = req.query.highlighted;
+	reqLocation.isCurrent = req.query.current;
 	res.render('loc-info', {
-		location: req.reqLocation,
+		location: reqLocation,
 		isAdmin: req.decoded.isAdmin
 	});
 };
 
 module.exports.deleteLocation = (req, res, next) => {
-	LocationService.deleteLocationById(req.params.locationId)
+	LocationService.deleteLocationById(req.params.id)
 		.then(() => {
 			res.sendStatus(200);
 			// emit update event in service
@@ -94,7 +95,7 @@ module.exports.deleteLocation = (req, res, next) => {
 };
 
 module.exports.doCheckin = (req, res, next) => {
-	LocationService.doCheckinById(req.params.locationId)
+	LocationService.doCheckinById(req.params.id)
 		.then(() => {
 			res.sendStatus(200);
 			// emit change
@@ -105,7 +106,7 @@ module.exports.doCheckin = (req, res, next) => {
 };
 
 module.exports.takeDailyBank = (req, res, next) => {
-	LocationService.takeDailyBankById(req.params.locationId)
+	LocationService.takeDailyBankById(req.params.id)
 		.then(() => {
 			res.sendStatus(200);
 			// emit change
@@ -116,7 +117,10 @@ module.exports.takeDailyBank = (req, res, next) => {
 };
 
 module.exports.restoreLoyalty = (req, res, next) => {
-	LocationService.restoreLoyaltyById(req.params.locationId)
+	LocationService.restoreLoyalPopulationByUser(
+		req.params.id,
+		req.decoded.id
+	)
 		.then(() => {
 			res.sendStatus(200);
 			// emit change

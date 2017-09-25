@@ -2,8 +2,8 @@ const ClientLocationObject = require('../services/location-service');
 
 module.exports.checkIsCurrent = (req, res, next) => {
 	ClientLocationObject.checkIsCurrentPermission(
-		req.locationData,
-		req.userGeodata,
+		req.body.locationData.northWest,
+		req.body.userGeoData,
 		req.decoded.isAdmin
 	);
 	next();
@@ -14,12 +14,15 @@ module.exports.checkDailyBank = (req, res, next) => {
 	const userId = req.decoded.id;
 	ClientLocationObject.checkDailyBankPresenceAndPermission(
 		locationId,
-		req.userGeodata,
+		req.body.userGeoData,
 		userId,
 		req.decoded.isAdmin
 	)
 		.then(() => {
 			next();
+		})
+		.catch((err) => {
+			next(err);
 		});
 };
 
@@ -33,6 +36,9 @@ module.exports.checkOwner = (req, res, next) => {
 	)
 		.then(() => {
 			next();
+		})
+		.catch((err) => {
+			next(err);
 		});
 };
 
@@ -41,12 +47,15 @@ module.exports.checkOwnerAndIsCurrent = (req, res, next) => {
 	const userId = req.decoded.id;
 	ClientLocationObject.checkIsCurrentAndOwnerOrAdminPermission(
 		locationId,
-		req.userGeodata,
+		req.body.userGeoData,
 		userId,
 		req.decoded.isAdmin
 	)
 		.then(() => {
 			next();
+		})
+		.catch((err) => {
+			next(err);
 		});
 };
 
@@ -60,5 +69,8 @@ module.exports.attachClientLocObject = (req, res, next) => {
 		.then((location) => {
 			req.body.requestedLocation = location;
 			next();
+		})
+		.catch((err) => {
+			next(err);
 		});
 };

@@ -10,7 +10,14 @@ const Location = sequelize.define('location', {
 		allowNull: false,
 		validate: {
 			min: -90,
-			max: 90
+			max: 90,
+			gridValidation() {
+				if (!EmptyLocation.validateLatitude(
+					this.dataValues.lat
+				)) {
+					throw new Error('Latitude is not valid!');
+				}
+			}
 		}
 	},
 	lng: {
@@ -19,7 +26,15 @@ const Location = sequelize.define('location', {
 		allowNull: false,
 		validate: {
 			min: -180,
-			max: 180
+			max: 180,
+			gridValidation() {
+				if (!EmptyLocation.validateLongitude(
+					this.dataValues.lat,
+					this.dataValues.lng
+				)) {
+					throw new Error('Longitude is not valid!');
+				}
+			}
 		}
 	},
 	name: {
@@ -57,17 +72,7 @@ const Location = sequelize.define('location', {
 		defaultValue: Sequelize.NOW
 	}
 }, {
-	underscored: true,
-	validate: {
-		gridValidation() {
-			if (EmptyLocation.validateLocationCoords({
-				lat: this.lat,
-				lng: this.lng
-			})) {
-				throw new Error('Location coordinates are not valid!');
-			}
-		}
-	}
+	underscored: true
 });
 
 module.exports = Location;

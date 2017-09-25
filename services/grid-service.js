@@ -24,19 +24,19 @@ class EmptyLocation {
 	getMapFeatureCoords() {
 		return [{
 			// north west
-			lat: this.northWest.lat,
-			lng: this.northWest.lng
+			lat: +this.northWest.lat,
+			lng: +this.northWest.lng
 		}, {
 			// south west
 			lat: ((this.northWest.lat * 10000000) - EmptyLocation.relLatSize) / 10000000,
-			lng: this.northWest.lng
+			lng: +this.northWest.lng
 		}, {
 			// south east
 			lat: ((this.northWest.lat * 10000000) - EmptyLocation.relLatSize) / 10000000,
 			lng: ((this.northWest.lng * 10000000) + this.relLngSize) / 10000000
 		}, {
 			// north east
-			lat: this.northWest.lat,
+			lat: +this.northWest.lat,
 			lng: ((this.northWest.lng * 10000000) + this.relLngSize) / 10000000
 		}];
 	}
@@ -208,14 +208,17 @@ class EmptyLocation {
 		return result;
 	}
 
-	static validateLocationCoords(point) {
-		const checkedPoint = EmptyLocation.calcNorthWestByPoint(point);
+	static validateLatitude(lat) {
+		const checkedLat = EmptyLocation.getNorthWestLocationLatitudeByPoint(lat);
+		return checkedLat === lat;
+	}
 
-		if (checkedPoint.lat === point.lat || checkedPoint.lng === point.lng) {
-			return true;
-		}
-
-		return false;
+	static validateLongitude(lat, lng) {
+		const checkedLng = EmptyLocation.getNorthWestLocationLongitudeByPoint({
+			lat,
+			lng
+		});
+		return checkedLng === lng;
 	}
 
 	static get equatorLength() {
