@@ -311,7 +311,14 @@ class ClientLocationObject extends EmptyLocation {
 }
 
 schedule.scheduleJob('0 0 3 * * *', () => {
-	ClientLocationObject.recalcLocationsLifecycle();
+	ClientLocationObject.recalcLocationsLifecycle()
+		.then(() => {
+			console.log('Daily event!');
+		})
+		.catch((err) => {
+			console.log('Daily event trouble:');
+			console.dir(err);
+		});
 });
 
 module.exports = ClientLocationObject;
