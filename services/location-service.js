@@ -3,9 +3,11 @@ const User = require('../models/user-orm');
 const EmptyLocation = require('./grid-service');
 const logService = require('./log-service');
 const sequelize = require('./orm-service');
-const eventEmitter = require('./eventEmitter-service');
+// const eventEmitter = require('./eventEmitter-service');
+const EventEmitter = require('events').EventEmitter;
 const schedule = require('node-schedule');
 
+const eventEmitter = new EventEmitter();
 
 class ClientLocationObject extends EmptyLocation {
 	constructor(location, userId) {

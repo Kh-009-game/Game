@@ -4,14 +4,22 @@ const locationMiddlewares = require('../middleware/location-middlewares');
 
 const router = express.Router();
 
-router.get('/', locationController.getAllLocations);
-router.get('/create', locationController.getOccupyForm);
+router.get(
+	'/',
+	locationController.getAllLocations);
+router.get(
+	'/create',
+	locationController.getOccupyForm
+);
 router.post(
 	'/create',
 	locationMiddlewares.checkIsCurrent,
 	locationController.occupyLocation
 );
-router.get('/check-location', locationController.getLocationOnPoint);
+router.get(
+	'/check-location',
+	locationController.getLocationOnPoint
+);
 router.get(
 	'/:id',
 	locationMiddlewares.attachClientLocObject,
