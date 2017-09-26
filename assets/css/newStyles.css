@@ -235,6 +235,32 @@ body {
 .show-form .loc-info {
   display: none;
 }
+.notification {
+  position: fixed;
+  right: 10px;
+  top: 5px;
+  display: none;
+  max-width: 320px;
+}
+.notification-item {
+   margin: 8px 0;
+    background-color: #fff; 
+    color: #4c4c4c;
+    padding: 10px;
+    box-shadow: 0 0 7px 0px rgba(0,0,0,.2);
+    text-align: left;
+    border-radius: 3px;
+    transition: all 2s ease-out;
+}
+.notification.open {
+  display: block;
+}
+.notification-item.remove {
+  animation-duration: 2s;
+  background-color: #fff; 
+  animation-name: slideout;
+  transform: translateX(200%);
+}
 @media screen and (min-width: 769px) {
   .main-block {
     position: absolute;
@@ -244,6 +270,7 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    max-width: 320px;
   }
   .header-menu {
     position: relative;
@@ -269,4 +296,15 @@ body {
   .main-btns .show-btn {
     display: none;
   }
+}
+
+
+@keyframes slideout {
+  0% {
+    transform: translateY(0) translateX(0);
+  }
+  90% {
+    transform: translateX(200%);
+  }
+
 }

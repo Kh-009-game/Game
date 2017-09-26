@@ -42,6 +42,7 @@ class Game {
 		this.centerUserLocationsBtn.addEventListener('click', (event) => {
 			// let target = event.target;
 			this.centerMapByUserGeoData(undefined, undefined, 16);
+			this.highlightCurrentLocation();
 		});
 		this.locInfoContainer.addEventListener('click', (event) => {
 			let target = event.target;
@@ -564,6 +565,15 @@ class Game {
 		);
 	}
 
+	highlightCurrentLocation() {
+		const locId = this.currentLocation.locationId;
+		if (locId) {
+			this.highlightOccupiedLocation(this.currentLocation);
+		} else {
+			this.hightlightCurrentEmptyLocation();
+		}
+	}
+
 	removeCurrentHighlight() {
 		if (this.currentLocationMapFeature) {
 			const currentLocId = this.currentLocationMapFeature.getId();
@@ -631,6 +641,7 @@ class Game {
 		);
 		this.highlightedMapFeature.setProperty('info', featureProps.info);
 	}
+
 
 	// current location highlighting method
 
@@ -1128,29 +1139,25 @@ class Game {
 	// The function creates a notification with the specified body and header.
 
 	createMessageElement(data) {
-		const type = data.type;
-		const container = document.createElement('div');
-		let typeClass;
-		if (type === 'msgCreateLoc') {
-			typeClass = 'create-loc-msg';
-		} else if (type === 'msgDeleteLoc') {
-			typeClass = 'del-loc-msg';
-		} else {
-			typeClass = 'update-loc-msg';
-		}
-		container.innerHTML = `<div class="my-message"> 
-	    <div class="my-message-title ${typeClass}"> Notification </div> 
-	    <div class="my-message-body"> ${data.text} </div> 
-	  </div>`;
-		return container.firstChild;
+		const notification = document.createElement('div');
+		notification.classList.add('notification-item');
+		notification.textContent = data.text;
+
+		const notifications = document.querySelector('.notification');
+		notifications.appendChild(notification);
 	}
 
 	// Running
 	setupMessageElement(data) {
-		const messageElem = this.createMessageElement(data);
-		document.body.appendChild(messageElem);
+		const notifications = document.querySelector('.notification');
+		notifications.classList.add('open');
+		this.createMessageElement(data);
 		setTimeout(() => {
-			messageElem.parentNode.removeChild(messageElem);
+			const removedItem = notifications.querySelector('.notification-item:first-child');
+			removedItem.classList.add('remove');
+			removedItem.addEventListener('animationend', () => {
+				notifications.removeChild(removedItem);
+			});
 		}, 10000);
 	}
 }
