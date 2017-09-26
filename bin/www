@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 'use strict';
 
 /**
@@ -9,7 +11,6 @@ const debug = require('debug')('heroku-test:server');
 const http = require('http');
 const socket = require('socket.io');
 const socketService = require('../services/sockets');
-// const sockets = require('../services/sockets');
 
 const server = http.createServer(app);
 const io = socket(server);

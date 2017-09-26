@@ -24,7 +24,7 @@ class ClientLocationObject extends EmptyLocation {
 		this.population = locationData.population;
 		this.hasDailyBank = locationData.taking_bank_date < lastLifeCycleEventDate;
 		this.loyalPopulation = locationData.loyal_population;
-		this.dailyCheckin = locationData.checkin_date < lastLifeCycleEventDate;
+		this.dailyCheckin = locationData.checkin_date > lastLifeCycleEventDate;
 		this.creationDate = locationData.created_at;
 		this.locationName = locationData.name;
 		this.dailyMessage = locationData.daily_msg;
