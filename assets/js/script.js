@@ -1,17 +1,19 @@
 'use strict';
 
-// const socket = io();
-
-
 class Game {
 	constructor(options) {
 		// use template for output
 		options = options || {};
 
-		this.locInfoContainer = options.locInfoContainer || document.getElementById('loc-info');
-		this.clickedLocInfo = options.locInfoContainer || document.getElementById('clicked-loc-info');
-		this.currentLocInfo = options.locInfoContainer || document.getElementById('current-loc-info');
-		this.occupyFormContainer = options.locInfoContainer || document.getElementById('occupy-form');
+		this.locInfoContainer = options.locInfoContainer || document.querySelector('.loc-info');
+		this.locInfoBlock = options.locInfoContainer || document.querySelector('.location-block');
+		this.locInfoMenu = options.locInfoContainer || document.querySelector('.location-menu');
+		this.clickedLocInfo = options.locInfoContainer || this.locInfoContainer;
+		this.currentLocInfo = options.locInfoContainer || this.locInfoContainer;
+		this.occupyFormContainer = options.locInfoContainer || document.querySelector('.form-container');
+		this.showUserLocationsBtn = document.getElementById('show-user-location');
+		this.centerUserLocationsBtn = document.getElementById('center-user-location');
+		this.logOutBtn = document.getElementById('log-out');
 
 		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
 			bubbles: true
@@ -29,29 +31,19 @@ class Game {
 		this.occupiedLocationsMapFeatures = {};
 		this.occupiedLocationsGroundOverlays = {};
 		this.occupiedLocationsIcons = {};
-		this.showUserLocationsBtn = document.getElementById('showUserLocationsButton');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
 			// let target = event.target;
 			this.showAllUserLocations();
 		});
+		this.centerUserLocationsBtn.addEventListener('click', (event) => {
+			// let target = event.target;
+			this.centerMapByUserGeoData(undefined, undefined, 16);
+			this.highlightCurrentLocation();
+		});
 		this.locInfoContainer.addEventListener('click', (event) => {
 			let target = event.target;
 
-			if (target.closest('#hide-btn')) {
-				target = target.closest('#btn-hide');
-				this.locInfoContainer.classList.add('hide');
-				// hide #loc-info
-				return;
-			}
-
-			if (target.closest('#show-btn')) {
-				target = target.closest('#show-btn');
-				this.locInfoContainer.classList.remove('hide');
-
-				// show #loc-info
-				return;
-			}
 			if (target.closest('#close-btn')) {
 				target = target.closest('#close-btn');
 				this.removeHighlight();
@@ -87,7 +79,7 @@ class Game {
 			}
 			if (target.closest('#edit-loc-btn')) {
 				target = target.closest('#edit-loc-btn');
-				 this.showEditingLocForm();
+				this.showEditingLocForm();
 				return;
 			}
 			if (target.closest('#money-btn')) {
@@ -100,7 +92,7 @@ class Game {
 				this.restorePopulation();
 			}
 		});
-		this.locInfoContainer.addEventListener('submit', (event) => {
+		this.occupyFormContainer.addEventListener('submit', (event) => {
 			const form = event.target;
 			if (form.getAttribute('name') === 'occup-form') {
 				this.occupySubmitHandler(event);
@@ -113,6 +105,23 @@ class Game {
 			if (form.getAttribute('name') === 'edit-loc-form') {
 				this.editLocationInfoHandler(event);
 			}
+		});
+
+		this.logOutBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			const logOutPromise = new Promise((res, rej) => {
+				const xhr = new XMLHttpRequest();
+
+				xhr.open('GET', '/user/logout');
+				xhr.send();
+				xhr.addEventListener('load', (e) => {
+					const srcXHR = e.target;
+					if (srcXHR.status !== 200) {
+						rej(srcXHR.response);
+					}
+					window.location.replace(srcXHR.responseURL);
+				});
+			});
 		});
 	}
 
@@ -203,6 +212,7 @@ class Game {
 		return marker;
 	}
 
+
 	get mapFeaturesStyles() {
 		return {
 			defaultStyles: {
@@ -278,6 +288,26 @@ class Game {
 
 	// GET LOCATIONS INFO FROM DB METHODS	
 
+	getGameBounds() {
+		return new Promise((res, rej) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', '/api/grid/bounds');
+			xhr.send();
+			xhr.addEventListener('load', (e) => {
+				const xhttp = e.target;
+				if (xhttp.status === 200) {
+					const response = JSON.parse(xhttp.response);
+					const pointsArr = [];
+					for (let i = 0; i < response.length; i++) {
+						pointsArr.push(response[i]);
+					}
+					res(pointsArr);
+				} else {
+					rej(xhttp.response);
+				}
+			});
+		});
+	}
 	// get ALL occupied locations short info from db
 	getOccupiedLocations() {
 		return new Promise((res, rej) => {
@@ -451,6 +481,17 @@ class Game {
 			this.occupiedLocationsIcons[locId].setMap(this.map);
 		});
 	}
+	showUserIcons() {
+		this.occupiedLocationsArray.forEach((location) => {
+			if (location.isMaster) {
+				const locId = location.locationId;
+				this.occupiedLocationsIcons[locId].setMap(this.map);
+			} else {
+				const locId = location.locationId;
+				this.occupiedLocationsIcons[locId].setMap(null);
+			}
+		});
+	}
 
 	// all user locations rendering method
 
@@ -480,6 +521,8 @@ class Game {
 					});
 					this.map.fitBounds(bounds);
 				}
+
+				this.showUserIcons();
 			})
 			.catch((err) => {
 				console.log(err);
@@ -539,6 +582,15 @@ class Game {
 		);
 	}
 
+	highlightCurrentLocation() {
+		const locId = this.currentLocation.locationId;
+		if (locId) {
+			this.highlightOccupiedLocation(this.currentLocation);
+		} else {
+			this.hightlightCurrentEmptyLocation();
+		}
+	}
+
 	removeCurrentHighlight() {
 		if (this.currentLocationMapFeature) {
 			const currentLocId = this.currentLocationMapFeature.getId();
@@ -571,8 +623,9 @@ class Game {
 		return this.getLocInfoHTML(this.currentLocation)
 			.then((response) => {
 				this.currentLocInfo.innerHTML = response;
-				if (this.locInfoContainer.className === 'loc-info') {
-				    this.locInfoContainer.className = 'loc-info show-current';
+				if (this.locInfoBlock.className === 'location-block') {
+					this.locInfoBlock.className = 'location-block show-current';
+					this.locInfoMenu.classList.add('open');
 				}
 			});
 	}
@@ -606,6 +659,7 @@ class Game {
 		this.highlightedMapFeature.setProperty('info', featureProps.info);
 	}
 
+
 	// current location highlighting method
 
 	hightlightCurrentEmptyLocation() {
@@ -630,7 +684,7 @@ class Game {
 			lng: event.latLng.lng()
 		})
 			.then((clickedLocation) => {
-				console.log(clickedLocation);
+				console.log(`click${clickedLocation}`);
 				clickedLocation.locationName = 'Empty Location';
 				this.highlightEmptyLocation(clickedLocation);
 				return this.renderHighlightedLocationTextInfo();
@@ -669,7 +723,7 @@ class Game {
 		return this.getLocInfoHTML(this.highlightedLocation)
 			.then((response) => {
 				this.clickedLocInfo.innerHTML = response;
-				this.locInfoContainer.className = 'loc-info show-clicked';
+				this.locInfoBlock.className = 'location-block show-clicked';
 			});
 	}
 
@@ -707,7 +761,7 @@ class Game {
 		this.getLocOccupFormHTML()
 			.then((response) => {
 				this.occupyFormContainer.innerHTML = response;
-				this.locInfoContainer.className = 'loc-info show-form';
+				this.locInfoBlock.className = 'location-block show-form';
 				document.getElementById('loc-name-field').focus();
 			})
 			.catch((err) => {
@@ -719,7 +773,7 @@ class Game {
 		this.getClickedLocOccupFormHTML()
 			.then((response) => {
 				this.occupyFormContainer.innerHTML = response;
-				this.locInfoContainer.className = 'loc-info show-form';
+				this.locInfoBlock.className = 'location-block show-form';
 				document.getElementById('loc-name-field').focus();
 			})
 			.catch((err) => {
@@ -807,8 +861,8 @@ class Game {
 	}
 
 	 showEditingLocForm() {
-	 	this.locInfoContainer.className = 'loc-info';
-	 	this.locInfoContainer.classList.add('show-form');
+	 	this.locInfoBlock.className = 'location-block';
+	 	this.locInfoBlock.classList.add('show-form');
 	 	this.getLocOccupFormHTML(
 	 		this.highlightedLocation
 	 	)
@@ -816,20 +870,20 @@ class Game {
 				this.occupyFormContainer.innerHTML = response;
 				document.getElementById('loc-name-field').focus();
 			});
-	 }
+	}
 
-	// editLocationInfoHandler(event) {
-	// 	event.preventDefault();
-	// 	const form = event.target;
-	// 	const locName = form['location-name'].value;
-	// 	const dailyMsg = form['daily-msg'].value;
-	// 	const location = form['daily-msg'].value;
+	editLocationInfoHandler(event) {
+		event.preventDefault();
+		const form = event.target;
+		const locName = form['location-name'].value;
+		const dailyMsg = form['daily-msg'].value;
+		const locID = this.highlightedLocation.locationId;
 
-	// 	this.currentLocation.locationName = locName;
-	// 	this.currentLocation.dailyMessage = dailyMsg;
-
-	// 	this.occupyCurrentLocation();
-	// }
+		socket.emit('editLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
+		// this.currentLocation.locationName = locName;
+		// this.currentLocation.dailyMessage = dailyMsg;
+		// this.hideOccupationForm();
+	}
 
 	deleteLocation(location) {
 		return new Promise((res, rej) => {
@@ -848,7 +902,7 @@ class Game {
 
 	hideOccupationForm() {
 		const locInfoClass = this.highlightedLocation ? 'show-clicked' : 'show-current';
-		this.locInfoContainer.className = 'loc-info';
+		this.locInfoBlock.className = 'location-block';
 		this.locInfoContainer.classList.add(locInfoClass);
 		this.occupyFormContainer.innerHTML = '';
 	}
@@ -1029,7 +1083,7 @@ class Game {
 
 	// GOOGLE MAP AND HTML5 GEOLOCATION INTERACTION METHODS
 	refreshUserGeodata(coords) {
-		const locInfoClassList = this.locInfoContainer.className;
+		const locInfoClassList = this.locInfoBlock.className;
 		this.setUserGeoData(coords);
 		this.renderCurrentUserMarker();
 
@@ -1052,8 +1106,8 @@ class Game {
 			// .then(() => this.renderHighlightedLocationTextInfo())
 			.then(() => {
 				// do not change displaying element in loc-info;
-				this.locInfoContainer.className = locInfoClassList === 'loc-info' ?
-					this.locInfoContainer.className :
+				this.locInfoBlock.className = locInfoClassList === 'location-block' ?
+					this.locInfoBlock.className :
 					locInfoClassList;
 			})
 			.catch((err) => {
@@ -1106,29 +1160,25 @@ class Game {
 	// The function creates a notification with the specified body and header.
 
 	createMessageElement(data) {
-		const type = data.type;
-		const container = document.createElement('div');
-		let typeClass;
-		if (type === 'msgCreateLoc') {
-			typeClass = 'create-loc-msg';
-		} else if (type === 'msgDeleteLoc') {
-			typeClass = 'del-loc-msg';
-		} else {
-			typeClass = 'update-loc-msg';
-		}
-		container.innerHTML = `<div class="my-message"> 
-	    <div class="my-message-title ${typeClass}"> Notification </div> 
-	    <div class="my-message-body"> ${data.text} </div> 
-	  </div>`;
-		return container.firstChild;
+		const notification = document.createElement('div');
+		notification.classList.add('notification-item');
+		notification.textContent = data.text;
+
+		const notifications = document.querySelector('.notification');
+		notifications.appendChild(notification);
 	}
 
 	// Running
 	setupMessageElement(data) {
-		const messageElem = this.createMessageElement(data);
-		document.body.appendChild(messageElem);
+		const notifications = document.querySelector('.notification');
+		notifications.classList.add('open');
+		this.createMessageElement(data);
 		setTimeout(() => {
-			messageElem.parentNode.removeChild(messageElem);
+			const removedItem = notifications.querySelector('.notification-item:first-child');
+			removedItem.classList.add('remove');
+			removedItem.addEventListener('animationend', () => {
+				notifications.removeChild(removedItem);
+			});
 		}, 10000);
 	}
 }
@@ -1138,191 +1188,8 @@ function initMap() {
 		zoom: 12,
 		center: { lat: 49.9891, lng: 36.2322 },
 		clickableIcons: false,
-		styles: [
-			{
-				featureType: 'water',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						color: '#d3d3d3'
-					}
-				]
-			},
-			{
-				featureType: 'transit',
-				stylers: [
-					{
-						color: '#808080'
-					},
-					{
-						visibility: 'off'
-					}
-				]
-			},
-			{
-				featureType: 'road.highway',
-				elementType: 'geometry.stroke',
-				stylers: [
-					{
-						visibility: 'on'
-					},
-					{
-						color: '#b3b3b3'
-					}
-				]
-			},
-			{
-				featureType: 'road.highway',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						color: '#ffffff'
-					}
-				]
-			},
-			{
-				featureType: 'road.local',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						visibility: 'on'
-					},
-					{
-						color: '#ffffff'
-					},
-					{
-						weight: 1.8
-					}
-				]
-			},
-			{
-				featureType: 'road.local',
-				elementType: 'geometry.stroke',
-				stylers: [
-					{
-						color: '#d7d7d7'
-					}
-				]
-			},
-			{
-				featureType: 'poi',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						visibility: 'on'
-					},
-					{
-						color: '#ebebeb'
-					}
-				]
-			},
-			{
-				featureType: 'administrative',
-				elementType: 'geometry',
-				stylers: [
-					{
-						color: '#a7a7a7'
-					}
-				]
-			},
-			{
-				featureType: 'road.arterial',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						color: '#ffffff'
-					}
-				]
-			},
-			{
-				featureType: 'road.arterial',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						color: '#ffffff'
-					}
-				]
-			},
-			{
-				featureType: 'landscape',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						visibility: 'on'
-					},
-					{
-						color: '#efefef'
-					}
-				]
-			},
-			{
-				featureType: 'road',
-				elementType: 'labels.text.fill',
-				stylers: [
-					{
-						color: '#696969'
-					}
-				]
-			},
-			{
-				featureType: 'administrative',
-				elementType: 'labels.text.fill',
-				stylers: [
-					{
-						visibility: 'on'
-					},
-					{
-						color: '#737373'
-					}
-				]
-			},
-			{
-				featureType: 'poi',
-				elementType: 'labels.icon',
-				stylers: [
-					{
-						visibility: 'off'
-					}
-				]
-			},
-			{
-				featureType: 'poi',
-				elementType: 'labels',
-				stylers: [
-					{
-						visibility: 'off'
-					}
-				]
-			},
-			{
-				featureType: 'road.arterial',
-				elementType: 'geometry.stroke',
-				stylers: [
-					{
-						color: '#d6d6d6'
-					}
-				]
-			},
-			{
-				featureType: 'road',
-				elementType: 'labels.icon',
-				stylers: [
-					{
-						visibility: 'off'
-					}
-				]
-			},
-			{},
-			{
-				featureType: 'poi',
-				elementType: 'geometry.fill',
-				stylers: [
-					{
-						color: '#dadada'
-					}
-				]
-			}
-		]
+		disableDefaultUI: true,
+		styles: MAP_STYLES
 	});
 
 
@@ -1378,9 +1245,37 @@ function initMap() {
 		});
 
 		game.renderOccupiedLocations();
-		// setTimeout(() => {
-		// 	game.renderOccupiedLocations();
-		// }, 5000);
+
+		game.getGameBounds()
+			.then((boundsCoords) => {
+				const gameArea = new google.maps.Polygon({
+					path: boundsCoords,
+					strokeColor: '#5B5B5B',
+					strokeOpacity: 1.0,
+					strokeWeight: 2,
+					fillOpacity: 0
+				});
+				const gameBounds = new google.maps.Polyline({
+					path: boundsCoords,
+					geodesic: true,
+					strokeColor: '#FF0000',
+					strokeOpacity: 1.0,
+					strokeWeight: 2
+				});
+
+				gameBounds.setMap(map);
+
+				map.addListener('click', (e) => {
+					if (google.maps.geometry.poly.containsLocation(e.latLng, gameArea)) {
+						console.log('contains');
+					} else {
+						console.log('out of bounds');
+					}
+				});
+			})
+			.catch((err) => {
+				console.log(`1419 ${err}`);
+			});
 
 		function initMapInteraction() {
 			navigator.geolocation.getCurrentPosition((position) => {

@@ -2,13 +2,6 @@ const Sequelize = require('sequelize');
 const sequelize = require('../services/db-service-orm');
 
 const User = sequelize.define('user', {
-	// id: {
-	// 	type: Sequelize.INTEGER,
-	// 	autoIncrement: true,
-	// 	unique: true,
-	// 	allowNull: false,
-	// 	primaryKey: true
-	// },
 	name: {
 		type: Sequelize.STRING,
 		unique: true,

@@ -1,43 +1,55 @@
-<% if (location.isHighlighted) { %> 
-  <button class="close-btn" id="close-btn">X</button>
+<!-- <% if (location.isHighlighted) { %> 
+  <button class="close-btn" id="close-btn"><i class="material-icons">cancel</i></button>
 <% } %>
-<div>
-  <h2 class="info-heading">
-    <% if (location.locationName) { %>
+ -->
+
+
+
+<div class="location-info">
+      <h2><% if (location.locationName) { %>
       <%= location.locationName %>
     <% } else { %>
     Empty location 
     <% } %>
     <% if (location.masterName) { %>
        (<%= location.masterName %>)
+    <% } %></h2>
+
+    <% if (location.dailyMessage) { %> 
+     <p><i class="icon material-icons">message</i> <%= location.dailyMessage %></p>
     <% } %>
-  </h2>							
-  <% if (location.dailyMessage) { %> 
-    <span><%= location.dailyMessage %></span>
-  <% } %>  									
-  <% if (location.population) { %>
-    <span>Loyalty: <%= location.loyalPopulation %>/<%= location.population %></span>
-  <% } %>
-  <% if (location.hasDailyBank) { %>
-    <span>Bank: <%= location.loyalPopulation %></span>
-  <% } %>  
-  <span>Location coords: <%= location.northWest.lat %> <%= location.northWest.lng %></span>
+    <p>
+      <% if (location.population) { %>
+        <span><i class="icon material-icons">accessibility</i> <%= location.loyalPopulation %>/<%= location.population %></span>
+      <% } %>
+      <% if (location.hasDailyBank !== undefined) { %>
+        <span><i class="icon material-icons">account_balance</i> <%= location.loyalPopulation %></span>  
+      <% } %>
+    </p> 
 </div>
-<% if (!location.masterId && location.isCurrent) { %>
-  <button class="btn" id="occupy-btn">Occupy</button>
-<% } %>
-<% if (!location.masterId && !location.isCurrent && isAdmin) { %>
-  <button class="btn" id="occupy-click-btn">Occupy</button>
-<% } %>
-<% if (location.isHighlighted && (location.isMaster || isAdmin)) { %>
-  <button class="btn edit-loc-btn" id="edit-loc-btn">Edit location</button>
-<% } %>
-<% if ((location.isMaster || (isAdmin && location.locationId)) && location.isHighlighted) { %>
-  <button class="btn delete-loc-btn" id="delete-loc-btn">Delete location</button>
-<% } %>
-<% if (location.isMaster && location.isCurrent && location.hasDailyBank) { %> 
-  <button class="btn money-btn" id="money-btn">Take money</button>
-<% } %>
+<div class="location-buttons">
+  <% if (!location.masterId && location.isCurrent) { %>
+    <button type="button" class="btn" id="occupy-btn">Occupy</button>
+  <% } %>
+  <% if (!location.masterId && !location.isCurrent && isAdmin) { %>
+    <button type="button" class="btn" id="occupy-click-btn">Occupy</button>
+  <% } %>
+  <% if (location.isHighlighted && location.locationId && (location.isMaster || isAdmin)) { %>
+    <button type="button" class="location-buttons--item" id="edit-loc-btn">
+          <i class="material-icons">mode_edit</i>
+     </button>
+  <% } %>
+     <% if (location.isMaster && location.isCurrent && location.hasDailyBank) { %> 
+        <button type="button" class="location-buttons--item" id="money-btn">
+              <i class="material-icons">monetization_on</i>
+            </button>
+      <% } %>
+
 <% if (( location.isMaster || isAdmin ) && !location.isCurrent && ( location.loyalPopulation < location.population )) { %>
-  <button class="btn feed-btn" id="feed-btn">Feed</button>
+  <button type="button" class="location-buttons--item" id="feed-btn">
+        <i class="material-icons">shopping_basket</i></button>
 <% } %>
+    <% if ((location.isMaster || (isAdmin && location.locationId)) && location.isHighlighted) { %>
+      <button type="button" class="location-buttons--item" id="delete-loc-btn"> <i class="material-icons">delete_forever</i></button>
+    <% } %>
+</div>

@@ -5,10 +5,19 @@ let ws;
 module.exports = function (io) {
 	io.on('connection', (socket) => {
 		ws = socket;
-		socket.on('message', (message) => {
-			console.log('info', message.value);
-			socket.emit('ditConsumer', message.value);
-			console.log('from console', message.value);
+		socket.on('editLocationWS', (data) => {
+			// OccupiedLocation.getLocationById(data.locationId)
+			// 	.then((location) => {
+			// 		Object.assign(location, data);
+			// 		location.editLocation();
+			// 		this.io.sockets.emit('update', {
+			// 			type: 'EditLoc',
+			// 			text: `The location with id ${data.locationId} was renamed`
+			// 		});
+			// 	})
+			// 	.catch((err) => {
+			// 		console.log('error', err);
+			// 	});
 		});
 	});
 };

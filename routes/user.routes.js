@@ -74,7 +74,7 @@ router.post('/register', (req, res) => {
 	res.redirect('../');
 });
 
-router.post('/logout', (req, res) => {
+router.get('/logout', (req, res) => {
 	res.clearCookie('auth');
 	res.redirect('/login');
 });
