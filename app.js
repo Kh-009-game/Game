@@ -16,7 +16,6 @@ const locationsRoutes = require('./routes/locations.routes');
 const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
 const logService = require('./services/log-service');
-const ormDB = require('./services/orm-service');
 
 const app = express();
 // const port = process.env.PORT || 8080;
