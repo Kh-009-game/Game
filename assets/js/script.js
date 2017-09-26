@@ -571,9 +571,9 @@ class Game {
 		return this.getLocInfoHTML(this.currentLocation)
 			.then((response) => {
 				this.currentLocInfo.innerHTML = response;
-                if (this.locInfoContainer.className === 'loc-info') {
+				if (this.locInfoContainer.className === 'loc-info') {
 				    this.locInfoContainer.className = 'loc-info show-current';
-                }
+				}
 			});
 	}
 
@@ -787,10 +787,14 @@ class Game {
 
 	occupyLocation(location) {
 		return new Promise((res, rej) => {
+			const body = {
+				locationData: location,
+				userGeoData: this.userGeoData
+			};
 			const createLocationXHR = new XMLHttpRequest();
 			createLocationXHR.open('POST', 'api/locations/create');
 			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
-			createLocationXHR.send(JSON.stringify(location));
+			createLocationXHR.send(JSON.stringify(body));
 			createLocationXHR.addEventListener('load', (e) => {
 				const xhr = e.srcElement;
 				console.log(xhr);
@@ -808,10 +812,10 @@ class Game {
 	 	this.getLocOccupFormHTML(
 	 		this.highlightedLocation
 	 	)
-         .then((response) => {
-            this.occupyFormContainer.innerHTML = response;
-            document.getElementById('loc-name-field').focus();
-         });
+			.then((response) => {
+				this.occupyFormContainer.innerHTML = response;
+				document.getElementById('loc-name-field').focus();
+			});
 	 }
 
 	// editLocationInfoHandler(event) {
@@ -1102,16 +1106,16 @@ class Game {
 	// The function creates a notification with the specified body and header.
 
 	createMessageElement(data) {
-        const type = data.type;
+		const type = data.type;
 		const container = document.createElement('div');
-        let typeClass;
-        if (type === 'msgCreateLoc') {
-            typeClass = 'create-loc-msg';
-        } else if (type === 'msgDeleteLoc') {
-            typeClass = 'del-loc-msg';
-        } else {
-            typeClass = 'update-loc-msg';
-        }
+		let typeClass;
+		if (type === 'msgCreateLoc') {
+			typeClass = 'create-loc-msg';
+		} else if (type === 'msgDeleteLoc') {
+			typeClass = 'del-loc-msg';
+		} else {
+			typeClass = 'update-loc-msg';
+		}
 		container.innerHTML = `<div class="my-message"> 
 	    <div class="my-message-title ${typeClass}"> Notification </div> 
 	    <div class="my-message-body"> ${data.text} </div> 

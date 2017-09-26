@@ -1,5 +1,5 @@
 const express = require('express');
-const EmptyLocation = require('../models/emptyLocation');
+const EmptyLocation = require('../services/grid-service');
 const config = require('../config');
 
 const router = express.Router();
@@ -9,7 +9,8 @@ router.get('/', (req, res) => {
 		lat: +req.query.lat,
 		lng: +req.query.lng
 	};
-	const location = new EmptyLocation(geoData);
+	const locCoords = EmptyLocation.calcNorthWestByPoint(geoData);
+	const location = new EmptyLocation(locCoords);
 	res.json(location);
 });
 
