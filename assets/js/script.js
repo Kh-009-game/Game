@@ -82,7 +82,7 @@ class Game {
 			}
 			if (target.closest('#edit-loc-btn')) {
 				target = target.closest('#edit-loc-btn');
-				 this.showEditingLocForm();
+				this.showEditingLocForm();
 				return;
 			}
 			if (target.closest('#money-btn')) {
@@ -291,6 +291,26 @@ class Game {
 
 	// GET LOCATIONS INFO FROM DB METHODS	
 
+	getGameBounds() {
+		return new Promise((res, rej) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', '/api/grid/bounds');
+			xhr.send();
+			xhr.addEventListener('load', (e) => {
+				const xhttp = e.target;
+				if (xhttp.status === 200) {
+					const response = JSON.parse(xhttp.response);
+					const pointsArr = [];
+					for (let i = 0; i < response.length; i++) {
+						pointsArr.push(response[i]);
+					}
+					res(pointsArr);
+				} else {
+					rej(xhttp.response);
+				}
+			});
+		});
+	}
 	// get ALL occupied locations short info from db
 	getOccupiedLocations() {
 		return new Promise((res, rej) => {
@@ -667,7 +687,7 @@ class Game {
 			lng: event.latLng.lng()
 		})
 			.then((clickedLocation) => {
-				console.log(clickedLocation);
+				console.log(`click${clickedLocation}`);
 				clickedLocation.locationName = 'Empty Location';
 				this.highlightEmptyLocation(clickedLocation);
 				return this.renderHighlightedLocationTextInfo();
@@ -858,11 +878,18 @@ class Game {
 	// 	const dailyMsg = form['daily-msg'].value;
 	// 	const location = form['daily-msg'].value;
 
-	// 	this.currentLocation.locationName = locName;
-	// 	this.currentLocation.dailyMessage = dailyMsg;
+	editLocationInfoHandler(event) {
+		event.preventDefault();
+		const form = event.target;
+		const locName = form['location-name'].value;
+		const dailyMsg = form['daily-msg'].value;
+		const locID = this.highlightedLocation.locationId;
 
-	// 	this.occupyCurrentLocation();
-	// }
+		socket.emit('editLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
+		// this.currentLocation.locationName = locName;
+		// this.currentLocation.dailyMessage = dailyMsg;
+		// this.hideOccupationForm();
+	}
 
 	deleteLocation(location) {
 		return new Promise((res, rej) => {
@@ -1224,9 +1251,41 @@ function initMap() {
 		});
 
 		game.renderOccupiedLocations();
-		// setTimeout(() => {
-		// 	game.renderOccupiedLocations();
-		// }, 5000);
+
+		game.getGameBounds()
+			.then((boundsCoords) => {
+				const gameArea = new google.maps.Polygon({
+					path: boundsCoords,
+					strokeColor: '#5B5B5B',
+					strokeOpacity: 1.0,
+					strokeWeight: 2,
+					fillOpacity: 0
+				});
+				const gameBounds = new google.maps.Polyline({
+					path: boundsCoords,
+					geodesic: true,
+					strokeColor: '#FF0000',
+					strokeOpacity: 1.0,
+					strokeWeight: 2
+				});
+
+				gameBounds.setMap(map);
+
+				map.addListener('click', (e) => {
+					if (google.maps.geometry.poly.containsLocation(e.latLng, gameArea)) {
+						console.log('contains');
+					} else {
+						console.log('out of bounds');
+					}
+				});
+			})
+			.catch((err) => {
+				console.log(`1419 ${err}`);
+			});
+
+		setTimeout(() => {
+			game.renderOccupiedLocations();
+		}, 5000);
 
 		function initMapInteraction() {
 			navigator.geolocation.getCurrentPosition((position) => {

@@ -117,25 +117,28 @@ router.get('/:id/edit', (req, res, next) => {
 	});
 });
 
-router.put('/:id', (req, res, next) => {
-	if (req.reqLocation.isMaster || req.decoded.isAdmin) {
-		const editedLocation = Object.assign(req.reqLocation, req.body);
+// sockets.getMessageWS('updateLocationWS', data);
 
-		editedLocation.editLocation()
-			.then(() => {
-				res.sendStatus(200);
-				sockets.sendMessage('update', {
-					type: 'msgUpdateLoc',
-					text: `The location ${req.reqLocation.locationName} was changed`
-				});
-			})
-			.catch((err) => {
-				next(err);
-			});
-	} else {
-		next(new Error('No such rights!'));
-	}
-});
+
+// router.put('/:id', (req, res, next) => {
+// 	if (req.reqLocation.isMaster || req.decoded.isAdmin) {
+// 		const editedLocation = Object.assign(req.reqLocation, req.body);
+
+// 		editedLocation.editLocation()
+// 			.then(() => {
+// 				res.sendStatus(200);
+// 				sockets.sendMessage('update', {
+// 					type: 'msgUpdateLoc',
+// 					text: `The location ${req.reqLocation.locationName} was changed`
+// 				});
+// 			})
+// 			.catch((err) => {
+// 				next(err);
+// 			});
+// 	} else {
+// 		next(new Error('No such rights!'));
+// 	}
+// });
 
 // '/:id/loc-info?current=xxx&highlighted=xxx'
 router.get('/:id/loc-info', (req, res) => {
