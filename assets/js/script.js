@@ -1252,37 +1252,83 @@ function initMap() {
 
 		game.renderOccupiedLocations();
 
+		// game.getGameBounds()
+		// 	.then((resArray) => {
+		// 		const gameBounds = new google.maps.Polyline({
+		// 			path: resArray,
+		// 			geodesic: true,
+		// 			strokeColor: '#FF0000',
+		// 			strokeOpacity: 1.0,
+		// 			strokeWeight: 2
+		// 		});
+
+		// 		gameBounds.setMap(map);
+		// 	})
+		// 	.catch((err) => {
+		// 		console.log(err);
+		// 	});
 		game.getGameBounds()
 			.then((boundsCoords) => {
-				const gameArea = new google.maps.Polygon({
+				console.log('got bounds')
+				let gameArea = new google.maps.Polygon({
 					path: boundsCoords,
 					strokeColor: '#5B5B5B',
 					strokeOpacity: 1.0,
 					strokeWeight: 2,
 					fillOpacity: 0
 				});
-				const gameBounds = new google.maps.Polyline({
-					path: boundsCoords,
-					geodesic: true,
-					strokeColor: '#FF0000',
-					strokeOpacity: 1.0,
-					strokeWeight: 2
+				console.log('got area')
+				// gameArea.setMap(map);
+				// document.addEventListener('click', (e) => {
+				// 	let resColor = google.maps.geometry.poly.containsLocation(e.latLng, gameArea) ?
+				// 	'green' :
+				// 	'red';
+				// 	// console.log('contains') :
+				// 	// console.log('out of bounds');
+				// 	gameArea.setMap(map);
+				// 	console.log(resColor);
+				// 	new google.maps.Marker({
+				// 		position: e.latLng,
+				// 		map: map,
+				// 		icon: {
+				// 			path: google.maps.SymbolPath.CIRCLE,
+				// 			fillColor: resColor,
+				// 			fillOpacity: .2,
+				// 			strokeColor: 'grey',
+				// 			strokeWeight: .5,
+				// 			scale: 10
+				// 		}
+				// 	});
+				// })
+				gameArea.setMap(map);
+				gameArea.addListener('click', (e) => {
+					let resColor = google.maps.geometry.poly.containsLocation(e.latLng, gameArea) ?
+					'green' :
+					'red';
+					// console.log('contains') :
+					// console.log('out of bounds');
+					// gameArea.setMap(map);
+					console.log(resColor);
+					new google.maps.Marker({
+						position: e.latLng,
+						map: map,
+						icon: {
+							path: google.maps.SymbolPath.CIRCLE,
+							fillColor: resColor,
+							fillOpacity: .2,
+							strokeColor: 'grey',
+							strokeWeight: .5,
+							scale: 10
+						}
+					});
 				});
+				
 
-				gameBounds.setMap(map);
-
-				map.addListener('click', (e) => {
-					if (google.maps.geometry.poly.containsLocation(e.latLng, gameArea)) {
-						console.log('contains');
-					} else {
-						console.log('out of bounds');
-					}
-				});
 			})
 			.catch((err) => {
 				console.log(`1419 ${err}`);
 			});
-
+		
 		setTimeout(() => {
 			game.renderOccupiedLocations();
 		}, 5000);
