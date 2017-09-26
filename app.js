@@ -11,7 +11,6 @@ const auth = require('./middleware/auth');
 const cookieParser = require('cookie-parser');
 const favicon = require('serve-favicon');
 const logger = require('morgan');
-const OccupiedLocation = require('./models/occupiedLocation');
 const gridRoutes = require('./routes/grid.routes');
 const locationsRoutes = require('./routes/locations.routes');
 const userRoutes = require('./routes/user.routes');

@@ -1,5 +1,5 @@
 const express = require('express');
-const EmptyLocation = require('../models/emptyLocation');
+const EmptyLocation = require('../services/grid-service');
 const config = require('../config');
 
 const router = express.Router();

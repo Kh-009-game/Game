@@ -22,7 +22,6 @@ module.exports.occupyLocation = (req, res, next) => {
 	LocationService.occupyLocationByUser(req.decoded.id, req.body.locationData)
 		.then(() => {
 			res.sendStatus(200);
-			// emit update event in service
 		})
 		.catch(err => next(err));
 };
@@ -65,7 +64,6 @@ module.exports.editLocation = (req, res, next) => {
 	LocationService.editLocationById(req.body)
 		.then(() => {
 			res.sendStatus(200);
-			// emit update event in service
 		})
 		.catch((err) => {
 			next(err);
@@ -87,7 +85,6 @@ module.exports.deleteLocation = (req, res, next) => {
 	LocationService.deleteLocationById(req.params.id)
 		.then(() => {
 			res.sendStatus(200);
-			// emit update event in service
 		})
 		.catch((err) => {
 			next(err);
@@ -98,7 +95,6 @@ module.exports.doCheckin = (req, res, next) => {
 	LocationService.doCheckinById(req.params.id)
 		.then(() => {
 			res.sendStatus(200);
-			// emit change
 		})
 		.catch((err) => {
 			next(err);
@@ -109,7 +105,6 @@ module.exports.takeDailyBank = (req, res, next) => {
 	LocationService.takeDailyBankById(req.params.id)
 		.then(() => {
 			res.sendStatus(200);
-			// emit change
 		})
 		.catch((err) => {
 			next(err);
@@ -123,7 +118,6 @@ module.exports.restoreLoyalty = (req, res, next) => {
 	)
 		.then(() => {
 			res.sendStatus(200);
-			// emit change
 		})
 		.catch((err) => {
 			next(err);
