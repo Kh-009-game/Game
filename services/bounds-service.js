@@ -1,12 +1,19 @@
 const EmptyLocation = require('./grid-service');
 const Config = require('../config');
+const Location = require('../models/location-orm');
+const sequelize = require('./orm-service');
+const Bounds = require('../models/bounds-orm');
 
-module.exports.calcGameBounds = function () {
+module.exports.getGameBounds = function () {
+	return Bounds.findAll({ where: { figure_id: 1 } })
+		.then((points) => {
+			console.log(`10 ${points}`);
+		});
+};
+
+function calcGameBounds() {
 	const boundsCoords = Config.gameBounds;
 	const pointsArr = [];
-	if (pointsArr.length > 0) {
-		return pointsArr;
-	}
 	for (let i = 0; i < boundsCoords.length; i++) {
 		let startPointLoc = EmptyLocation.createLocationByPoint(boundsCoords[i]);
 		let endPointLoc;
@@ -25,7 +32,7 @@ module.exports.calcGameBounds = function () {
 		pointsArr.push(endPointLoc.northWest);
 	}
 	return pointsArr;
-};
+}
 
 function assemblePoints(direction, startPLoc, pointsArr) {
 	switch (direction) {

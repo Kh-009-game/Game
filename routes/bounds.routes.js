@@ -4,4 +4,6 @@ const locationController = require('../controllers/location-controller');
 
 const router = express.Router();
 
-router.get('/', locationController.calcGameBounds);
+router.get('/', locationController.getGameBounds);
+
+module.exports = router;

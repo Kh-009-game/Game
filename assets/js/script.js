@@ -291,16 +291,18 @@ class Game {
 	getGameBounds() {
 		return new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest();
-			xhr.open('GET', '/api/grid/bounds');
+			xhr.open('GET', '/api/bounds');
 			xhr.send();
 			xhr.addEventListener('load', (e) => {
 				const xhttp = e.target;
 				if (xhttp.status === 200) {
 					const response = JSON.parse(xhttp.response);
+					console.log(response);
 					const pointsArr = [];
 					for (let i = 0; i < response.length; i++) {
 						pointsArr.push(response[i]);
 					}
+					console.log(pointsArr);
 					res(pointsArr);
 				} else {
 					rej(xhttp.response);
