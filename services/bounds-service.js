@@ -7,7 +7,22 @@ const Bounds = require('../models/bounds-orm');
 module.exports.getGameBounds = function () {
 	return Bounds.findAll({ where: { figure_id: 1 } })
 		.then((points) => {
-			console.log(`10 ${points}`);
+			if (points.length === 0) {
+				const pointsArr = calcGameBounds();
+				for (let i = 0; i < pointsArr.length; i++) {
+					Bounds.create({
+						figure_id: 1,
+						lat: pointsArr[i].lat,
+						lng: pointsArr[i].lng
+					})
+						.then(() => pointsArr)
+						.catch(err => console.log(`bounds-service21${err}`));
+				}
+			}
+			return points;
+		})
+		.catch((err) => {
+			console.log(`11bService${err}`);
 		});
 };
 
