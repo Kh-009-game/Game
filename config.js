@@ -1,6 +1,9 @@
 'use strict';
 
 class Conf {
+	constructor() {
+		this.calculatedBounds = [];
+	}
 	static get dbUsername() {
 		return 'smdtzebruscqxv';
 	}
@@ -40,6 +43,13 @@ class Conf {
 			{ lat: 49.900, lng: 36.300 },
 			{ lat: 49.850, lng: 36.220 }
 		];
+	}
+
+	static set calculatedBounds(value) {
+		this.calculatedBounds = value;
+	}
+	static get calculatedBounds() {
+		return this.calculatedBounds;
 	}
 }
 

@@ -29,11 +29,12 @@ module.exports.occupyLocation = (req, res, next) => {
 
 // gameBounds
 module.exports.getGameBounds = (req, res, next) => {
-	boundService.getGameBounds()
-		.then((points) => {
-			res.json(points);
-		})
-		.catch(err => next(err));
+	// boundService.getGameBounds()
+	// 	.then((points) => {
+	// 		res.json(points);
+	// 	})
+	// 	.catch(err => next(err));
+	res.json(boundService.getGameBounds());
 };
 // '/check-location?lat=xxx&lng=xxx'
 module.exports.getLocationOnPoint = (req, res, next) => {

@@ -300,7 +300,10 @@ class Game {
 					console.log(response);
 					const pointsArr = [];
 					for (let i = 0; i < response.length; i++) {
-						pointsArr.push(response[i]);
+						const coordsObj = {};
+						coordsObj.lat = parseFloat(response[i].lat);
+						coordsObj.lng = parseFloat(response[i].lng);
+						pointsArr.push(coordsObj);
 					}
 					console.log(pointsArr);
 					res(pointsArr);
