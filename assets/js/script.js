@@ -544,6 +544,9 @@ class Game {
 		})
 			.then((currentLocation) => {
 				console.log(currentLocation);
+				if (!currentLocation) {
+					console.log('cannot be occupied');
+				}
 				this.removeCurrentHighlight();
 				if (!currentLocation.masterId) {
 					currentLocation.locationName = 'Empty Location';
@@ -690,7 +693,7 @@ class Game {
 			lng: event.latLng.lng()
 		})
 			.then((clickedLocation) => {
-				console.log(`click${clickedLocation}`);
+				console.log(clickedLocation);
 				clickedLocation.locationName = 'Empty Location';
 				this.highlightEmptyLocation(clickedLocation);
 				return this.renderHighlightedLocationTextInfo();

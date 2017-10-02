@@ -5,6 +5,7 @@ const Config = require('../config');
 const Bounds = require('../models/bounds-orm');
 
 let bounds = [];
+const validateBounds = [];
 module.exports.getGameBounds = function () {
 	if (bounds.length > 0) {
 		return new Promise((res, rej) => {
@@ -50,6 +51,40 @@ module.exports.getGameBounds = function () {
 		.catch((err) => {
 			throw new Error(err);
 		});
+};
+
+module.exports.getValidationPoints = function () {
+	const defaultLngOffset = 0.00128;
+	const defaultLatOffset = 0.09;
+	for (let i = 0; i < bounds.length - 1; i++) {
+		let latOffset = bounds[i].lat - bounds[i + 1].lat;
+		let lngOffset = bounds[i].lng - bounds[i + 1].lng;
+		validateBounds.push({ lat: bounds[i].lat, lng: bounds[i].lng });
+		const sign = latOffset > 0;
+		const sign1 = lngOffset > 0;
+		while (Math.abs(latOffset) > defaultLatOffset) {
+			if (sign) {
+				validateBounds.push({ lat: bounds[i].lat + defaultLatOffset, lng: bounds[i].lng });
+			} else {
+				validateBounds.push({ lat: bounds[i].lat - defaultLatOffset, lng: bounds[i].lng });
+			}
+			latOffset = Math.abs(latOffset) - defaultLatOffset;
+		}
+		while (Math.abs(lngOffset) > defaultLngOffset) {
+			if (sign1) {
+				validateBounds.push({ lat: bounds[i].lat, lng: bounds[i].lng + defaultLngOffset });
+			} else {
+				validateBounds.push({ lat: bounds[i].lat, lng: bounds[i].lng - defaultLngOffset });
+			}
+			lngOffset = Math.abs(lngOffset) - defaultLngOffset;
+		}
+		if (!bounds[i + 2]) {
+			validateBounds.push({ lat: bounds[i + 1].lat, lng: bounds[i + 1].lng });
+		}
+
+		// validateBounds.push({ lat: bounds[i].lat, lng: bounds[i].lng })
+	}
+	return validateBounds;
 };
 
 // return Bounds.findAll({ where: { figure_id: 1 } })

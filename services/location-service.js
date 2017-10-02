@@ -93,13 +93,34 @@ class ClientLocationObject extends EmptyLocation {
 		})
 			.then((location) => {
 				if (!location) {
+					// if (this.validateLocation(locNorthWest)) {
 					return new EmptyLocation(locNorthWest);
+					// }
+					// return false;
+
+					// return new EmptyLocation(locNorthWest);
 				}
 				return ClientLocationObject.createClientLocationObjectByIdForUser(
 					location.dataValues.id,
 					userId
 				);
 			});
+	}
+
+	static validateLocation(northWest) {
+		const validationArr = boundsService.getValidationPoints();
+		const sameLat = [];
+		for (let i = 0; i < validationArr.length; i++) {
+			if (northWest.lat === validationArr[i].lat) {
+				sameLat.push(validationArr[i]);
+			}
+		}
+		const first = Math.max(sameLat[0].lng, sameLat[1].lng) > northWest.lng;
+		const second = Math.min(sameLat[0].lng, sameLat[1].lng) < northWest.lng;
+		if (first && second) {
+			return true;
+		}
+		return false;
 	}
 
 	static updateLocation(locationId, newLocData) {
