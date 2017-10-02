@@ -55,13 +55,14 @@ Location.sync({ force: true })
 		lat: 49.995,
 		lng: 36.24192,
 		name: '123',
-		daily_msg: '123'
+		daily_msg: '123',
+		user_id: '1'
 	}))
 	.then(() => Location.create({
 		lat: 50.004,
 		lng: 36.2432,
 		name: '123',
-		daily_msg: '123'
+		user_id: '1'
 	}))
 	.then(() => Location.findById(1)
 		.then(location => Location.findById(2)

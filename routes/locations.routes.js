@@ -6,7 +6,8 @@ const router = express.Router();
 
 router.get(
 	'/',
-	locationController.getAllLocations);
+	locationController.getAllLocations
+);
 router.get(
 	'/create',
 	locationController.getOccupyForm
@@ -46,25 +47,21 @@ router.get(
 	locationMiddlewares.attachClientLocObject,
 	locationController.getLocationInfo
 );
-
 router.delete(
 	'/:id',
 	locationMiddlewares.checkOwner,
 	locationController.deleteLocation
 );
-
 router.put(
 	'/:id/do-checkin',
 	locationMiddlewares.checkOwnerAndIsCurrent,
 	locationController.doCheckin
 );
-
 router.put(
 	'/:id/get-bank',
 	locationMiddlewares.checkDailyBank,
 	locationController.takeDailyBank
 );
-
 router.put(
 	'/:id/restore-population',
 	locationMiddlewares.checkOwner,
