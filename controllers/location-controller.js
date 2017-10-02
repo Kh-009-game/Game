@@ -1,6 +1,6 @@
 const LocationService = require('../services/location-service');
 const svgTemplate = require('../views/svg-tmpl');
-const boundService = require('../services/bounds-service');
+// const boundService = require('../services/bounds-service');
 
 module.exports.getAllLocations = (req, res, next) => {
 	LocationService.getAllClientLocationObjectsForUser(req.decoded.id)
@@ -27,15 +27,7 @@ module.exports.occupyLocation = (req, res, next) => {
 		.catch(err => next(err));
 };
 
-// gameBounds
-module.exports.getGameBounds = (req, res, next) => {
-	// boundService.getGameBounds()
-	// 	.then((points) => {
-	// 		res.json(points);
-	// 	})
-	// 	.catch(err => next(err));
-	res.json(boundService.getGameBounds());
-};
+
 // '/check-location?lat=xxx&lng=xxx'
 module.exports.getLocationOnPoint = (req, res, next) => {
 	LocationService.getLocationOnPointForUser(

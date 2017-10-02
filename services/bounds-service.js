@@ -4,56 +4,107 @@ const Config = require('../config');
 // const sequelize = require('./orm-service');
 const Bounds = require('../models/bounds-orm');
 
+let bounds = [];
 module.exports.getGameBounds = function () {
-	// return Bounds.findAll({ where: { figure_id: 1 } })
-	// 	.then((points) => {
-	let calculatedBounds = [];
-	if (calculatedBounds.length === 0) {
-		// Config.calculatedBounds = calcGameBounds();
-		console.log(000000);
-		calculatedBounds = calcGameBounds();
-		// let pathLength = 0;
-		// while (true) {
-		// 	let k = 100;
-		// 	const bulkArr = [];
-		// 	for (let i = 0; i <= k; i++) {
-		// 		const valuesObj = {};
-		// 		valuesObj.figure_id = 1;
-		// 		valuesObj.lat = pointsArr[i].lat;
-		// 		valuesObj.lng = pointsArr[i].lng;
-		// 		bulkArr.push(valuesObj);
-		// 	}
-		// 	Bounds.bulkCreate(bulkArr)
-		// 		.then(() => console.log('done!'))
-		// 		.catch(err => console.log(err));
-
-		// 	pathLength += k;
-		// 	if (k >= pointsArr.length - pathLength) {
-		// 		k = pathLength;
-		// 	} else if (pathLength >= pointsArr.length) {
-		// 		break;
-		// 	}
-		// }
-		return calculatedBounds;
+	if (bounds.length > 0) {
+		return new Promise((res, rej) => {
+			console.log('return saved bounds');
+			res(bounds);
+		});
 	}
-	return calculatedBounds;
-	// 	const boundsArr = [];
-	// 	for (let i = 0; i < points.length; i++) {
-	// 		console.log(points[i].dataValues);
-	// 		const coordsObj = {};
-	// 		coordsObj.lat = points[i].dataValues.lat;
-	// 		coordsObj.lng = points[i].dataValues.lng;
-	// 		boundsArr.push(coordsObj);
-	// 	}
-	// 	return boundsArr;
-	// })
-	// .catch((err) => {
-	// 	console.log(`11bService${err}`);
-	// });
+	return Bounds.findAll({ where: { figure_id: 1 } })
+		.then((points) => {
+			console.log(points);
+			if (points.length === 0) {
+				const bulkArr = [];
+				console.log('points length 0');
+				const pointsArr = Config.gameBounds;
+				for (let i = 0; i < pointsArr.length; i++) {
+					const valuesObj = {};
+					valuesObj.figure_id = 1;
+					valuesObj.lat = pointsArr[i].lat;
+					valuesObj.lng = pointsArr[i].lng;
+					bulkArr.push(valuesObj);
+				}
+				return Bounds.bulkCreate(bulkArr)
+					.then(() => {
+						console.log('done!');
+						return calcGameBounds(pointsArr);
+					})
+					.catch(err => console.log(err));
+			}
+			// points = calcGameBounds(points);
+			console.log('calculating bounds points from table');
+			const boundsArr = [];
+			console.log(points[0].dataValues);
+			for (let i = 0; i < points.length; i++) {
+				console.log(points[i].dataValues);
+				const coordsObj = {};
+				coordsObj.lat = points[i].dataValues.lat;
+				coordsObj.lng = points[i].dataValues.lng;
+				boundsArr.push(coordsObj);
+			}
+			bounds = calcGameBounds(boundsArr);
+			return bounds;
+		})
+		.catch((err) => {
+			throw new Error(err);
+		});
 };
 
-function calcGameBounds() {
-	const boundsCoords = Config.gameBounds;
+// return Bounds.findAll({ where: { figure_id: 1 } })
+// 	.then((points) => {
+// let calculatedBounds = [];
+// if (calculatedBounds.length === 0) {
+// 	// Config.calculatedBounds = calcGameBounds();
+// 	calculatedBounds = calcGameBounds();
+// let pathLength = 0;
+// while (true) {
+// 	let k = 100;
+// 	const bulkArr = [];
+// 	for (let i = 0; i <= k; i++) {
+// 		const valuesObj = {};
+// 		valuesObj.figure_id = 1;
+// 		valuesObj.lat = pointsArr[i].lat;
+// 		valuesObj.lng = pointsArr[i].lng;
+// 		bulkArr.push(valuesObj);
+// 	}
+// 	Bounds.bulkCreate(bulkArr)
+// 		.then(() => console.log('done!'))
+// 		.catch(err => console.log(err));
+
+// 	pathLength += k;
+// 	if (k >= pointsArr.length - pathLength) {
+// 		k = pathLength;
+// 	} else if (pathLength >= pointsArr.length) {
+// 		break;
+// 	}
+// }
+// 	return calculatedBounds;
+// }
+// return calculatedBounds;
+// 	const boundsArr = [];
+// 	for (let i = 0; i < points.length; i++) {
+// 		console.log(points[i].dataValues);
+// 		const coordsObj = {};
+// 		coordsObj.lat = points[i].dataValues.lat;
+// 		coordsObj.lng = points[i].dataValues.lng;
+// 		boundsArr.push(coordsObj);
+// 	}
+// 	return boundsArr;
+// })
+// .catch((err) => {
+// 	console.log(`11bService${err}`);
+// });
+// };
+// module.exports.validateLocation = function (northWest) {
+// 	const bounds = getGameBounds();
+// 	for (let i = 0; i < bounds.length; i++) {
+// 		if (Math.abs(bounds[i].lat - northWest.lat)) {}
+// 	}
+// };
+function calcGameBounds(boundsCoords) {
+	// const boundsCoords = Config.gameBounds;
 	const pointsArr = [];
 	for (let i = 0; i < boundsCoords.length; i++) {
 		let startPointLoc = EmptyLocation.createLocationByPoint(boundsCoords[i]);
@@ -77,25 +128,6 @@ function calcGameBounds() {
 	return pointsArr;
 }
 
-function saveToDb(point, figureId) {
-	// const rec = {
-	// 	figure_id: figureId,
-	// 	lat: point1.lat,
-	// 	lng: point1.lng
-	// };
-	// const record2 = {
-	// 	figure_id: figureId,
-	// 	lat: point2.lat,
-	// 	lng: point2.lng
-	// };
-	Bounds.create({
-		figure_id: figureId,
-		lat: point.lat,
-		lng: point.lng
-	})
-		.catch(err => console.log(`77b${err}`));
-}
-
 function assemblePoints(direction, startPLoc, pointsArr) {
 	switch (direction) {
 		case 'toTheSouthWest': {
@@ -103,10 +135,8 @@ function assemblePoints(direction, startPLoc, pointsArr) {
 			const newPoint = { lat: startPLoc.northWest.lat, lng: newLng };
 			startPLoc = EmptyLocation.createLocationByPoint(newPoint);
 			pointsArr.push(startPLoc.northWest);
-			// saveToDb(startPLoc.northWest, 1);
 			// south west
 			pointsArr.push(startPLoc.getMapFeatureCoords()[1]);
-			// saveToDb(startPLoc.getMapFeatureCoords()[1], 1);
 			const newNorthWest = startPLoc.getMapFeatureCoords()[1];
 			startPLoc.northWest = newNorthWest;
 			return startPLoc;

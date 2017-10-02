@@ -5,6 +5,7 @@ const logService = require('./log-service');
 const sequelize = require('./orm-service');
 const eventEmitter = require('./eventEmitter-service');
 const schedule = require('node-schedule');
+const boundsService = require('./bounds-service');
 
 
 class ClientLocationObject extends EmptyLocation {
@@ -83,7 +84,7 @@ class ClientLocationObject extends EmptyLocation {
 
 	static getLocationOnPointForUser(userId, geoData) {
 		const locNorthWest = EmptyLocation.calcNorthWestByPoint(geoData);
-
+		// boundsService.validateLocation(locNorthWest);
 		return Location.findOne({
 			where: {
 				lat: locNorthWest.lat,

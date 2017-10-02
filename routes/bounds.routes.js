@@ -1,9 +1,9 @@
 const express = require('express');
-const locationController = require('../controllers/location-controller');
+const boundsController = require('../controllers/bounds-controller');
 // const locationMiddlewares = require('../middleware/location-middlewares');
 
 const router = express.Router();
 
-router.get('/', locationController.getGameBounds);
+router.get('/', boundsController.getGameBounds);
 
 module.exports = router;

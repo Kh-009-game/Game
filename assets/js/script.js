@@ -55,16 +55,17 @@ class Game {
 			}
 			if (target.closest('#occupy-btn')) {
 				target = target.closest('#occupy-btn');
-				this.checkAbilityToOccupyLocation(this.currentLocation)
-					.then((isAble) => {
-						if (isAble) {
-							console.log('can be occupied');
-							this.showOccupationForm();
-						} else {
-							// set pop-up or smth if cannot occupy
-							console.log('cannot be occupied, out of bounds');
-						}
-					});
+				// this.checkAbilityToOccupyLocation(this.currentLocation)
+				// 	.then((isAble) => {
+				// 		if (isAble) {
+				// 			console.log('can be occupied');
+				this.showOccupationForm();
+				// } else {
+				// 	// set pop-up or smth if cannot occupy
+				// 	console.log('cannot be occupied, out of bounds');
+				// }
+				// });
+
 				return;
 			}
 			if (target.closest('#occupy-click-btn')) {
