@@ -11,6 +11,7 @@ module.exports.getGameBounds = function () {
 		return new Promise((res, rej) => {
 			console.log('return saved bounds');
 			res(bounds);
+			// res(this.getValidationPoints());
 		});
 	}
 	return Bounds.findAll({ where: { figure_id: 1 } })
@@ -84,6 +85,7 @@ module.exports.getValidationPoints = function () {
 
 		// validateBounds.push({ lat: bounds[i].lat, lng: bounds[i].lng })
 	}
+
 	return validateBounds;
 };
 

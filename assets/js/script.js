@@ -543,7 +543,7 @@ class Game {
 			lng: this.userGeoData.lng
 		})
 			.then((currentLocation) => {
-				console.log(currentLocation);
+				console.log(currentLocation.northWest);
 				if (!currentLocation) {
 					console.log('cannot be occupied');
 				}

@@ -96,6 +96,7 @@ class ClientLocationObject extends EmptyLocation {
 					// if (this.validateLocation(locNorthWest)) {
 					return new EmptyLocation(locNorthWest);
 					// }
+					// return this.validateLocation(locNorthWest);
 					// return false;
 
 					// return new EmptyLocation(locNorthWest);
@@ -115,12 +116,29 @@ class ClientLocationObject extends EmptyLocation {
 				sameLat.push(validationArr[i]);
 			}
 		}
-		const first = Math.max(sameLat[0].lng, sameLat[1].lng) > northWest.lng;
-		const second = Math.min(sameLat[0].lng, sameLat[1].lng) < northWest.lng;
-		if (first && second) {
-			return true;
+		let max = sameLat[0].lng;
+		let min = sameLat[1].lng;
+		for (let i = 0; i < sameLat.length; i++) {
+			if (sameLat[i].lng > max) {
+				max = sameLat[i].lng;
+			} else if (sameLat[i].lng < min) {
+				min = sameLat[i].lng;
+			}
 		}
-		return false;
+		const first = max > northWest.lng;
+		const second = min < northWest.lng;
+		console.log(sameLat);
+		console.log(max);
+		console.log(min);
+		sameLat.length = 0;
+		if (first && second) {
+			const emptyLoc = new EmptyLocation(northWest);
+			emptyLoc.isAllowed = true;
+			return emptyLoc;
+		}
+		const emptyLoc = new EmptyLocation(northWest);
+		emptyLoc.isAllowed = false;
+		return emptyLoc;
 	}
 
 	static updateLocation(locationId, newLocData) {
