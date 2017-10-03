@@ -1,6 +1,7 @@
 class EmptyLocation {
 	constructor(northWestPoint) {
 		this.northWest = northWestPoint;
+		this.center = this.calcCenterPoint();
 		this.mapFeatureCoords = this.getMapFeatureCoords();
 	}
 
@@ -17,7 +18,7 @@ class EmptyLocation {
 		return width / height;
 	}
 
-	get centerPoint() {
+	calcCenterPoint() {
 		const lat = this.northWest.lat - (this.relLatSize / 2);
 		const lng = this.northWest.lng - (this.relLngSize / 2);
 

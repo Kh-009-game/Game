@@ -5,12 +5,14 @@ const ClientLocationObject = require('./location-service');
 const Underpass = require('../models/underpass');
 
 class UnderpassClientObject {
-	constructor(underpass) {
-
+	constructor(locationFrom, locationTo) {
+		this.begin = locationFrom.center;
+		this.end = locationTo.center;
 	}
 
 	static getAllUnderpassesForUser(userId) {
-
+		ClientLocationObject.getAllUsersClientLocationObjects(userId)
+			.then();
 	}
 
 	static createUnderpassByUser(locationIdFrom, locationIdTo, userId) {

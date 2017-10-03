@@ -12,6 +12,11 @@ class ClientLocationObject extends EmptyLocation {
 		const locationData = location.dataValues;
 		const masterData = location.user.dataValues;
 		const lastLifeCycleEventDate = locationData.lastLifeCycleEventDate;
+		const underpassesTo = [];
+
+		locationData.UnderpassTo.forEach((item) => {
+			underpassesTo.push(item.dataValues.id);
+		});
 
 		super({
 			lat: location.dataValues.lat,
@@ -29,6 +34,7 @@ class ClientLocationObject extends EmptyLocation {
 		this.locationName = locationData.name;
 		this.dailyMessage = locationData.daily_msg;
 		this.isMaster = locationData.user_id === userId;
+		this.underpassesTo = underpassesTo;
 	}
 
 	static createClientLocationObjectByIdForUser(locationId, userId) {
@@ -47,9 +53,36 @@ class ClientLocationObject extends EmptyLocation {
 
 	static getAllClientLocationObjectsForUser(userId) {
 		return Location.findAll({
-			include: {
+			include: [{
 				model: User
-			}
+			}, {
+				model: Location,
+				as: 'UnderpassTo'
+			}]
+		})
+			.then(locations => logService.getLastLifeCycleEventDate()
+				.then((lastLifeCycleEventDate) => {
+					const clientLocationsArray = [];
+					locations.forEach((location) => {
+						location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
+						clientLocationsArray.push(new ClientLocationObject(location, userId));
+					});
+					return clientLocationsArray;
+				})
+			);
+	}
+
+	static getAllUsersClientLocationObjects(userId) {
+		return Location.findAll({
+			where: {
+				user_id: userId
+			},
+			include: [{
+				model: User
+			}, {
+				model: Location,
+				as: 'UnderpassTo'
+			}]
 		})
 			.then(locations => logService.getLastLifeCycleEventDate()
 				.then((lastLifeCycleEventDate) => {
