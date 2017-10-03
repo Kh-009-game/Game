@@ -5,10 +5,10 @@ module.exports.getGridByCoords = (req, res) => {
 		lat: +req.query.lat,
 		lng: +req.query.lng
 	};
-	GridService.createLocationByPoint(geoData)
-		.then((location) => {
-			res.json(location);
-		});
+	// const locCoords = EmptyLocation.calcNorthWestByPoint(geoData);
+	// const location = new EmptyLocation(locCoords);
+	const location = GridService.createLocationByPoint(geoData);
+	res.json(location);
 };
 
 module.exports.getLocInfo = (req, res) => {
