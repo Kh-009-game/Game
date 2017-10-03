@@ -1,25 +1,12 @@
 const sequelize = require('./db-service-orm');
-const Sequelize = require('sequelize');
 const Location = require('../models/location-orm');
+const Underpass = require('../models/underpass');
 // const LogMessage = require('../models/logMessage');
 const User = require('../models/user-orm');
 
-const Underpass = sequelize.define('underpass', {
-// 	location_id: {
-// 		type: Sequelize.INTEGER,
-// 		primaryKey: 'underpass'
-// 	},
-// 	underpass_id: {
-// 		type: Sequelize.INTEGER,
-// 		primaryKey: 'underpass'
-// 	}
-}, {
-	underscored: true
-});
-
-
 Location.User = Location.belongsTo(User);
 User.Locations = User.hasMany(Location);
+
 Location.belongsToMany(Location, {
 	as: 'UnderpassTo',
 	// foreignKey: 'underpass_id',
@@ -38,16 +25,6 @@ Location.belongsToMany(Location, {
 		primaryKey: true
 	}
 });
-// Underpass.belongsTo(Location, {
-// 	primaryKey: true
-// });
-// Location.belongsToMany(Location, {
-// 	as: 'Underpass',
-// 	foreignKey: 'location_id',
-// 	// through: Underpass
-// });
-
-// Underpass.sync({ force: true });
 
 Location.sync({ force: true })
 	.then(() => Underpass.sync({ force: true }))

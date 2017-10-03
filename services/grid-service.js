@@ -17,6 +17,16 @@ class EmptyLocation {
 		return width / height;
 	}
 
+	get centerPoint() {
+		const lat = this.northWest.lat - (this.relLatSize / 2);
+		const lng = this.northWest.lng - (this.relLngSize / 2);
+
+		return {
+			lat,
+			lng
+		};
+	}
+
 	get relLngSize() {
 		return EmptyLocation.calcRelLngSize(this.northWest.lat);
 	}
@@ -103,6 +113,13 @@ class EmptyLocation {
 				Math.round(point.lng * 10000000) / relLngSize
 			) * relLngSize
 		) /	10000000;
+	}
+
+	static calcPointToMercator(point) {
+		return {
+			lat: EmptyLocation.recalcLatToMercator(point.lat),
+			lng: EmptyLocation.recalcLngToMercator(point.lng)
+		};
 	}
 
 	static recalcLngToMercator(lng) {
