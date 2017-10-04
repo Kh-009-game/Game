@@ -1,3 +1,5 @@
+const db = require('../services/db-transport');
+
 class User {
 	constructor(userData) {
 		this.name = userData.name;
@@ -9,7 +11,7 @@ class User {
 	}
 
 	saveNewUser() {
-		global.db.none('insert into users(email, password, reg_date, cash, name, is_admin)' +
+		db.none('insert into users(email, password, reg_date, cash, name, is_admin)' +
 		`values('${this.email}', '${this.pass}', '${this.registrationDate}', '${this.cash}', '${this.name}', ${this.isAdmin})`)
 			.then(() => console.log('New user was added to db'))
 			.catch(error => console.log('error:', error));

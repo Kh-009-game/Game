@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const nodemailer = require('nodemailer');
+const db = require('../services/db-transport');
 const Config = require('../config');
 
 const router = express.Router();
@@ -24,7 +25,7 @@ router.route('/login')
 
 		// business-login in controller!
 
-		global.db.one(`SELECT * FROM users
+		db.one(`SELECT * FROM users
 		WHERE email = '${email}';`)
 			.then((data) => {
 				if (data.password !== password) {
@@ -73,7 +74,7 @@ router.post('/register', (req, res) => {
 	res.redirect('../');
 });
 
-router.post('/logout', (req, res) => {
+router.get('/logout', (req, res) => {
 	res.clearCookie('auth');
 	res.redirect('/login');
 });
