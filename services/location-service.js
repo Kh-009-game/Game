@@ -5,6 +5,7 @@ const logService = require('./log-service');
 const sequelize = require('./orm-service');
 const eventEmitter = require('./eventEmitter-service');
 const schedule = require('node-schedule');
+const boundsService = require('./bounds-service');
 
 
 class ClientLocationObject extends EmptyLocation {
@@ -121,7 +122,7 @@ class ClientLocationObject extends EmptyLocation {
 
 	static getLocationOnPointForUser(userId, geoData) {
 		const locNorthWest = EmptyLocation.calcNorthWestByPoint(geoData);
-
+		// boundsService.validateLocation(locNorthWest);
 		return Location.findOne({
 			where: {
 				lat: locNorthWest.lat,
@@ -130,13 +131,52 @@ class ClientLocationObject extends EmptyLocation {
 		})
 			.then((location) => {
 				if (!location) {
+					// if (this.validateLocation(locNorthWest)) {
 					return new EmptyLocation(locNorthWest);
+					// }
+					// return this.validateLocation(locNorthWest);
+					// return false;
+
+					// return new EmptyLocation(locNorthWest);
 				}
 				return ClientLocationObject.createClientLocationObjectByIdForUser(
 					location.dataValues.id,
 					userId
 				);
 			});
+	}
+
+	static validateLocation(northWest) {
+		const validationArr = boundsService.getValidationPoints();
+		const sameLat = [];
+		for (let i = 0; i < validationArr.length; i++) {
+			if (northWest.lat === validationArr[i].lat) {
+				sameLat.push(validationArr[i]);
+			}
+		}
+		let max = sameLat[0].lng;
+		let min = sameLat[1].lng;
+		for (let i = 0; i < sameLat.length; i++) {
+			if (sameLat[i].lng > max) {
+				max = sameLat[i].lng;
+			} else if (sameLat[i].lng < min) {
+				min = sameLat[i].lng;
+			}
+		}
+		const first = max > northWest.lng;
+		const second = min < northWest.lng;
+		console.log(sameLat);
+		console.log(max);
+		console.log(min);
+		sameLat.length = 0;
+		if (first && second) {
+			const emptyLoc = new EmptyLocation(northWest);
+			emptyLoc.isAllowed = true;
+			return emptyLoc;
+		}
+		const emptyLoc = new EmptyLocation(northWest);
+		emptyLoc.isAllowed = false;
+		return emptyLoc;
 	}
 
 	static updateLocation(locationId, newLocData) {

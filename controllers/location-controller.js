@@ -1,5 +1,6 @@
 const LocationService = require('../services/location-service');
 const svgTemplate = require('../views/svg-tmpl');
+// const boundService = require('../services/bounds-service');
 
 module.exports.getAllLocations = (req, res, next) => {
 	LocationService.getAllClientLocationObjectsForUser(req.decoded.id)
@@ -25,6 +26,7 @@ module.exports.occupyLocation = (req, res, next) => {
 		})
 		.catch(err => next(err));
 };
+
 
 // '/check-location?lat=xxx&lng=xxx'
 module.exports.getLocationOnPoint = (req, res, next) => {
@@ -123,3 +125,4 @@ module.exports.restoreLoyalty = (req, res, next) => {
 			next(err);
 		});
 };
+

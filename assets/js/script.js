@@ -57,16 +57,17 @@ class Game {
 			}
 			if (target.closest('#occupy-btn')) {
 				target = target.closest('#occupy-btn');
-				this.checkAbilityToOccupyLocation(this.currentLocation)
-					.then((isAble) => {
-						if (isAble) {
-							console.log('can be occupied');
-							this.showOccupationForm();
-						} else {
-							// set pop-up or smth if cannot occupy
-							console.log('cannot be occupied, out of bounds');
-						}
-					});
+				// this.checkAbilityToOccupyLocation(this.currentLocation)
+				// 	.then((isAble) => {
+				// 		if (isAble) {
+				// 			console.log('can be occupied');
+				this.showOccupationForm();
+				// } else {
+				// 	// set pop-up or smth if cannot occupy
+				// 	console.log('cannot be occupied, out of bounds');
+				// }
+				// });
+
 				return;
 			}
 			if (target.closest('#occupy-click-btn')) {
@@ -297,16 +298,21 @@ class Game {
 	getGameBounds() {
 		return new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest();
-			xhr.open('GET', '/api/grid/bounds');
+			xhr.open('GET', '/api/bounds');
 			xhr.send();
 			xhr.addEventListener('load', (e) => {
 				const xhttp = e.target;
 				if (xhttp.status === 200) {
 					const response = JSON.parse(xhttp.response);
+					console.log(response);
 					const pointsArr = [];
-					for (let i = 0; i < response.length; i += 1) {
-						pointsArr.push(response[i]);
+					for (let i = 0; i < response.length; i++) {
+						const coordsObj = {};
+						coordsObj.lat = parseFloat(response[i].lat);
+						coordsObj.lng = parseFloat(response[i].lng);
+						pointsArr.push(coordsObj);
 					}
+					console.log(pointsArr);
 					res(pointsArr);
 				} else {
 					rej(xhttp.response);
@@ -557,7 +563,10 @@ class Game {
 			lng: this.userGeoData.lng
 		})
 			.then((currentLocation) => {
-				console.log(currentLocation);
+				console.log(currentLocation.northWest);
+				if (!currentLocation) {
+					console.log('cannot be occupied');
+				}
 				this.removeCurrentHighlight();
 				if (!currentLocation.masterId) {
 					currentLocation.locationName = 'Empty Location';
@@ -736,7 +745,7 @@ class Game {
 			lng: event.latLng.lng()
 		})
 			.then((clickedLocation) => {
-				console.log(`click${clickedLocation}`);
+				console.log(clickedLocation);
 				clickedLocation.locationName = 'Empty Location';
 				this.highlightEmptyLocation(clickedLocation);
 				return this.renderHighlightedLocationTextInfo();

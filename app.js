@@ -12,6 +12,7 @@ const cookieParser = require('cookie-parser');
 const favicon = require('serve-favicon');
 const logger = require('morgan');
 const gridRoutes = require('./routes/grid.routes');
+const boundsRoutes = require('./routes/bounds.routes');
 const locationsRoutes = require('./routes/locations.routes');
 const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
@@ -40,6 +41,7 @@ app.use('/user', userRoutes);
 app.use('/', auth);
 app.all('/', indexRoutes);
 app.use('/api/grid', gridRoutes);
+app.use('/api/bounds', boundsRoutes);
 app.use('/api/locations', locationsRoutes);
 app.use('/api/underpasses', underpassesRoutes);
 
