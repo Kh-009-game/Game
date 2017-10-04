@@ -11,3 +11,5 @@ router.post(
 	'/create',
 	underpassesController.createUnderpass
 );
+
+module.exports = router;

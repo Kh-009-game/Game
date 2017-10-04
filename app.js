@@ -15,6 +15,7 @@ const gridRoutes = require('./routes/grid.routes');
 const locationsRoutes = require('./routes/locations.routes');
 const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
+const underpassesRoutes = require('./routes/underpasses.routes');
 const logService = require('./services/log-service');
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/', auth);
 app.all('/', indexRoutes);
 app.use('/api/grid', gridRoutes);
 app.use('/api/locations', locationsRoutes);
+app.use('/api/underpasses', underpassesRoutes);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

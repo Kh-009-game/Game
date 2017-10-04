@@ -31,6 +31,8 @@ class Game {
 		this.occupiedLocationsMapFeatures = {};
 		this.occupiedLocationsGroundOverlays = {};
 		this.occupiedLocationsIcons = {};
+		this.underpasses = [];
+		this.underpassesPolys = [];
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
 			// let target = event.target;
@@ -90,6 +92,10 @@ class Game {
 			if (target.closest('#feed-btn')) {
 				target = target.closest('#feed-btn');
 				this.restorePopulation();
+			}
+			if (target.closest('#underpass-btn')) {
+				target = target.closest('#feed-btn');
+				this.initUnderpassCreation();
 			}
 		});
 		this.occupyFormContainer.addEventListener('submit', (event) => {
@@ -298,7 +304,7 @@ class Game {
 				if (xhttp.status === 200) {
 					const response = JSON.parse(xhttp.response);
 					const pointsArr = [];
-					for (let i = 0; i < response.length; i++) {
+					for (let i = 0; i < response.length; i += 1) {
 						pointsArr.push(response[i]);
 					}
 					res(pointsArr);
@@ -366,6 +372,21 @@ class Game {
 		return new Promise((res, rej) => {
 			const gridXHR = new XMLHttpRequest();
 			gridXHR.open('GET', `/api/grid?lat=${geoCoords.lat}&lng=${geoCoords.lng}`);
+			gridXHR.send();
+			gridXHR.onload = (e) => {
+				const xhr = e.srcElement;
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res(JSON.parse(xhr.response));
+			};
+		});
+	}
+
+	getUnderpasses() {
+		return new Promise((res, rej) => {
+			const gridXHR = new XMLHttpRequest();
+			gridXHR.open('GET', '/api/underpasses');
 			gridXHR.send();
 			gridXHR.onload = (e) => {
 				const xhr = e.srcElement;
@@ -499,7 +520,6 @@ class Game {
 		const userLocations = [];
 		const bounds = new google.maps.LatLngBounds();
 		console.dir(bounds);
-		// no need to send request!
 		this.getOccupiedLocations()
 			.then(() => {
 				this.occupiedLocationsArray.forEach((location) => {
@@ -628,6 +648,38 @@ class Game {
 					this.locInfoMenu.classList.add('open');
 				}
 			});
+	}
+
+	// UNDERPASSES RENDER METHODS
+
+	renderUnderpasses() {
+		this.getUnderpasses()
+			.then((underpasses) => {
+				this.underpasses = underpasses;
+				this.underpasses.forEach((item) => {
+					this.renderUnderpass(item);
+				});
+				console.log(underpasses);
+			})
+			.catch((err) => {
+				console.log(err);
+			});
+	}
+
+	renderUnderpass(underpass) {
+		const underpassPoly = new google.maps.Polyline({
+			path: underpass.coords,
+			geodesic: true,
+			strokeColor: '#FF0000',
+			strokeOpacity: 1.0,
+			strokeWeight: 2
+		});
+		this.underpassesPolys.push(underpassPoly);
+		underpassPoly.setMap(this.map);
+	}
+
+	initUnderpassCreation() {
+
 	}
 
 	// HIGHLIGHTED LOCATION METHODS
@@ -805,18 +857,6 @@ class Game {
 		this.occupyHighlightedLocation();
 	}
 
-	// occupyResetHandler(event) {
-	// 	event.preventDefault();
-	// 	const form = event.target;
-	// 	const locName = form['location-name'].value;
-	// 	const dailyMsg = form['daily-msg'].value;
-
-	// 	this.currentLocation.locationName = locName;
-	// 	this.currentLocation.dailyMessage = dailyMsg;
-
-	// 	this.occupyCurrentLocation();
-	// }
-
 	occupyCurrentLocation() {
 		this.occupyLocation(this.currentLocation)
 			.then(() => {
@@ -860,12 +900,12 @@ class Game {
 		});
 	}
 
-	 showEditingLocForm() {
-	 	this.locInfoBlock.className = 'location-block';
-	 	this.locInfoBlock.classList.add('show-form');
-	 	this.getLocOccupFormHTML(
-	 		this.highlightedLocation
-	 	)
+	showEditingLocForm() {
+		this.locInfoBlock.className = 'location-block';
+		this.locInfoBlock.classList.add('show-form');
+		this.getLocOccupFormHTML(
+			this.highlightedLocation
+		)
 			.then((response) => {
 				this.occupyFormContainer.innerHTML = response;
 				document.getElementById('loc-name-field').focus();
@@ -880,9 +920,6 @@ class Game {
 		const locID = this.highlightedLocation.locationId;
 
 		socket.emit('editLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
-		// this.currentLocation.locationName = locName;
-		// this.currentLocation.dailyMessage = dailyMsg;
-		// this.hideOccupationForm();
 	}
 
 	deleteLocation(location) {
@@ -1136,7 +1173,6 @@ class Game {
 		});
 	}
 
-
 	updateMapBounds() {
 		this.setMapBounds({
 			northEast: {
@@ -1245,6 +1281,7 @@ function initMap() {
 		});
 
 		game.renderOccupiedLocations();
+		game.renderUnderpasses();
 
 		game.getGameBounds()
 			.then((boundsCoords) => {
@@ -1299,13 +1336,6 @@ function initMap() {
 				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
 
-			// setTimeout(() => {
-			// 	game.refreshUserGeodata({
-			// 		lat: game.userGeoData.lat,
-			// 		lng: game.userGeoData.lng
-			// 	});
-			// }, 5000);
-
 			map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
 			});
@@ -1317,9 +1347,6 @@ function initMap() {
 
 				if (targetFeatureId) {
 					game.renderOccupiedLocationInfo(targetFeatureId);
-					// .catch((err) => {
-					// 	console.log(err);
-					// });
 				}
 				if (event.feature.getProperty('info').isCurrent) {
 					game.hightlightCurrentEmptyLocation();

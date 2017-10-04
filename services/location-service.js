@@ -14,9 +14,11 @@ class ClientLocationObject extends EmptyLocation {
 		const lastLifeCycleEventDate = locationData.lastLifeCycleEventDate;
 		const underpassesTo = [];
 
-		locationData.UnderpassTo.forEach((item) => {
-			underpassesTo.push(item.dataValues.id);
-		});
+		if (Array.isArray(locationData.UnderpassTo)) {
+			locationData.UnderpassTo.forEach((item) => {
+				underpassesTo.push(item.dataValues.id);
+			});
+		}
 
 		super({
 			lat: location.dataValues.lat,
@@ -39,9 +41,12 @@ class ClientLocationObject extends EmptyLocation {
 
 	static createClientLocationObjectByIdForUser(locationId, userId) {
 		return Location.findById(locationId, {
-			include: {
+			include: [{
 				model: User
-			}
+			}, {
+				model: Location,
+				as: 'UnderpassTo'
+			}]
 		})
 			.then(location => logService.getLastLifeCycleEventDate()
 				.then((lastLifeCycleEventDate) => {

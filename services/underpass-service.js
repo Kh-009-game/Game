@@ -5,14 +5,68 @@ const ClientLocationObject = require('./location-service');
 const Underpass = require('../models/underpass');
 
 class UnderpassClientObject {
-	constructor(locationFrom, locationTo) {
-		this.begin = locationFrom.center;
-		this.end = locationTo.center;
+	constructor(connection) {
+		this.from = connection.from.center;
+		this.to = connection.to.center;
+		this.coords = [
+			this.from,
+			this.to
+		];
 	}
 
 	static getAllUnderpassesForUser(userId) {
-		ClientLocationObject.getAllUsersClientLocationObjects(userId)
-			.then();
+		return ClientLocationObject.getAllUsersClientLocationObjects(userId)
+			.then((usersLocations) => {
+				const connections = UnderpassClientObject.findConnections(usersLocations);
+
+				let underpasses = [];
+
+				connections.forEach((connection) => {
+					underpasses.push(new UnderpassClientObject(connection));
+				});
+
+				underpasses = UnderpassClientObject.filterUnderpassesArray(underpasses);
+
+				return underpasses;
+			});
+	}
+
+	static findConnections(locArray) {
+		const connections = [];
+
+		locArray.forEach((location) => {
+			location.underpassesTo.forEach((underpassToId) => {
+				for (let i = 0, max = locArray.length; i < max; i += 1) {
+					if (locArray[i].locationId === underpassToId) {
+						connections.push({
+							from: location,
+							to: locArray[i]
+						});
+						break;
+					}
+				}
+			});
+		});
+
+		return connections;
+	}
+
+	static filterUnderpassesArray(underpasses) {
+		underpasses.forEach((underpass) => {
+			for (let i = 0, max = underpasses.length; i < max; i += 1) {
+				if (
+					(underpasses[i].from.lat === underpass.to.lat) &&
+					(underpasses[i].from.lng === underpass.to.lng) &&
+					(underpasses[i].to.lat === underpass.from.lat) &&
+					(underpasses[i].to.lng === underpass.from.lng)
+				) {
+					underpasses.splice(i, 1);
+					break;
+				}
+			}
+		});
+
+		return underpasses;
 	}
 
 	static createUnderpassByUser(locationIdFrom, locationIdTo, userId) {
@@ -75,3 +129,5 @@ class UnderpassClientObject {
 		return distance;
 	}
 }
+
+module.exports = UnderpassClientObject;

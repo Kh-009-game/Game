@@ -1,8 +1,8 @@
 class EmptyLocation {
 	constructor(northWestPoint) {
 		this.northWest = northWestPoint;
-		this.center = this.calcCenterPoint();
 		this.mapFeatureCoords = this.getMapFeatureCoords();
+		this.center = this.calcCenterPoint();
 	}
 
 	get absoluteMercatorWidthToHeight() {
@@ -19,8 +19,8 @@ class EmptyLocation {
 	}
 
 	calcCenterPoint() {
-		const lat = this.northWest.lat - (this.relLatSize / 2);
-		const lng = this.northWest.lng - (this.relLngSize / 2);
+		const lat = +this.northWest.lat - (EmptyLocation.relLatSize / 20000000);
+		const lng = +this.northWest.lng + (this.relLngSize / 20000000);
 
 		return {
 			lat,
@@ -99,7 +99,7 @@ class EmptyLocation {
 	}
 
 	static getNorthWestLocationLatitudeByPoint(pointLat) {
-		const relLatSize = EmptyLocation.calcRelLatSize();
+		const relLatSize = EmptyLocation.relLatSize;
 		return (
 			Math.ceil(
 				Math.round(pointLat * 10000000) / relLatSize

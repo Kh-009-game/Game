@@ -1,9 +1,10 @@
 const UnderpassClientObject = require('../services/underpass-service');
 
 module.exports.getAllUnderpasses = (req, res, next) => {
-	UnderpassClientObject.getAllUnderpassesForUser()
-		.then(() => {
-			res.send(200);
+	const userId = req.decoded.id;
+	UnderpassClientObject.getAllUnderpassesForUser(userId)
+		.then((underpasses) => {
+			res.json(underpasses);
 		})
 		.catch((err) => {
 			next(err);
