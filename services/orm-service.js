@@ -1,5 +1,6 @@
 const sequelize = require('./db-service-orm');
 const Location = require('../models/location-orm');
+const Underpass = require('../models/underpass');
 const User = require('../models/user-orm');
 
 Location.User = Location.belongsTo(User);

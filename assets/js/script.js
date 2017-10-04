@@ -679,7 +679,7 @@ class Game {
 		const underpassPoly = new google.maps.Polyline({
 			path: underpass.coords,
 			geodesic: true,
-			strokeColor: '#FF0000',
+			strokeColor: '#999',
 			strokeOpacity: 1.0,
 			strokeWeight: 2
 		});
