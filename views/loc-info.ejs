@@ -34,16 +34,24 @@
   <% if (!location.masterId && !location.isCurrent && isAdmin) { %>
     <button type="button" class="btn" id="occupy-click-btn">Occupy</button>
   <% } %>
+  
+  <% if ((location.isCurrent || isAdmin) && location.isMaster && location.isHighlighted) { %> 
+    <button type="button" class="location-buttons--item" id="underpass-btn">
+      <i class="material-icons">swap_calls</i>
+    </button>
+  <% } %>
   <% if (location.isHighlighted && location.locationId && (location.isMaster || isAdmin)) { %>
     <button type="button" class="location-buttons--item" id="edit-loc-btn">
           <i class="material-icons">mode_edit</i>
      </button>
   <% } %>
-     <% if (location.isMaster && location.isCurrent && location.hasDailyBank) { %> 
-        <button type="button" class="location-buttons--item" id="money-btn">
-              <i class="material-icons">monetization_on</i>
-            </button>
-      <% } %>
+  
+  <% if (location.isMaster && location.isCurrent && location.hasDailyBank) { %> 
+    <button type="button" class="location-buttons--item" id="money-btn">
+      <i class="material-icons">monetization_on</i>
+    </button>
+  <% } %>
+  
 
 <% if (( location.isMaster || isAdmin ) && !location.isCurrent && ( location.loyalPopulation < location.population )) { %>
   <button type="button" class="location-buttons--item" id="feed-btn">
