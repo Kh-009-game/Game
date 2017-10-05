@@ -149,14 +149,14 @@ class ClientLocationObject extends EmptyLocation {
 	static validateLocation(northWest) {
 		const validationArr = boundsService.getValidationPoints();
 		const sameLat = [];
-		for (let i = 0; i < validationArr.length; i++) {
+		for (let i = 0; i < validationArr.length; i += 1) {
 			if (northWest.lat === validationArr[i].lat) {
 				sameLat.push(validationArr[i]);
 			}
 		}
 		let max = sameLat[0].lng;
 		let min = sameLat[1].lng;
-		for (let i = 0; i < sameLat.length; i++) {
+		for (let i = 0; i < sameLat.length; i += 1) {
 			if (sameLat[i].lng > max) {
 				max = sameLat[i].lng;
 			} else if (sameLat[i].lng < min) {
