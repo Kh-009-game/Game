@@ -4,9 +4,11 @@ const EmptyLocation = require('./grid-service');
 const logService = require('./log-service');
 const sequelize = require('./orm-service');
 const eventEmitter = require('./eventEmitter-service');
+const Locker = require('./locker-service');
 const schedule = require('node-schedule');
 const boundsService = require('./bounds-service');
 
+const locker = new Locker(new Error('Location is being occupied!'));
 
 class ClientLocationObject extends EmptyLocation {
 	constructor(location, userId) {
@@ -103,6 +105,13 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static occupyLocationByUser(userId, locData) {
+		const key = {
+			lat: locData.lat,
+			lng: locData.lng
+		};
+
+		locker.validateKey(key);
+
 		return Location.create({
 			lat: locData.northWest.lat,
 			lng: locData.northWest.lng,
@@ -117,6 +126,11 @@ class ClientLocationObject extends EmptyLocation {
 					lat: locData.northWest.lat,
 					lng: locData.northWest.lng
 				});
+				locker.deleteKey(key);
+			})
+			.catch((err) => {
+				locker.deleteKey(key);
+				throw err;
 			});
 	}
 
