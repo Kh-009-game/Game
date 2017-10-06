@@ -1,10 +1,10 @@
 const eventEmitter = require('./eventEmitter-service');
 
-let ws;
+// let ws;
 
 module.exports = function (io) {
 	io.on('connection', (socket) => {
-		ws = socket;
+		// ws = socket;
 		socket.on('editLocationWS', (data) => {
 			// OccupiedLocation.getLocationById(data.locationId)
 			// 	.then((location) => {
@@ -19,47 +19,85 @@ module.exports = function (io) {
 			// 		console.log('error', err);
 			// 	});
 		});
-	});
-};
 
-eventEmitter.on('location-created', (newLocationData) => {
-	sendNotification('update', {
-		type: 'msgCreateLoc',
-		text: `
+
+		eventEmitter.on('location-created', (newLocationData) => {
+			socket.emit('update', {
+				type: 'msgCreateLoc',
+				text: `
 			The new location was occupied on latitude: ${newLocationData.lat} 
 			and longitude: ${newLocationData.lng}.
 		`
-	});
-});
+			});
+		});
 
-eventEmitter.on('location-updated', (locationData) => {
-	sendNotification('update', {
-		type: 'msgUpdateLoc',
-		text: `
+		eventEmitter.on('location-updated', (locationData) => {
+			socket.emit('update', {
+				type: 'msgUpdateLoc',
+				text: `
 			Location ${locationData.locationId} was updated.
 		`
-	});
-});
+			});
+		});
 
-eventEmitter.on('location-deleted', (locationData) => {
-	sendNotification('update', {
-		type: 'msgDeleteLoc',
-		text: `
+		eventEmitter.on('location-deleted', (locationData) => {
+			socket.emit('update', {
+				type: 'msgDeleteLoc',
+				text: `
 			Location ${locationData.locationId} was deleted.
 		`
-	});
-});
+			});
+		});
 
-eventEmitter.on('daily-event', () => {
-	sendNotification('update', {
-		type: 'msgCreateLoc',
-		text: `
+		eventEmitter.on('daily-event', () => {
+			socket.emit('update', {
+				type: 'msgCreateLoc',
+				text: `
 			New day begins!
 		`
+			});
+		});
 	});
-});
+};
 
-function sendNotification(message, data) {
-	ws.emit(message, data);
-}
+// eventEmitter.on('location-created', (newLocationData) => {
+// 	sendNotification('update', {
+// 		type: 'msgCreateLoc',
+// 		text: `
+// 			The new location was occupied on latitude: ${newLocationData.lat} 
+// 			and longitude: ${newLocationData.lng}.
+// 		`
+// 	});
+// });
+
+// eventEmitter.on('location-updated', (locationData) => {
+// 	sendNotification('update', {
+// 		type: 'msgUpdateLoc',
+// 		text: `
+// 			Location ${locationData.locationId} was updated.
+// 		`
+// 	});
+// });
+
+// eventEmitter.on('location-deleted', (locationData) => {
+// 	sendNotification('update', {
+// 		type: 'msgDeleteLoc',
+// 		text: `
+// 			Location ${locationData.locationId} was deleted.
+// 		`
+// 	});
+// });
+
+// eventEmitter.on('daily-event', () => {
+// 	sendNotification('update', {
+// 		type: 'msgCreateLoc',
+// 		text: `
+// 			New day begins!
+// 		`
+// 	});
+// });
+
+// function sendNotification(message, data) {
+// 	ws.emit(message, data);
+// }
 

@@ -4,9 +4,11 @@ const EmptyLocation = require('./grid-service');
 const logService = require('./log-service');
 const sequelize = require('./orm-service');
 const eventEmitter = require('./eventEmitter-service');
+const Locker = require('./locker-service');
 const schedule = require('node-schedule');
 const boundsService = require('./bounds-service');
 
+const locker = new Locker(new Error('Location is being occupied!'));
 
 class ClientLocationObject extends EmptyLocation {
 	constructor(location, userId) {
@@ -103,20 +105,42 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static occupyLocationByUser(userId, locData) {
-		return Location.create({
-			lat: locData.northWest.lat,
-			lng: locData.northWest.lng,
-			name: locData.locationName,
-			daily_msg: locData.dailyMessage,
-			user_id: userId
-		}, {
-			include: [User]
+		const key = {
+			lat: locData.lat,
+			lng: locData.lng
+		};
+
+		locker.validateKey(key);
+
+		return sequelize.transaction(trans => Location.count({
+			where: key,
+			transaction: trans
 		})
+			.then((count) => {
+				if (count !== 0) {
+					throw new Error('Location has been already occupied');
+				}
+				return Location.create({
+					lat: locData.northWest.lat,
+					lng: locData.northWest.lng,
+					name: locData.locationName,
+					daily_msg: locData.dailyMessage,
+					user_id: userId
+				}, {
+					include: [User],
+					transaction: trans
+				});
+			}))
 			.then(() => {
 				eventEmitter.emit('location-created', {
 					lat: locData.northWest.lat,
 					lng: locData.northWest.lng
 				});
+				locker.deleteKey(key);
+			})
+			.catch((err) => {
+				locker.deleteKey(key);
+				throw err;
 			});
 	}
 
@@ -149,14 +173,14 @@ class ClientLocationObject extends EmptyLocation {
 	static validateLocation(northWest) {
 		const validationArr = boundsService.getValidationPoints();
 		const sameLat = [];
-		for (let i = 0; i < validationArr.length; i++) {
+		for (let i = 0; i < validationArr.length; i += 1) {
 			if (northWest.lat === validationArr[i].lat) {
 				sameLat.push(validationArr[i]);
 			}
 		}
 		let max = sameLat[0].lng;
 		let min = sameLat[1].lng;
-		for (let i = 0; i < sameLat.length; i++) {
+		for (let i = 0; i < sameLat.length; i += 1) {
 			if (sameLat[i].lng > max) {
 				max = sameLat[i].lng;
 			} else if (sameLat[i].lng < min) {
