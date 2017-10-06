@@ -15,13 +15,6 @@ class ClientLocationObject extends EmptyLocation {
 		const locationData = location.dataValues;
 		const masterData = location.user.dataValues;
 		const lastLifeCycleEventDate = locationData.lastLifeCycleEventDate;
-		const underpassesTo = [];
-
-		if (Array.isArray(locationData.UnderpassTo)) {
-			locationData.UnderpassTo.forEach((item) => {
-				underpassesTo.push(item.dataValues.id);
-			});
-		}
 
 		super({
 			lat: location.dataValues.lat,
@@ -39,7 +32,6 @@ class ClientLocationObject extends EmptyLocation {
 		this.locationName = locationData.name;
 		this.dailyMessage = locationData.daily_msg;
 		this.isMaster = locationData.user_id === userId;
-		this.underpassesTo = underpassesTo;
 	}
 
 	static createClientLocationObjectByIdForUser(locationId, userId) {

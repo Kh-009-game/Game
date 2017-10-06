@@ -261,25 +261,14 @@ body {
   animation-name: slideout;
   transform: translateX(200%);
 }
+
 @media screen and (min-width: 769px) {
-  .main-block {
-    position: absolute;
-    left: 10px;
-    top: 10px;
-    bottom:10px;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    max-width: 320px;
-  }
   .header-menu {
-    position: relative;
+    max-width: 500px;
   }
-  .location-menu  {
-    position: static;
-    opacity: 0;
-    transition: opacity .3s ease-in-out;
-  }
+  .location-menu {
+    max-width: 500px;
+  }  
   .location-menu.open {
     opacity: 1;
   }
@@ -297,7 +286,6 @@ body {
     display: none;
   }
 }
-
 
 @keyframes slideout {
   0% {
