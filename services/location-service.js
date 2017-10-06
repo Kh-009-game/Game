@@ -112,15 +112,25 @@ class ClientLocationObject extends EmptyLocation {
 
 		locker.validateKey(key);
 
-		return Location.create({
-			lat: locData.northWest.lat,
-			lng: locData.northWest.lng,
-			name: locData.locationName,
-			daily_msg: locData.dailyMessage,
-			user_id: userId
-		}, {
-			include: [User]
+		return sequelize.transaction(trans => Location.count({
+			where: key,
+			transaction: trans
 		})
+			.then((count) => {
+				if (count !== 0) {
+					throw new Error('Location has been already occupied');
+				}
+				return Location.create({
+					lat: locData.northWest.lat,
+					lng: locData.northWest.lng,
+					name: locData.locationName,
+					daily_msg: locData.dailyMessage,
+					user_id: userId
+				}, {
+					include: [User],
+					transaction: trans
+				});
+			}))
 			.then(() => {
 				eventEmitter.emit('location-created', {
 					lat: locData.northWest.lat,
