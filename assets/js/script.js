@@ -928,7 +928,7 @@ class Game {
 		const dailyMsg = form['daily-msg'].value;
 		const locID = this.highlightedLocation.locationId;
 
-		socket.emit('editLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
+		socket.emit('editLocationWS', { name: locName, dailyMessage: dailyMsg, locationId: locID });
 	}
 
 	deleteLocation(location) {
