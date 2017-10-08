@@ -18,6 +18,17 @@ class EmptyLocation {
 		return width / height;
 	}
 
+	static calcCenterPoint(point) {
+		const relLngSize = EmptyLocation.calcRelLngSize(point.lat);
+		const lat = +point.lat - (EmptyLocation.relLatSize / 20000000);
+		const lng = +point.lng + (relLngSize / 20000000);
+
+		return {
+			lat,
+			lng
+		};
+	}
+
 	calcCenterPoint() {
 		const lat = +this.northWest.lat - (EmptyLocation.relLatSize / 20000000);
 		const lng = +this.northWest.lng + (this.relLngSize / 20000000);

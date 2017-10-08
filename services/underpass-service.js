@@ -1,13 +1,27 @@
-const EmptyLocation = require('./grid-service');
+const Sequelize = require('sequelize');
 const sequelize = require('./orm-service');
 const eventEmitter = require('./eventEmitter-service');
-const ClientLocationObject = require('./location-service');
+const ClientClusterObject = require('./cluster-service');
+const EmptyObject = require('./grid-service');
 const Underpass = require('../models/underpass');
+const Location = require('../models/location-orm');
 
 class UnderpassClientObject {
-	constructor(connection) {
-		this.from = connection.from.center;
-		this.to = connection.to.center;
+	constructor(underpass) {
+		const underpassData = underpass.dataValues;
+
+		const locFromData = underpassData.underpassFrom.dataValues;
+		const locToData = underpassData.underpassTo.dataValues;
+
+		this.from = EmptyObject.calcCenterPoint({
+			lat: +locFromData.lat,
+			lng: +locFromData.lng
+		});
+		this.to = EmptyObject.calcCenterPoint({
+			lat: +locToData.lat,
+			lng: +locToData.lng
+		});
+
 		this.coords = [
 			this.from,
 			this.to
@@ -15,94 +29,75 @@ class UnderpassClientObject {
 	}
 
 	static getAllUnderpassesForUser(userId) {
-		return ClientLocationObject.getAllUsersClientLocationObjects(userId)
-			.then((usersLocations) => {
-				const connections = UnderpassClientObject.findConnections(usersLocations);
+		return ClientClusterObject.getUsersLocationIds(userId)
+			.then((data) => {
+				const userLocIds1 = [];
+				const userLocIds2 = [];
 
-				let underpasses = [];
-
-				connections.forEach((connection) => {
-					underpasses.push(new UnderpassClientObject(connection));
+				data.forEach((item) => {
+					userLocIds1.push({
+						loc_id_1: item.dataValues.id
+					});
+					userLocIds2.push({
+						loc_id_2: item.dataValues.id
+					});
 				});
 
-				underpasses = UnderpassClientObject.filterUnderpassesArray(underpasses);
+				return Underpass.findAll({
+					where: {
+						[Sequelize.Op.or]: [{
+							[Sequelize.Op.or]: userLocIds1
+						}, {
+							[Sequelize.Op.or]: userLocIds2
+						}]
+					},
+					include: [{
+						model: Location,
+						association: 'underpassFrom',
+						as: 'underpassFrom'
+					}, {
+						model: Location,
+						association: 'underpassTo',
+						as: 'underpassTo'
+					}]
+				});
+			})
+			.then((underpasses) => {
+				const underpassesClientObjects = [];
 
-				return underpasses;
+				underpasses.forEach((underpass) => {
+					underpassesClientObjects.push(new UnderpassClientObject(underpass));
+				});
+
+				return underpassesClientObjects;
 			});
 	}
 
-	static findConnections(locArray) {
-		const connections = [];
-
-		locArray.forEach((location) => {
-			location.underpassesTo.forEach((underpassToId) => {
-				for (let i = 0, max = locArray.length; i < max; i += 1) {
-					if (locArray[i].locationId === underpassToId) {
-						connections.push({
-							from: location,
-							to: locArray[i]
-						});
-						break;
-					}
-				}
-			});
-		});
-
-		return connections;
-	}
-
-	static filterUnderpassesArray(underpasses) {
-		underpasses.forEach((underpass) => {
-			for (let i = 0, max = underpasses.length; i < max; i += 1) {
-				if (
-					(underpasses[i].from.lat === underpass.to.lat) &&
-					(underpasses[i].from.lng === underpass.to.lng) &&
-					(underpasses[i].to.lat === underpass.from.lat) &&
-					(underpasses[i].to.lng === underpass.from.lng)
-				) {
-					underpasses.splice(i, 1);
-					break;
-				}
-			}
-		});
-
-		return underpasses;
-	}
-
-	static createUnderpassByUser(locationIdFrom, locationIdTo, userId) {
+	static createUnderpassByUser(locationId1, locationId2, userId) {
+		const locationIdFrom = locationId1 < locationId2 ? locationId1 : locationId2;
+		const locationIdTo = locationId1 > locationId2 ? locationId1 : locationId2;
 		UnderpassClientObject.calcUnderpassDistanceByLocIds(
 			locationIdFrom,
 			locationIdTo,
 			userId
 		)
-			.then(distance => sequelize.transaction(
-				trans => Underpass.create({
-					location_id: locationIdFrom,
-					underpass_id: locationIdTo,
-					distance
-				}, {
-					transaction: trans
-				})
-					.then(() => Underpass.create({
-						location_id: locationIdTo,
-						underpass_id: locationIdFrom,
-						distance
-					}, {
-						transaction: trans
-					}))
-			));
+			.then(distance => Underpass.create({
+				loc_id_1: locationIdFrom,
+				loc_id_2: locationIdTo,
+				distance
+			}));
 	}
 
 	static calcUnderpassDistanceByLocIds(locationIdFrom, locationIdTo, userId) {
 		let locationFrom;
 		let locationTo;
-		ClientLocationObject.createClientLocationObjectByIdForUser(
+		ClientClusterObject.createClientLocationObjectByIdForUser(
 			locationIdFrom,
 			userId
 		)
 			.then((foundLocationFrom) => {
 				locationFrom = foundLocationFrom;
-				return ClientLocationObject.createClientLocationObjectByIdForUser(
+				return ClientClusterObject.createClientLocationObjectByIdForUser(
 					locationIdTo,
 					userId
 				);

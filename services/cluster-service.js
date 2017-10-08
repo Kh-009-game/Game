@@ -1,4 +1,9 @@
 const ClientLocationObject = require('./location-service.js');
+const Location = require('../models/location-orm');
+const User = require('../models/user-orm');
+const sequelize = require('./orm-service');
+const logService = require('./log-service');
+const eventEmitter = require('./eventEmitter-service');
 
 class ClientClusterObject extends ClientLocationObject {
 	constructor(location, userId) {
@@ -17,6 +22,35 @@ class ClientClusterObject extends ClientLocationObject {
 		}
 
 		this.underpassesTo = underpassesTo;
+	}
+
+	static createClientClusterObjectByIdForUser(locationId, userId) {
+		return Location.findById(locationId, {
+			include: [{
+				model: User
+			}, {
+				model: Location,
+				as: 'underpassTo'
+			}, {
+				model: Location,
+				as: 'underpassFrom'
+			}]
+		})
+			.then(location => logService.getLastLifeCycleEventDate()
+				.then((lastLifeCycleEventDate) => {
+					location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
+					return new ClientClusterObject(location, userId);
+				})
+			);
+	}
+
+	static getUsersLocationIds(userId) {
+		return Location.findAll({
+			attributes: ['id'],
+			where: {
+				user_id: userId
+			}
+		});
 	}
 }
 
