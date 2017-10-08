@@ -2,7 +2,7 @@ const Sequelize = require('sequelize');
 const sequelize = require('./orm-service');
 const eventEmitter = require('./eventEmitter-service');
 const ClientClusterObject = require('./cluster-service');
-const EmptyObject = require('./grid-service');
+const EmptyLocationObject = require('./grid-service');
 const Underpass = require('../models/underpass');
 const Location = require('../models/location-orm');
 
@@ -13,11 +13,11 @@ class UnderpassClientObject {
 		const locFromData = underpassData.underpassFrom.dataValues;
 		const locToData = underpassData.underpassTo.dataValues;
 
-		this.from = EmptyObject.calcCenterPoint({
+		this.from = EmptyLocationObject.calcCenterPoint({
 			lat: +locFromData.lat,
 			lng: +locFromData.lng
 		});
-		this.to = EmptyObject.calcCenterPoint({
+		this.to = EmptyLocationObject.calcCenterPoint({
 			lat: +locToData.lat,
 			lng: +locToData.lng
 		});
@@ -84,26 +84,28 @@ class UnderpassClientObject {
 			.then(distance => Underpass.create({
 				loc_id_1: locationIdFrom,
 				loc_id_2: locationIdTo,
-				distance
+				distance_lat: distance.distanceLat,
+				distance_lng: distance.distanceLng
 			}));
 	}
 
-	static calcUnderpassDistanceByLocIds(locationIdFrom, locationIdTo, userId) {
+	static calcUnderpassDistanceByLocIds(locationIdFrom, locationIdTo) {
 		let locationFrom;
 		let locationTo;
-		ClientClusterObject.createClientLocationObjectByIdForUser(
-			locationIdFrom,
-			userId
-		)
+		Location.findById(locationIdFrom)
 			.then((foundLocationFrom) => {
-				locationFrom = foundLocationFrom;
-				return ClientClusterObject.createClientLocationObjectByIdForUser(
-					locationIdTo,
-					userId
-				);
+				locationFrom = new EmptyLocationObject({
+					lat: foundLocationFrom.dataValues.lat,
+					lng: foundLocationFrom.dataValues.lng
+				});
+
+				return Location.findById(locationIdTo);
 			})
 			.then((foundLocationTo) => {
-				locationTo = foundLocationTo;
+				locationTo = new EmptyLocationObject({
+					lat: foundLocationTo.dataValues.lat,
+					lng: foundLocationTo.dataValues.lng
+				});
 
 				return UnderpassClientObject.calcUnderpassDistance(
 					locationFrom,
@@ -117,11 +119,11 @@ class UnderpassClientObject {
 				/ locationFrom.relLngSize;
 		const latDistance = (locationFrom.northWest.lat - locationTo.northWest.lat)
 				/ locationFrom.relLatSize;
-		const distance = Math.sqrt(
-			Math.pow(lngDistance, 2) + Math.pow(latDistance, 2)
-		);
 
-		return distance;
+		return {
+			distanceLat: latDistance,
+			distanceLng: lngDistance
+		};
 	}
 }
 
