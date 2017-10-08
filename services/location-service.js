@@ -2,6 +2,7 @@ const Location = require('../models/location-orm');
 const User = require('../models/user-orm');
 const EmptyLocation = require('./grid-service');
 const logService = require('./log-service');
+const Sequelize = require('sequelize');
 const sequelize = require('./orm-service');
 const eventEmitter = require('./eventEmitter-service');
 const Locker = require('./locker-service');
@@ -15,17 +16,10 @@ class ClientLocationObject extends EmptyLocation {
 		const locationData = location.dataValues;
 		const masterData = location.user.dataValues;
 		const lastLifeCycleEventDate = locationData.lastLifeCycleEventDate;
-		const underpassesTo = [];
-
-		if (Array.isArray(locationData.UnderpassTo)) {
-			locationData.UnderpassTo.forEach((item) => {
-				underpassesTo.push(item.dataValues.id);
-			});
-		}
 
 		super({
-			lat: location.dataValues.lat,
-			lng: location.dataValues.lng
+			lat: +location.dataValues.lat,
+			lng: +location.dataValues.lng
 		});
 
 		this.masterId = locationData.user_id;
@@ -39,16 +33,12 @@ class ClientLocationObject extends EmptyLocation {
 		this.locationName = locationData.name;
 		this.dailyMessage = locationData.daily_msg;
 		this.isMaster = locationData.user_id === userId;
-		this.underpassesTo = underpassesTo;
 	}
 
 	static createClientLocationObjectByIdForUser(locationId, userId) {
 		return Location.findById(locationId, {
 			include: [{
 				model: User
-			}, {
-				model: Location,
-				as: 'UnderpassTo'
 			}]
 		})
 			.then(location => logService.getLastLifeCycleEventDate()
@@ -63,9 +53,6 @@ class ClientLocationObject extends EmptyLocation {
 		return Location.findAll({
 			include: [{
 				model: User
-			}, {
-				model: Location,
-				as: 'UnderpassTo'
 			}]
 		})
 			.then(locations => logService.getLastLifeCycleEventDate()
@@ -80,34 +67,31 @@ class ClientLocationObject extends EmptyLocation {
 			);
 	}
 
-	static getAllUsersClientLocationObjects(userId) {
-		return Location.findAll({
-			where: {
-				user_id: userId
-			},
-			include: [{
-				model: User
-			}, {
-				model: Location,
-				as: 'UnderpassTo'
-			}]
-		})
-			.then(locations => logService.getLastLifeCycleEventDate()
-				.then((lastLifeCycleEventDate) => {
-					const clientLocationsArray = [];
-					locations.forEach((location) => {
-						location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
-						clientLocationsArray.push(new ClientLocationObject(location, userId));
-					});
-					return clientLocationsArray;
-				})
-			);
-	}
+	// static getAllUsersClientLocationObjects(userId) {
+	// 	return Location.findAll({
+	// 		where: {
+	// 			user_id: userId
+	// 		},
+	// 		include: [{
+	// 			model: User
+	// 		}]
+	// 	})
+	// 		.then(locations => logService.getLastLifeCycleEventDate()
+	// 			.then((lastLifeCycleEventDate) => {
+	// 				const clientLocationsArray = [];
+	// 				locations.forEach((location) => {
+	// 					location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
+	// 					clientLocationsArray.push(new ClientLocationObject(location, userId));
+	// 				});
+	// 				return clientLocationsArray;
+	// 			})
+	// 		);
+	// }
 
 	static occupyLocationByUser(userId, locData) {
 		const key = {
-			lat: locData.lat,
-			lng: locData.lng
+			lat: locData.northWest.lat,
+			lng: locData.northWest.lng
 		};
 
 		locker.validateKey(key);
@@ -155,13 +139,7 @@ class ClientLocationObject extends EmptyLocation {
 		})
 			.then((location) => {
 				if (!location) {
-					// if (this.validateLocation(locNorthWest)) {
 					return new EmptyLocation(locNorthWest);
-					// }
-					// return this.validateLocation(locNorthWest);
-					// return false;
-
-					// return new EmptyLocation(locNorthWest);
 				}
 				return ClientLocationObject.createClientLocationObjectByIdForUser(
 					location.dataValues.id,
@@ -322,7 +300,7 @@ class ClientLocationObject extends EmptyLocation {
 					where: {
 						loyal_population: 0,
 						checkin_date: {
-							$lt: lastLifeCycleEventDate
+							[Sequelize.Op.lt]: lastLifeCycleEventDate
 						}
 					},
 					transaction: trans
@@ -332,7 +310,7 @@ class ClientLocationObject extends EmptyLocation {
 					}, {
 						where: {
 							checkin_date: {
-								$lt: lastLifeCycleEventDate
+								[Sequelize.Op.lt]: lastLifeCycleEventDate
 							}
 						},
 						transaction: trans
