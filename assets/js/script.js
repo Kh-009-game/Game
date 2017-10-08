@@ -564,8 +564,10 @@ class Game {
 		})
 			.then((currentLocation) => {
 				console.log(currentLocation.northWest);
-				if (!currentLocation) {
-					console.log('cannot be occupied');
+				if (currentLocation.isAllowed) {
+					console.log(true);
+				} else {
+					console.log(false);
 				}
 				this.removeCurrentHighlight();
 				if (!currentLocation.masterId) {

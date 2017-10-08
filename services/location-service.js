@@ -139,7 +139,8 @@ class ClientLocationObject extends EmptyLocation {
 		})
 			.then((location) => {
 				if (!location) {
-					return new EmptyLocation(locNorthWest);
+					// return new EmptyLocation(locNorthWest);
+					return this.validateLocation(locNorthWest);
 				}
 				return ClientLocationObject.createClientLocationObjectByIdForUser(
 					location.dataValues.id,
@@ -151,10 +152,20 @@ class ClientLocationObject extends EmptyLocation {
 	static validateLocation(northWest) {
 		const validationArr = boundsService.getValidationPoints();
 		const sameLat = [];
-		for (let i = 0; i < validationArr.length; i += 1) {
-			if (northWest.lat === validationArr[i].lat) {
+		let check = false;
+		for (let i = 0; i < validationArr.length; i++) {
+			const roundedLat = Math.round(northWest.lat * 10000) / 10000;
+			const roundedValidLat = Math.round(validationArr[i].lat * 10000) / 10000;
+			if (roundedLat === roundedValidLat) {
+				console.log('inLat');
 				sameLat.push(validationArr[i]);
+				check = true;
 			}
+		}
+		if (!check) {
+			const emptyLoc = new EmptyLocation(northWest);
+			emptyLoc.isAllowed = false;
+			return emptyLoc;
 		}
 		let max = sameLat[0].lng;
 		let min = sameLat[1].lng;
@@ -166,7 +177,7 @@ class ClientLocationObject extends EmptyLocation {
 			}
 		}
 		const first = max > northWest.lng;
-		const second = min < northWest.lng;
+		const second = min <= northWest.lng;
 		console.log(sameLat);
 		console.log(max);
 		console.log(min);

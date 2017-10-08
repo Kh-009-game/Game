@@ -255,6 +255,7 @@ class EmptyLocation {
 		return checkedLng === lng;
 	}
 
+
 	static get equatorLength() {
 		return 40075696;
 	}

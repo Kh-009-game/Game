@@ -8,8 +8,8 @@ module.exports.getGameBounds = function () {
 	if (bounds.length > 0) {
 		return new Promise((res, rej) => {
 			console.log('return saved bounds');
-			// res(bounds);
-			res(this.getValidationPoints());
+			res(bounds);
+			// res(this.getValidationPoints());
 		});
 	}
 	return Bounds.findAll({ where: { figure_id: 1 } })
@@ -94,12 +94,6 @@ module.exports.getValidationPoints = function () {
 			lngOffset = lngOffset.toFixed(5);
 			console.log(lngOffset);
 		}
-		// if (!bounds[i + 2]) {
-		// 	validateBounds.push({ lat: bounds[i + 1].lat, lng: bounds[i + 1].lng });
-		// 	break;
-		// }
-
-		// validateBounds.push({ lat: bounds[i].lat, lng: bounds[i].lng })
 	}
 
 	return validateBounds;
