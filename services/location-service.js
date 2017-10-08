@@ -2,28 +2,24 @@ const Location = require('../models/location-orm');
 const User = require('../models/user-orm');
 const EmptyLocation = require('./grid-service');
 const logService = require('./log-service');
+const Sequelize = require('sequelize');
 const sequelize = require('./orm-service');
 const eventEmitter = require('./eventEmitter-service');
+const Locker = require('./locker-service');
 const schedule = require('node-schedule');
 const boundsService = require('./bounds-service');
 
+const locker = new Locker(new Error('Location is being occupied!'));
 
 class ClientLocationObject extends EmptyLocation {
 	constructor(location, userId) {
 		const locationData = location.dataValues;
 		const masterData = location.user.dataValues;
 		const lastLifeCycleEventDate = locationData.lastLifeCycleEventDate;
-		const underpassesTo = [];
-
-		if (Array.isArray(locationData.UnderpassTo)) {
-			locationData.UnderpassTo.forEach((item) => {
-				underpassesTo.push(item.dataValues.id);
-			});
-		}
 
 		super({
-			lat: location.dataValues.lat,
-			lng: location.dataValues.lng
+			lat: +location.dataValues.lat,
+			lng: +location.dataValues.lng
 		});
 
 		this.masterId = locationData.user_id;
@@ -37,16 +33,12 @@ class ClientLocationObject extends EmptyLocation {
 		this.locationName = locationData.name;
 		this.dailyMessage = locationData.daily_msg;
 		this.isMaster = locationData.user_id === userId;
-		this.underpassesTo = underpassesTo;
 	}
 
 	static createClientLocationObjectByIdForUser(locationId, userId) {
 		return Location.findById(locationId, {
 			include: [{
 				model: User
-			}, {
-				model: Location,
-				as: 'UnderpassTo'
 			}]
 		})
 			.then(location => logService.getLastLifeCycleEventDate()
@@ -61,9 +53,6 @@ class ClientLocationObject extends EmptyLocation {
 		return Location.findAll({
 			include: [{
 				model: User
-			}, {
-				model: Location,
-				as: 'UnderpassTo'
 			}]
 		})
 			.then(locations => logService.getLastLifeCycleEventDate()
@@ -78,45 +67,64 @@ class ClientLocationObject extends EmptyLocation {
 			);
 	}
 
-	static getAllUsersClientLocationObjects(userId) {
-		return Location.findAll({
-			where: {
-				user_id: userId
-			},
-			include: [{
-				model: User
-			}, {
-				model: Location,
-				as: 'UnderpassTo'
-			}]
-		})
-			.then(locations => logService.getLastLifeCycleEventDate()
-				.then((lastLifeCycleEventDate) => {
-					const clientLocationsArray = [];
-					locations.forEach((location) => {
-						location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
-						clientLocationsArray.push(new ClientLocationObject(location, userId));
-					});
-					return clientLocationsArray;
-				})
-			);
-	}
+	// static getAllUsersClientLocationObjects(userId) {
+	// 	return Location.findAll({
+	// 		where: {
+	// 			user_id: userId
+	// 		},
+	// 		include: [{
+	// 			model: User
+	// 		}]
+	// 	})
+	// 		.then(locations => logService.getLastLifeCycleEventDate()
+	// 			.then((lastLifeCycleEventDate) => {
+	// 				const clientLocationsArray = [];
+	// 				locations.forEach((location) => {
+	// 					location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
+	// 					clientLocationsArray.push(new ClientLocationObject(location, userId));
+	// 				});
+	// 				return clientLocationsArray;
+	// 			})
+	// 		);
+	// }
 
 	static occupyLocationByUser(userId, locData) {
-		return Location.create({
+		const key = {
 			lat: locData.northWest.lat,
-			lng: locData.northWest.lng,
-			name: locData.locationName,
-			daily_msg: locData.dailyMessage,
-			user_id: userId
-		}, {
-			include: [User]
+			lng: locData.northWest.lng
+		};
+
+		locker.validateKey(key);
+
+		return sequelize.transaction(trans => Location.count({
+			where: key,
+			transaction: trans
 		})
+			.then((count) => {
+				if (count !== 0) {
+					throw new Error('Location has been already occupied');
+				}
+				return Location.create({
+					lat: locData.northWest.lat,
+					lng: locData.northWest.lng,
+					name: locData.locationName,
+					daily_msg: locData.dailyMessage,
+					user_id: userId
+				}, {
+					include: [User],
+					transaction: trans
+				});
+			}))
 			.then(() => {
 				eventEmitter.emit('location-created', {
 					lat: locData.northWest.lat,
 					lng: locData.northWest.lng
 				});
+				locker.deleteKey(key);
+			})
+			.catch((err) => {
+				locker.deleteKey(key);
+				throw err;
 			});
 	}
 
@@ -131,13 +139,7 @@ class ClientLocationObject extends EmptyLocation {
 		})
 			.then((location) => {
 				if (!location) {
-					// if (this.validateLocation(locNorthWest)) {
 					return new EmptyLocation(locNorthWest);
-					// }
-					// return this.validateLocation(locNorthWest);
-					// return false;
-
-					// return new EmptyLocation(locNorthWest);
 				}
 				return ClientLocationObject.createClientLocationObjectByIdForUser(
 					location.dataValues.id,
@@ -149,14 +151,14 @@ class ClientLocationObject extends EmptyLocation {
 	static validateLocation(northWest) {
 		const validationArr = boundsService.getValidationPoints();
 		const sameLat = [];
-		for (let i = 0; i < validationArr.length; i++) {
+		for (let i = 0; i < validationArr.length; i += 1) {
 			if (northWest.lat === validationArr[i].lat) {
 				sameLat.push(validationArr[i]);
 			}
 		}
 		let max = sameLat[0].lng;
 		let min = sameLat[1].lng;
-		for (let i = 0; i < sameLat.length; i++) {
+		for (let i = 0; i < sameLat.length; i += 1) {
 			if (sameLat[i].lng > max) {
 				max = sameLat[i].lng;
 			} else if (sameLat[i].lng < min) {
@@ -298,7 +300,7 @@ class ClientLocationObject extends EmptyLocation {
 					where: {
 						loyal_population: 0,
 						checkin_date: {
-							$lt: lastLifeCycleEventDate
+							[Sequelize.Op.lt]: lastLifeCycleEventDate
 						}
 					},
 					transaction: trans
@@ -308,7 +310,7 @@ class ClientLocationObject extends EmptyLocation {
 					}, {
 						where: {
 							checkin_date: {
-								$lt: lastLifeCycleEventDate
+								[Sequelize.Op.lt]: lastLifeCycleEventDate
 							}
 						},
 						transaction: trans
