@@ -223,6 +223,11 @@ body {
   margin: 3px 5px;
   outline: none;
 }
+
+.btn:disabled {
+ opacity: 0.5;
+}
+
 .btn:hover {
   background-color: #58568c;
 }
@@ -260,6 +265,13 @@ body {
   background-color: #fff; 
   animation-name: slideout;
   transform: translateX(200%);
+}
+
+.underpass-info {
+  margin: 10px 20px;
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
 }
 
 @media screen and (min-width: 769px) {

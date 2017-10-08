@@ -1,0 +1,35 @@
+<form name="underpass-form">
+  <div class="underpass-info">
+    <div>
+      Underpass start point:  
+      <div id="loc-from-container">
+          <%= location.locationName %>
+      </div>
+    </div>
+  
+    <div>
+      Underpass end point:  
+      <div id="loc-to-container">
+      </div>
+    </div>
+  </div>
+
+  <input type="number" 
+         name="loc-from-id" 
+         id="loc-from-id" 
+         style="visibility: hidden" 
+         value="<%= location.locationId %>"
+         required>
+  <input type="number" 
+         name="loc-to-id" 
+         id="loc-to-id" 
+         style="visibility: hidden"
+         required>
+
+  <div class="location-buttons">
+    <div class="form-btns">
+        <input id="underpass-submit" type="submit" class="btn" value="Create" disabled>
+        <input type="reset" class="btn" value="Cancel">
+    </div>
+  </div>
+</form>

@@ -104,13 +104,30 @@ class Game {
 			if (form.getAttribute('name') === 'occup-form') {
 				this.occupySubmitHandler(event);
 			}
-
 			if (form.getAttribute('name') === 'occup-clicked-form') {
 				this.occupyHighlightedSubmitHandler(event);
 			}
-
 			if (form.getAttribute('name') === 'edit-loc-form') {
 				this.editLocationInfoHandler(event);
+			}
+			if (form.getAttribute('name') === 'underpass-form') {
+				this.submitUnderpassCreation(event);
+			}
+		});
+
+		this.occupyFormContainer.addEventListener('reset', (event) => {
+			const form = event.target;
+			if (form.getAttribute('name') === 'occup-form') {
+				this.hideOccupationForm();
+			}
+			if (form.getAttribute('name') === 'occup-clicked-form') {
+				this.hideOccupationForm();
+			}
+			if (form.getAttribute('name') === 'edit-loc-form') {
+				this.hideOccupationForm();
+			}
+			if (form.getAttribute('name') === 'underpass-form') {
+				this.resetUnderpassCreationHandler();
 			}
 		});
 
@@ -410,14 +427,18 @@ class Game {
 		this.getOccupiedLocations()
 			.then((locArray) => {
 				this.occupiedLocationsArray = locArray;
-				this.occupiedLocationsArray.forEach((location) => {
-					this.renderFullLocation(location);
-				});
+				this.renderLocationsArray();
 				document.dispatchEvent(this.occLocRenderedEvent);
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
+	}
+
+	renderLocationsArray() {
+		this.occupiedLocationsArray.forEach((location) => {
+			this.renderFullLocation(location);
+		});
 	}
 
 	refreshOccupiedLocations() {
@@ -439,7 +460,7 @@ class Game {
 			})
 			.then(() => this.refreshHighlightedLocation())
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
 	}
 
@@ -469,7 +490,7 @@ class Game {
 				return this.renderHighlightedLocationTextInfo();
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
 	}
 
@@ -551,7 +572,7 @@ class Game {
 				this.showUserIcons();
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
 	}
 
@@ -593,16 +614,18 @@ class Game {
 				return Promise.all(promises);
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
 	}
 
 	renderCurrentOccupiedLocation(currentLocation) {
+		const locId = currentLocation.locationId;
 		this.currentLocation = this.getAndExtendLoadedLocationById(currentLocation);
 		this.currentLocation.isCurrent = true;
 		this.currentLocationMapFeature = this.getAndRenderFeatureByLocObj(
 			this.currentLocation
 		);
+		this.occupiedLocationsMapFeatures[locId] = this.currentLocationMapFeature;
 	}
 
 	renderCurrentEmptyLocation(currentLocation) {
@@ -673,8 +696,21 @@ class Game {
 				console.log(underpasses);
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
+	}
+
+	clearUnderpasses() {
+		this.underpassesPolys.forEach((underpassPoly) => {
+			underpassPoly.setMap(null);
+		});
+
+		this.underpassesPolys = [];
+	}
+
+	refreshUnderpasses() {
+		this.clearUnderpasses();
+		this.renderUnderpasses();
 	}
 
 	renderUnderpass(underpass) {
@@ -682,7 +718,7 @@ class Game {
 			path: underpass.coords,
 			geodesic: true,
 			strokeColor: '#999',
-			strokeOpacity: 1.0,
+			strokeOpacity: 0.5,
 			strokeWeight: 2
 		});
 		this.underpassesPolys.push(underpassPoly);
@@ -690,7 +726,159 @@ class Game {
 	}
 
 	initUnderpassCreation() {
+		const locId = this.highlightedLocation.locationId;
 
+		this.showUnderpassCreationForm()
+			.then(() => this.getAvailableLocsForConnection(locId))
+			.then((ids) => {
+				this.availableForUnderpass = ids;
+				this.highlightAvailableForUnderpass();
+				this.initUnderpassCreationHandler();
+				console.log(ids);
+			})
+			.catch((err) => {
+				this.errorHandler(err);
+			});
+	}
+
+	initUnderpassCreationHandler() {
+		google.maps.event.removeListener(this.highlightGridMapListener);
+		google.maps.event.removeListener(this.highlightFeatureMapListener);
+		this.createUnderpassMapListener = this.map.data.addListener('click', (event) => {
+			const feature = event.feature;
+			if (!feature.getProperty('info').underpassAvailable) return;
+			this.chooseUnderpassLocToId(feature.getId());
+		});
+	}
+
+	submitUnderpassCreation(event) {
+		event.preventDefault();
+		const form = event.target;
+
+		const locId1 = +form['loc-from-id'].value;
+		const locId2 = +form['loc-to-id'].value;
+
+		this.createUnderpass(locId1, locId2)
+			.then(() => {
+				this.resetUnderpassCreationHandler();
+				this.refreshUnderpasses();
+				console.log('Ok!');
+			})
+			.catch((err) => {
+				this.resetUnderpassCreationHandler();
+				this.errorHandler(err);
+			});
+	}
+
+	createUnderpass(locId1, locId2) {
+		return new Promise((res, rej) => {
+			const body = {
+				locIdFrom: locId1,
+				locIdTo: locId2,
+				userGeoData: this.userGeoData
+			};
+			const createLocationXHR = new XMLHttpRequest();
+			createLocationXHR.open('POST', 'api/underpasses/create');
+			createLocationXHR.setRequestHeader('Content-Type', 'application/json');
+			createLocationXHR.send(JSON.stringify(body));
+			createLocationXHR.addEventListener('load', (e) => {
+				const xhr = e.srcElement;
+				console.log(xhr);
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res();
+			});
+		});
+	}
+
+	resetUnderpassCreationHandler() {
+		this.highlightGridMapListener = this.map.addListener('click', (event) => {
+			this.renderEmptyLocationInfo(event);
+		});
+		this.highlightGridMapListener = this.map.data.addListener('click', (event) => {
+			this.renderHightlightedFeatureInfo(event);
+		});
+		this.map.data.addListener(this.highlightFeatureMapListener);
+		google.maps.event.removeListener(this.createUnderpassMapListener);
+		this.clearMap();
+		this.refreshHighlightedLocation();
+		this.renderLocationsArray();
+	}
+
+	chooseUnderpassLocToId(locToId) {
+		this.highlightAvailableForUnderpass();
+		document.getElementById('underpass-submit').disabled = false;
+
+		this.map.data.overrideStyle(
+			this.occupiedLocationsMapFeatures[locToId], {
+				strokeOpacity: 1
+			}
+		);
+
+		let location;
+		this.occupiedLocationsArray.forEach((item) => {
+			if (item.locationId === locToId) {
+				location = item;
+			}
+		});
+
+		document.getElementById('loc-to-container').innerHTML = location.locationName;
+		document.getElementById('loc-to-id').value = locToId;
+	}
+
+	showUnderpassCreationForm() {
+		return this.getUnderpassCreationForm()
+			.then((form) => {
+				this.occupyFormContainer.innerHTML = form;
+				this.locInfoBlock.className = 'location-block show-form';
+			});
+	}
+
+	getUnderpassCreationForm() {
+		const locId = this.highlightedLocation.locationId;
+		return new Promise((res, rej) => {
+			const xhttpr = new XMLHttpRequest();
+			xhttpr.open('GET', `/api/underpasses/create?locFromId=${locId}`);
+			xhttpr.send();
+			xhttpr.addEventListener('load', (e) => {
+				const xhr = e.srcElement;
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res(xhr.response);
+			});
+		});
+	}
+
+	highlightAvailableForUnderpass() {
+		this.availableForUnderpass.forEach((id) => {
+			this.map.data.overrideStyle(
+				this.occupiedLocationsMapFeatures[id], {
+					strokeWeight: 3,
+					strokeOpacity: 0.5,
+					strokeColor: 'green'
+				}
+			);
+			this.occupiedLocationsMapFeatures[id].setProperty('info', {
+				underpassAvailable: true
+			});
+		});
+	}
+
+	getAvailableLocsForConnection(locId) {
+		return new Promise((res, rej) => {
+			const xhttpr = new XMLHttpRequest();
+			xhttpr.open('GET', `/api/underpasses/available-locations?locFromId=${locId}`);
+			xhttpr.send();
+			xhttpr.addEventListener('load', (e) => {
+				const xhr = e.srcElement;
+				if (xhr.status !== 200) {
+					rej(xhr.response);
+				}
+				res(JSON.parse(xhr.response));
+			});
+		});
 	}
 
 	// HIGHLIGHTED LOCATION METHODS
@@ -782,6 +970,19 @@ class Game {
 		this.highlightedMapFeature = null;
 	}
 
+	renderHightlightedFeatureInfo(event) {
+		if (event.feature.getProperty('info').isHighlighted) return;
+
+		const targetFeatureId = event.feature.getId();
+
+		if (targetFeatureId) {
+			this.renderOccupiedLocationInfo(targetFeatureId);
+		}
+		if (event.feature.getProperty('info').isCurrent) {
+			this.hightlightCurrentEmptyLocation();
+		}
+	}
+
 	renderHighlightedLocationTextInfo() {
 		return this.getLocInfoHTML(this.highlightedLocation)
 			.then((response) => {
@@ -828,7 +1029,7 @@ class Game {
 				document.getElementById('loc-name-field').focus();
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
 	}
 
@@ -840,7 +1041,7 @@ class Game {
 				document.getElementById('loc-name-field').focus();
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
 	}
 
@@ -875,18 +1076,19 @@ class Game {
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
+				this.hideOccupationForm();
 			});
 	}
 
 	occupyHighlightedLocation() {
 		this.occupyLocation(this.highlightedLocation)
 			.then(() => {
-				alert('Congrats! You\'ve occupied the location!');
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
+				this.hideOccupationForm();
 			});
 	}
 
@@ -930,6 +1132,7 @@ class Game {
 		const dailyMsg = form['daily-msg'].value;
 		const locID = this.highlightedLocation.locationId;
 
+		// error handling?
 		socket.emit('editLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
 	}
 
@@ -966,7 +1169,7 @@ class Game {
 				console.log('You\'ve deleted location');
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
 	}
 
@@ -995,7 +1198,7 @@ class Game {
 				return this.renderHighlightedLocationTextInfo();
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
 	}
 
@@ -1047,7 +1250,7 @@ class Game {
 				return this.renderCurrentLocationTextInfo();
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
 	}
 
@@ -1159,7 +1362,7 @@ class Game {
 					locInfoClassList;
 			})
 			.catch((err) => {
-				console.log(err);
+				this.errorHandler(err);
 			});
 	}
 
@@ -1227,6 +1430,13 @@ class Game {
 				notifications.removeChild(removedItem);
 			});
 		}, 10000);
+	}
+
+	errorHandler(err) {
+		this.setupMessageElement({
+			text: err
+		});
+		console.log(err);
 	}
 }
 
@@ -1322,7 +1532,7 @@ function initMap() {
 				});
 			})
 			.catch((err) => {
-				console.log(`1419 ${err}`);
+				this.errorHandler(err);
 			});
 
 		function initMapInteraction() {
@@ -1347,21 +1557,12 @@ function initMap() {
 				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
 
-			map.addListener('click', (event) => {
+			game.highlightGridMapListener = map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
 			});
 
-			map.data.addListener('click', (event) => {
-				if (event.feature.getProperty('info').isHighlighted) return;
-
-				const targetFeatureId = event.feature.getId();
-
-				if (targetFeatureId) {
-					game.renderOccupiedLocationInfo(targetFeatureId);
-				}
-				if (event.feature.getProperty('info').isCurrent) {
-					game.hightlightCurrentEmptyLocation();
-				}
+			game.highlightFeatureMapListener = map.data.addListener('click', (event) => {
+				game.renderHightlightedFeatureInfo(event);
 			});
 			document.removeEventListener('occloc-ready', initMapInteraction);
 		}

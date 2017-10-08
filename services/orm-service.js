@@ -93,4 +93,12 @@ Underpass.belongsTo(Location, {
 // 		console.dir(data[0].dataValues.underpassFrom.dataValues.id);
 // 	});
 
+// Underpass.sync({ force: true })
+// 	.then(() => Underpass.create({
+// 		loc_id_1: 23,
+// 		loc_id_2: 4,
+// 		distance_lat: 3,
+// 		distance_lng: 3
+// 	}));
+
 module.exports = sequelize;
