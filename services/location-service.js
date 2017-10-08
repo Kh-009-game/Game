@@ -399,6 +399,10 @@ class ClientLocationObject extends EmptyLocation {
 			throw new Error('You have to be there to do that!');
 		}
 	}
+
+	static emitLifecycle() {
+		return ClientLocationObject.recalcLocationsLifecycle();
+	}
 }
 
 schedule.scheduleJob('0 0 3 * * *', () => {

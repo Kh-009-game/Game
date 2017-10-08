@@ -1,6 +1,7 @@
 const express = require('express');
 const locationController = require('../controllers/location-controller');
 const locationMiddlewares = require('../middleware/location-middlewares');
+const authorizationMiddleware = require('../middleware/authorization-middleware');
 
 const router = express.Router();
 
@@ -20,6 +21,11 @@ router.post(
 router.get(
 	'/check-location',
 	locationController.getLocationOnPoint
+);
+router.put(
+	'/emit-lifecycle',
+	authorizationMiddleware.isAdmin,
+	locationController.emitLifecycle
 );
 router.get(
 	'/:id',
@@ -67,5 +73,4 @@ router.put(
 	locationMiddlewares.checkOwner,
 	locationController.restoreLoyalty
 );
-
 module.exports = router;

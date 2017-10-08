@@ -14,6 +14,7 @@ class Game {
 		this.showUserLocationsBtn = document.getElementById('show-user-location');
 		this.centerUserLocationsBtn = document.getElementById('center-user-location');
 		this.logOutBtn = document.getElementById('log-out');
+		this.lifecycleBtn = document.getElementById('lifecycle-btn');
 
 		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
 			bubbles: true
@@ -1438,6 +1439,37 @@ class Game {
 		});
 		console.log(err);
 	}
+
+	initLifecycleBtn() {
+		if (!this.lifecycleBtn) return;
+
+		this.lifecycleBtn.addEventListener('click', () => {
+			this.emitLifecycle();
+		});
+	}
+
+	emitLifecycle() {
+		return new Promise((res, rej) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('PUT', 'api/locations/emit-lifecycle');
+			xhr.send();
+			xhr.onload = (e) => {
+				const htmlXHR = e.srcElement;
+
+				if (htmlXHR.status !== 200) {
+					rej(htmlXHR.response);
+				}
+
+				res(htmlXHR.response);
+			};
+		})
+			.then(() => {
+				console.log('OK!');
+			})
+			.catch((err) => {
+				this.errorHandler(err);
+			});
+	}
 }
 
 function initMap() {
@@ -1565,6 +1597,7 @@ function initMap() {
 				game.renderHightlightedFeatureInfo(event);
 			});
 			document.removeEventListener('occloc-ready', initMapInteraction);
+			game.initLifecycleBtn();
 		}
 	};
 }

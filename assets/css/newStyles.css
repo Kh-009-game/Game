@@ -31,9 +31,9 @@ body {
   text-align: center;
   box-shadow: 0 0 7px 0px rgba(0,0,0,.2);
 }
-.header-menu .btn-burger {
+
+.header-btn {
   position: absolute;
-  left: 20px;
   top: 50%;
   transform: translateY(-50%);
   background-color: transparent;
@@ -51,6 +51,15 @@ body {
   cursor: pointer;
   outline: none;
 }
+
+.btn-burger {
+  left: 20px;
+}
+
+.btn-lifecycle {
+  right: 20px;
+}
+
 .header-menu .btn:hover {
   background-color: #58568c;
 }
