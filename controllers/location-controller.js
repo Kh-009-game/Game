@@ -24,7 +24,9 @@ module.exports.occupyLocation = (req, res, next) => {
 		.then(() => {
 			res.sendStatus(200);
 		})
-		.catch(err => next(err));
+		.catch((err) => {
+			next(err);
+		});
 };
 
 
