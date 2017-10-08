@@ -40,19 +40,17 @@ const Underpass = sequelize.define('underpass', {
 		}
 	},
 	distance_lng: {
-		type: Sequelize.DECIMAL,
+		type: Sequelize.INTEGER,
 		allowNull: false,
 		validate: {
-			max: 5,
-			min: 1
+			max: 5
 		}
 	},
 	distance_lat: {
-		type: Sequelize.DECIMAL,
+		type: Sequelize.INTEGER,
 		allowNull: false,
 		validate: {
-			max: 5,
-			min: 1
+			max: 5
 		}
 	}
 }, {

@@ -73,13 +73,16 @@ class UnderpassClientObject {
 			});
 	}
 
-	static createUnderpassByUser(locationId1, locationId2, userId) {
+	static getLocationsAbleToConnectByLocIdForUser(locationId, userId) {
+
+	}
+
+	static createUnderpass(locationId1, locationId2) {
 		const locationIdFrom = locationId1 < locationId2 ? locationId1 : locationId2;
 		const locationIdTo = locationId1 > locationId2 ? locationId1 : locationId2;
-		UnderpassClientObject.calcUnderpassDistanceByLocIds(
+		return UnderpassClientObject.calcUnderpassDistanceByLocIds(
 			locationIdFrom,
-			locationIdTo,
-			userId
+			locationIdTo
 		)
 			.then(distance => Underpass.create({
 				loc_id_1: locationIdFrom,
@@ -92,19 +95,19 @@ class UnderpassClientObject {
 	static calcUnderpassDistanceByLocIds(locationIdFrom, locationIdTo) {
 		let locationFrom;
 		let locationTo;
-		Location.findById(locationIdFrom)
+		return Location.findById(locationIdFrom)
 			.then((foundLocationFrom) => {
 				locationFrom = new EmptyLocationObject({
-					lat: foundLocationFrom.dataValues.lat,
-					lng: foundLocationFrom.dataValues.lng
+					lat: +foundLocationFrom.dataValues.lat,
+					lng: +foundLocationFrom.dataValues.lng
 				});
 
 				return Location.findById(locationIdTo);
 			})
 			.then((foundLocationTo) => {
 				locationTo = new EmptyLocationObject({
-					lat: foundLocationTo.dataValues.lat,
-					lng: foundLocationTo.dataValues.lng
+					lat: +foundLocationTo.dataValues.lat,
+					lng: +foundLocationTo.dataValues.lng
 				});
 
 				return UnderpassClientObject.calcUnderpassDistance(
@@ -115,10 +118,13 @@ class UnderpassClientObject {
 	}
 
 	static calcUnderpassDistance(locationFrom, locationTo) {
-		const lngDistance = (locationFrom.northWest.lng - locationTo.northWest.lng)
-				/ locationFrom.relLngSize;
-		const latDistance = (locationFrom.northWest.lat - locationTo.northWest.lat)
-				/ locationFrom.relLatSize;
+		let lngDistance = Math.round((locationFrom.northWest.lng - locationTo.northWest.lng)
+				/ (locationFrom.relLngSize / 10000000));
+		let latDistance = Math.round((locationFrom.northWest.lat - locationTo.northWest.lat)
+				/ (EmptyLocationObject.relLatSize / 10000000));
+
+		lngDistance = lngDistance < 0 ? -lngDistance : lngDistance;
+		latDistance = latDistance < 0 ? -latDistance : latDistance;
 
 		return {
 			distanceLat: latDistance,
