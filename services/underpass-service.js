@@ -73,8 +73,63 @@ class UnderpassClientObject {
 			});
 	}
 
-	static getLocationsAbleToConnectByLocIdForUser(locationId, userId) {
+	static getAvailableLocIdsForUser(locFromId, userId) {
+		return Location.findById(locFromId)
+			.then((location) => {
+				const bounds = UnderpassClientObject.calcPermittedBoundsForLocation(location);
 
+				return Underpass.findAll({
+					where: {
+						[Sequelize.Op.or]: [{
+							loc_id_1: locFromId
+						}, {
+							loc_id_2: locFromId
+						}]
+					}
+				})
+					.then((underpasses) => {
+						const ids = [];
+						ids.push(locFromId);
+						underpasses.forEach((item) => {
+							const id1 = item.dataValues.loc_id_1;
+							const id2 = item.dataValues.loc_id_2;
+							ids.push(id1);
+							ids.push(id2);
+						});
+
+						return Location.findAll({
+							attributes: ['id'],
+							where: {
+								user_id: userId,
+								id: {
+									[Sequelize.Op.notIn]: ids
+								},
+								lat: {
+									[Sequelize.Op.and]: [{
+										[Sequelize.Op.gte]: bounds.south
+									}, {
+										[Sequelize.Op.lte]: bounds.north
+									}]
+								},
+								lng: {
+									[Sequelize.Op.and]: [{
+										[Sequelize.Op.gte]: bounds.west
+									}, {
+										[Sequelize.Op.lte]: bounds.east
+									}]
+								}
+							}
+						});
+					});
+			})
+			.then((data) => {
+				const ids = [];
+
+				data.forEach((item) => {
+					ids.push(item.dataValues.id);
+				});
+				return ids;
+			});
 	}
 
 	static createUnderpass(locationId1, locationId2) {
@@ -90,6 +145,23 @@ class UnderpassClientObject {
 				distance_lat: distance.distanceLat,
 				distance_lng: distance.distanceLng
 			}));
+	}
+
+	static calcPermittedBoundsForLocation(location) {
+		const locGridObject = new EmptyLocationObject({
+			lat: +location.dataValues.lat,
+			lng: +location.dataValues.lng
+		});
+
+		const relLatSize = EmptyLocationObject.relLatSize / 10000000;
+		const relLngSize = locGridObject.relLngSize / 10000000;
+
+		return {
+			north: locGridObject.northWest.lat + (relLatSize * 5),
+			south: locGridObject.northWest.lat - (relLatSize * 5),
+			east: locGridObject.northWest.lng + (relLngSize * 5),
+			west: locGridObject.northWest.lng - (relLngSize * 5)
+		};
 	}
 
 	static calcUnderpassDistanceByLocIds(locationIdFrom, locationIdTo) {
