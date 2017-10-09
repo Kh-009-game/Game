@@ -705,12 +705,22 @@ class Game {
 	}
 
 	renderUnderpass(underpass) {
+		const lineSymbol = {
+			path: 'M 0,-1.5 0,-3.5',
+			strokeOpacity: 0.5,
+			scale: 2.5
+		};
+
 		const underpassPoly = new google.maps.Polyline({
 			path: underpass.coords,
-			geodesic: true,
-			strokeColor: '#999',
-			strokeOpacity: 0.5,
-			strokeWeight: 2
+			icons: [{
+				icon: lineSymbol,
+				offset: '0',
+				repeat: '15px'
+			}],
+			strokeColor: 'purple',
+			strokeOpacity: 0
+			// strokeWeight: 2
 		});
 		this.underpassesPolys.push(underpassPoly);
 		underpassPoly.setMap(this.map);
@@ -1594,7 +1604,7 @@ function initMap() {
 				// THERE HAVE TO BE CODE FOR TURNED OFF GEOLOCATION NOTIFICATION
 				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
-							
+
 			navigator.geolocation.watchPosition((position) => {
 				game.refreshUserGeodata({
 					lat: position.coords.latitude,
