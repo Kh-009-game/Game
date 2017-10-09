@@ -34,6 +34,8 @@ class Game {
 		this.occupiedLocationsIcons = {};
 		this.underpasses = [];
 		this.underpassesPolys = [];
+		this.infoBtn = document.getElementById('my-info');
+		this.sidebar = document.querySelector('.sidebar');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
 			// let target = event.target;
@@ -147,6 +149,10 @@ class Game {
 					window.location.replace(srcXHR.responseURL);
 				});
 			});
+		});
+		this.infoBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			this.sidebar.classList.toggle('is-hidden');
 		});
 	}
 
@@ -1133,8 +1139,7 @@ class Game {
 		const dailyMsg = form['daily-msg'].value;
 		const locID = this.highlightedLocation.locationId;
 
-		// error handling?
-		socket.emit('editLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
+		socket.emit('editLocationWS', { name: locName, dailyMessage: dailyMsg, locationId: locID });
 	}
 
 	deleteLocation(location) {

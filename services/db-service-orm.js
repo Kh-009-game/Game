@@ -23,7 +23,8 @@ const sequelize = new Sequelize(database, user, password, {
 		max: 20,
 		min: 0,
 		idle: 10000
-	}
+	},
+	logging: false
 });
 
 module.exports = sequelize;

@@ -198,7 +198,7 @@ class ClientLocationObject extends EmptyLocation {
 			daily_msg: newLocData.dailyMessage
 		}, {
 			where: {
-				loc_id: locationId
+				id: locationId
 			}
 		})
 			.then(() => {
