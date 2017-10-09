@@ -1355,10 +1355,9 @@ class Game {
 					}
 				}
 			})
-			// .then(() => this.renderHighlightedLocationTextInfo())
 			.then(() => {
 				// do not change displaying element in loc-info;
-				this.locInfoBlock.className = locInfoClassList === 'location-block' ?
+				this.locInfoBlock.className = locInfoClassList !== 'location-block' ?
 					this.locInfoBlock.className :
 					locInfoClassList;
 			})
@@ -1588,6 +1587,13 @@ function initMap() {
 				// THERE HAVE TO BE CODE FOR TURNED OFF GEOLOCATION NOTIFICATION
 				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
+
+			setInterval(() => {
+				game.refreshUserGeodata({
+					lat: game.userGeoData.lat,
+					lng: game.userGeoData.lng
+				});
+			}, 5000);
 
 			game.highlightGridMapListener = map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
