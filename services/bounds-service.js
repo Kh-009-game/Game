@@ -94,7 +94,7 @@ function getValidationPoints() {
 	return validateBounds;
 }
 
-module.exports.getEmptyLocationWithIsAllowedProp = function (northWest) {
+module.exports.getEmptyLocationWithIsAllowedProp = function (northWest, ormCheck) {
 	const validationArr = getValidationPoints();
 	const sameLat = [];
 	let check = false;
@@ -110,6 +110,9 @@ module.exports.getEmptyLocationWithIsAllowedProp = function (northWest) {
 		const emptyLoc = new EmptyLocation(northWest);
 		console.log('!check');
 		emptyLoc.isAllowed = false;
+		if (ormCheck) {
+			return false;
+		}
 		return emptyLoc;
 	}
 	console.log(sameLat);
@@ -128,14 +131,37 @@ module.exports.getEmptyLocationWithIsAllowedProp = function (northWest) {
 	if (first && second) {
 		const emptyLoc = new EmptyLocation(northWest);
 		emptyLoc.isAllowed = true;
+		if (ormCheck) {
+			return true;
+		}
 		return emptyLoc;
 	}
 
 	const emptyLoc = new EmptyLocation(northWest);
 	emptyLoc.isAllowed = false;
+	if (ormCheck) {
+		return false;
+	}
 	return emptyLoc;
 };
 
+// module.exports.validateLatConsideringBounds = function (lat) {
+// 	const validationArr = getValidationPoints();
+// 	const sameLatPoints = [];
+// 	let check = false;
+// 	for (let i = 0; i < validationArr.length; i++) {
+// 		if (Math.round(lat * 10000) / 10000 === Math.round(validationArr[i] * 10000) / 10000) {
+// 			sameLatPoints.push(validationArr[i]);
+// 			check = true;
+// 		}
+// 	}
+// 	if (!check) {
+// 		return false;
+// 	}
+// 	let max = Math.max(...sameLatPoints);
+// 	let min = Math.min(...sameLatPoints);
+// 	if(lat )
+// };
 function calcRegularPolyCoords(n, r, centerLat, centerLng) {
 	let angle;
 	const coordsArr = [];
