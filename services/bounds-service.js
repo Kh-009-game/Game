@@ -101,15 +101,6 @@ module.exports.getValidationPoints = function () {
 };
 
 function calcRegularPolyCoords(n, r, centerLat, centerLng) {
-	// int i, N = 12, X = 50, Y = 50, R = 20;
-	// double angle;
-	// String s = "";
-	// for (i = 0; i < N; i++)
-	// {
-	//   angle = 2*M_PI*i/N;
-	//   s += "x = " + String(R*cos(angle)+X) + "   y = " + String(R*sin(angle)+Y) + "\n";
-	// }
-	// ShowMessage(s);
 	let angle;
 	const coordsArr = [];
 
