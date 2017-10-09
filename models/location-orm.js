@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../services/db-service-orm');
 const EmptyLocation = require('../services/grid-service');
-// const boundsService = require('../services/bounds-service');
+const boundsService = require('../services/bounds-service');
 
 
 const Location = sequelize.define('location', {
@@ -17,6 +17,15 @@ const Location = sequelize.define('location', {
 					this.dataValues.lat
 				)) {
 					throw new Error('Latitude is not valid!');
+				}
+			},
+			isAllowed() {
+				const latLng = {
+					lat: this.dataValues.lat,
+					lng: this.dataValues.lng
+				};
+				if (!boundsService.getEmptyLocationWithIsAllowedProp(latLng, true)) {
+					throw new Error('Out of bounds');
 				}
 			}
 		}
@@ -34,6 +43,15 @@ const Location = sequelize.define('location', {
 					this.dataValues.lng
 				)) {
 					throw new Error('Longitude is not valid!');
+				}
+			},
+			isAllowed() {
+				const latLng = {
+					lat: this.dataValues.lat,
+					lng: this.dataValues.lng
+				};
+				if (!boundsService.getEmptyLocationWithIsAllowedProp(latLng, true)) {
+					throw new Error('Out of bounds');
 				}
 			}
 		}

@@ -62,11 +62,16 @@ class Game {
 			}
 			if (target.closest('#occupy-btn')) {
 				target = target.closest('#occupy-btn');
+				if (!this.currentLocation.isAllowed) {
+					console.log('cannot be occupied');
+				} else {
+					this.showOccupationForm();
+				}
 				// this.checkAbilityToOccupyLocation(this.currentLocation)
 				// 	.then((isAble) => {
 				// 		if (isAble) {
 				// 			console.log('can be occupied');
-				this.showOccupationForm();
+				// this.showOccupationForm();
 				// } else {
 				// 	// set pop-up or smth if cannot occupy
 				// 	console.log('cannot be occupied, out of bounds');
@@ -641,6 +646,7 @@ class Game {
 	renderCurrentEmptyLocation(currentLocation) {
 		this.currentLocation = currentLocation;
 		this.currentLocation.isCurrent = true;
+		// this.currentLocation.isAllowed = currentLocation.isAllowed;
 		this.currentLocationMapFeature = this.getAndRenderFeatureByLocObj(
 			this.currentLocation
 		);

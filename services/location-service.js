@@ -130,7 +130,6 @@ class ClientLocationObject extends EmptyLocation {
 
 	static getLocationOnPointForUser(userId, geoData) {
 		const locNorthWest = EmptyLocation.calcNorthWestByPoint(geoData);
-		// boundsService.validateLocation(locNorthWest);
 		return Location.findOne({
 			where: {
 				lat: locNorthWest.lat,
@@ -139,8 +138,8 @@ class ClientLocationObject extends EmptyLocation {
 		})
 			.then((location) => {
 				if (!location) {
-					return new EmptyLocation(locNorthWest);
-					// return this.validateLocation(locNorthWest);
+					// return new EmptyLocation(locNorthWest);
+					return boundsService.getEmptyLocationWithIsAllowedProp(locNorthWest);
 				}
 				return ClientLocationObject.createClientLocationObjectByIdForUser(
 					location.dataValues.id,
@@ -149,48 +148,6 @@ class ClientLocationObject extends EmptyLocation {
 			});
 	}
 
-	static validateLocation(northWest) {
-		const validationArr = boundsService.getValidationPoints();
-		const sameLat = [];
-		let check = false;
-		for (let i = 0; i < validationArr.length; i++) {
-			const roundedLat = Math.round(northWest.lat * 10000) / 10000;
-			const roundedValidLat = Math.round(validationArr[i].lat * 10000) / 10000;
-			if (roundedLat === roundedValidLat) {
-				console.log('inLat');
-				sameLat.push(validationArr[i]);
-				check = true;
-			}
-		}
-		if (!check) {
-			const emptyLoc = new EmptyLocation(northWest);
-			emptyLoc.isAllowed = false;
-			return emptyLoc;
-		}
-		let max = sameLat[0].lng;
-		let min = sameLat[1].lng;
-		for (let i = 0; i < sameLat.length; i += 1) {
-			if (sameLat[i].lng > max) {
-				max = sameLat[i].lng;
-			} else if (sameLat[i].lng < min) {
-				min = sameLat[i].lng;
-			}
-		}
-		const first = max > northWest.lng;
-		const second = min <= northWest.lng;
-		console.log(sameLat);
-		console.log(max);
-		console.log(min);
-		sameLat.length = 0;
-		if (first && second) {
-			const emptyLoc = new EmptyLocation(northWest);
-			emptyLoc.isAllowed = true;
-			return emptyLoc;
-		}
-		const emptyLoc = new EmptyLocation(northWest);
-		emptyLoc.isAllowed = false;
-		return emptyLoc;
-	}
 
 	static updateLocation(locationId, newLocData) {
 		return Location.update({
