@@ -1,6 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../services/db-service-orm');
 const EmptyLocation = require('../services/grid-service');
+// const boundsService = require('../services/bounds-service');
 
 
 const Location = sequelize.define('location', {
@@ -71,7 +72,8 @@ const Location = sequelize.define('location', {
 		allowNull: false,
 		defaultValue: Sequelize.NOW
 	}
-}, {
+},
+{
 	underscored: true
 });
 

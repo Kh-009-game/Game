@@ -5,15 +5,18 @@ class Game {
 		// use template for output
 		options = options || {};
 
-		this.locInfoContainer = options.locInfoContainer || document.querySelector('.loc-info');
-		this.locInfoBlock = options.locInfoContainer || document.querySelector('.location-block');
-		this.locInfoMenu = options.locInfoContainer || document.querySelector('.location-menu');
-		this.clickedLocInfo = options.locInfoContainer || this.locInfoContainer;
-		this.currentLocInfo = options.locInfoContainer || this.locInfoContainer;
-		this.occupyFormContainer = options.locInfoContainer || document.querySelector('.form-container');
+		// this.locInfoContainer = options.locInfoContainer || document.querySelector('.loc-info');
+		this.locInfoBlock = document.querySelector('.location-block');
+		this.locInfoMenu = document.querySelector('.location-menu');
+		// this.clickedLocInfo = options.locInfoContainer || this.locInfoContainer;
+		// this.currentLocInfo = options.locInfoContainer || this.locInfoContainer;
+		this.clickedLocInfo = document.querySelector('.clicked-loc-info');
+		this.currentLocInfo = document.querySelector('.current-loc-info');
+		this.occupyFormContainer = document.querySelector('.form-container');
 		this.showUserLocationsBtn = document.getElementById('show-user-location');
 		this.centerUserLocationsBtn = document.getElementById('center-user-location');
 		this.logOutBtn = document.getElementById('log-out');
+		this.lifecycleBtn = document.getElementById('lifecycle-btn');
 
 		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
 			bubbles: true
@@ -33,6 +36,8 @@ class Game {
 		this.occupiedLocationsIcons = {};
 		this.underpasses = [];
 		this.underpassesPolys = [];
+		this.infoBtn = document.getElementById('my-info');
+		this.sidebar = document.querySelector('.sidebar');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
 			// let target = event.target;
@@ -43,14 +48,14 @@ class Game {
 			this.centerMapByUserGeoData(undefined, undefined, 16);
 			this.highlightCurrentLocation();
 		});
-		this.locInfoContainer.addEventListener('click', (event) => {
+		this.locInfoBlock.addEventListener('click', (event) => {
 			let target = event.target;
 
 			if (target.closest('#close-btn')) {
 				target = target.closest('#close-btn');
 				this.removeHighlight();
-				this.locInfoContainer.classList.remove('show-clicked');
-				this.locInfoContainer.classList.add('show-current');
+				this.locInfoBlock.classList.remove('show-clicked');
+				this.locInfoBlock.classList.add('show-current');
 
 				// close #clicked-loc-info
 				return;
@@ -146,6 +151,10 @@ class Game {
 					window.location.replace(srcXHR.responseURL);
 				});
 			});
+		});
+		this.infoBtn.addEventListener('click', (e) => {
+			e.preventDefault();
+			this.sidebar.classList.toggle('is-hidden');
 		});
 	}
 
@@ -562,7 +571,7 @@ class Game {
 						console.log(`${northWest.lat} ${northWest.lng}`);
 						const northWestPoint = new google.maps.LatLng(northWest.lat, northWest.lng);
 						// console.dir()
-						this.locInfoContainer.classList.add('hide');
+						this.locInfoBlock.classList.add('hide');
 						// console.dir(northWestPoint);
 						bounds.extend(northWestPoint);
 					});
@@ -585,8 +594,10 @@ class Game {
 		})
 			.then((currentLocation) => {
 				console.log(currentLocation.northWest);
-				if (!currentLocation) {
-					console.log('cannot be occupied');
+				if (currentLocation.isAllowed) {
+					console.log(true);
+				} else {
+					console.log(false);
 				}
 				this.removeCurrentHighlight();
 				if (!currentLocation.masterId) {
@@ -1130,8 +1141,7 @@ class Game {
 		const dailyMsg = form['daily-msg'].value;
 		const locID = this.highlightedLocation.locationId;
 
-		// error handling?
-		socket.emit('editLocationWS', { locationName: locName, dailyMessage: dailyMsg, locationId: locID });
+		socket.emit('editLocationWS', { name: locName, dailyMessage: dailyMsg, locationId: locID });
 	}
 
 	deleteLocation(location) {
@@ -1152,7 +1162,7 @@ class Game {
 	hideOccupationForm() {
 		const locInfoClass = this.highlightedLocation ? 'show-clicked' : 'show-current';
 		this.locInfoBlock.className = 'location-block';
-		this.locInfoContainer.classList.add(locInfoClass);
+		this.locInfoBlock.classList.add(locInfoClass);
 		this.occupyFormContainer.innerHTML = '';
 	}
 
@@ -1340,8 +1350,8 @@ class Game {
 			.then(() => {
 				if (this.highlightedLocation) {
 					const currentIsHighlighted = (
-						this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat &&
-						this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng
+						(this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat) &&
+						(this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng)
 					);
 					if (currentIsHighlighted) {
 						if (!this.currentLocation.locationId) {
@@ -1352,12 +1362,12 @@ class Game {
 					}
 				}
 			})
-			// .then(() => this.renderHighlightedLocationTextInfo())
 			.then(() => {
 				// do not change displaying element in loc-info;
-				this.locInfoBlock.className = locInfoClassList === 'location-block' ?
-					this.locInfoBlock.className :
-					locInfoClassList;
+				// this.locInfoBlock.className = locInfoClassList;
+				//  !== 'location-block' ?
+				// 	this.locInfoBlock.className :
+				// 	locInfoClassList;
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -1435,6 +1445,37 @@ class Game {
 			text: err
 		});
 		console.log(err);
+	}
+
+	initLifecycleBtn() {
+		if (!this.lifecycleBtn) return;
+
+		this.lifecycleBtn.addEventListener('click', () => {
+			this.emitLifecycle();
+		});
+	}
+
+	emitLifecycle() {
+		return new Promise((res, rej) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('PUT', 'api/locations/emit-lifecycle');
+			xhr.send();
+			xhr.onload = (e) => {
+				const htmlXHR = e.srcElement;
+
+				if (htmlXHR.status !== 200) {
+					rej(htmlXHR.response);
+				}
+
+				res(htmlXHR.response);
+			};
+		})
+			.then(() => {
+				console.log('OK!');
+			})
+			.catch((err) => {
+				this.errorHandler(err);
+			});
 	}
 }
 
@@ -1555,6 +1596,13 @@ function initMap() {
 				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
 
+			// setInterval(() => {
+			// 	game.refreshUserGeodata({
+			// 		lat: game.userGeoData.lat,
+			// 		lng: game.userGeoData.lng
+			// 	});
+			// }, 5000);
+
 			game.highlightGridMapListener = map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
 			});
@@ -1563,6 +1611,7 @@ function initMap() {
 				game.renderHightlightedFeatureInfo(event);
 			});
 			document.removeEventListener('occloc-ready', initMapInteraction);
+			game.initLifecycleBtn();
 		}
 	};
 }

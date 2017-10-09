@@ -128,3 +128,14 @@ module.exports.restoreLoyalty = (req, res, next) => {
 		});
 };
 
+
+module.exports.emitLifecycle = (req, res, next) => {
+	LocationService.emitLifecycle()
+		.then(() => {
+			res.sendStatus(200);
+		})
+		.catch((err) => {
+			next(err);
+		});
+};
+

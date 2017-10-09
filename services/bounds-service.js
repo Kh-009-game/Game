@@ -94,12 +94,6 @@ module.exports.getValidationPoints = function () {
 			lngOffset = lngOffset.toFixed(5);
 			console.log(lngOffset);
 		}
-		// if (!bounds[i + 2]) {
-		// 	validateBounds.push({ lat: bounds[i + 1].lat, lng: bounds[i + 1].lng });
-		// 	break;
-		// }
-
-		// validateBounds.push({ lat: bounds[i].lat, lng: bounds[i].lng })
 	}
 
 	return validateBounds;
