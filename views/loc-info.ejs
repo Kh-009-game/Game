@@ -24,7 +24,8 @@
       <% } %>
       <% if (location.hasDailyBank) { %>
         <span><i class="icon material-icons">account_balance</i> <%= location.loyalPopulation %></span>  
-      <% } else {%>
+      <% } %>
+      <% if (location.hasDailyBank === false) {%>
         <span><i class="icon material-icons">account_balance</i> 0</span>  
       <% } %>
     </p> 
