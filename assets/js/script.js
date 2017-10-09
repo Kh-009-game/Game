@@ -1424,15 +1424,15 @@ class Game {
 
 		const notifications = document.querySelector('.notification');
 		notifications.appendChild(notification);
+		return notification;
 	}
 
 	// Running
 	setupMessageElement(data) {
 		const notifications = document.querySelector('.notification');
 		notifications.classList.add('open');
-		this.createMessageElement(data);
+		const removedItem = this.createMessageElement(data);		
 		setTimeout(() => {
-			const removedItem = notifications.querySelector('.notification-item:first-child');
 			removedItem.classList.add('remove');
 			removedItem.addEventListener('animationend', () => {
 				notifications.removeChild(removedItem);
