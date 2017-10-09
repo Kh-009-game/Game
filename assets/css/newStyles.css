@@ -243,12 +243,34 @@ body {
 .form-container {
   display: none;
 }
+
 .show-form .form-container {
   display: block;
 }
-.show-form .loc-info {
+
+.show-clicked .form-container {
+  display: block;
+}
+
+.show-current .current-loc-info {
+  display: block;
+}
+
+.show-current .clicked-loc-info,
+.show-current .form-container {
   display: none;
 }
+
+.show-clicked .current-loc-info,
+.show-clicked .form-container {
+  display: none;
+}
+
+.show-form .current-loc-info,
+.show-form .clicked-loc-info {
+  display: none;
+}
+
 .notification {
   position: fixed;
   right: 10px;
