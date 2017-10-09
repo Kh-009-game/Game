@@ -474,6 +474,7 @@ class Game {
 	}
 
 	refreshHighlightedLocation() {
+		if (!this.highlightedLocation) return;
 		this.getLocationByCoords(this.highlightedLocation.northWest)
 			.then((location) => {
 				this.removeHighlight();
@@ -1505,11 +1506,8 @@ function initMap() {
 		});
 
 		socket.on('update', (data) => {
-			// текст сообщения перенести в сокет.текст
 			game.setupMessageElement(data);
-			console.log('socketData', data);
 			game.refreshOccupiedLocations();
-			console.log(game.occupiedLocationsMapFeatures);
 		});
 
 

@@ -272,7 +272,7 @@ class ClientLocationObject extends EmptyLocation {
 			.then((location) => {
 				const loyalPopulation = location.dataValues.loyal_population;
 				const population = location.dataValues.population;
-				sequelize.transaction(
+				return sequelize.transaction(
 					trans => Location.update({
 						loyal_population: population
 					}, {
