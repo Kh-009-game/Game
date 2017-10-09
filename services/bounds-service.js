@@ -12,16 +12,17 @@ module.exports.getGameBounds = function () {
 			// res(this.getValidationPoints());
 		});
 	}
-	return Bounds.findAll({ where: { figure_id: 1 } })
+	return Bounds.findAll({ where: { figure_id: 33 } })
 		.then((points) => {
 			console.log(points);
 			if (points.length === 0) {
 				const bulkArr = [];
 				console.log('points length 0');
-				const pointsArr = Config.gameBounds;
+				// const pointsArr = Config.gameBounds;
+				const pointsArr = calcRegularPolyCoords(50, 0.150, 49.9941, 36.2744);
 				for (let i = 0; i < pointsArr.length; i++) {
 					const valuesObj = {};
-					valuesObj.figure_id = 1;
+					valuesObj.figure_id = 32;
 					valuesObj.lat = pointsArr[i].lat;
 					valuesObj.lng = pointsArr[i].lng;
 					bulkArr.push(valuesObj);
@@ -99,7 +100,22 @@ module.exports.getValidationPoints = function () {
 	return validateBounds;
 };
 
+function calcRegularPolyCoords(n, r, centerLat, centerLng) {
+	let angle;
+	const coordsArr = [];
 
+
+	for (let i = 0; i < n; i++) {
+		const pointObj = {};
+		angle = (2 * Math.PI) / n;
+		pointObj.lat = (r * Math.cos(i * angle)) + centerLat;
+		pointObj.lng = (r * Math.sin(i * angle)) + centerLng;
+		coordsArr.push(pointObj);
+	}
+	console.log(coordsArr);
+	coordsArr.push(coordsArr[0]);
+	return coordsArr;
+}
 function calcGameBounds(boundsCoords) {
 	// const boundsCoords = Config.gameBounds;
 	const pointsArr = [];
@@ -146,20 +162,20 @@ function assemblePoints(direction, startPLoc, pointsArr) {
 			return startPLoc;
 		}
 		case 'toTheNorthWest': {
-			const newLng = startPLoc.northWest.lng - 0.001;
-			const newLat = startPLoc.northWest.lat + 0.001;
+			const newLng = startPLoc.northWest.lng - 0.0001;
+			const newLat = startPLoc.northWest.lat + 0.0001;
 			const newPoint = { lat: newLat, lng: newLng };
 			startPLoc = EmptyLocation.createLocationByPoint(newPoint);
 			// north east
-			pointsArr.push(startPLoc.getMapFeatureCoords()[3], 1);
+			pointsArr.push(startPLoc.getMapFeatureCoords()[3]);
 			pointsArr.push(startPLoc.northWest);
 
 			return startPLoc;
 		}
 		case 'toTheNorthEast': {
 			pointsArr.push(startPLoc.getMapFeatureCoords()[3]);
-			const newLng = startPLoc.getMapFeatureCoords()[3].lng + 0.001;
-			const newLat = startPLoc.northWest.lat + 0.001;
+			const newLng = startPLoc.getMapFeatureCoords()[3].lng + 0.0001;
+			const newLat = startPLoc.northWest.lat + 0.0001;
 			const newPoint = { lat: newLat, lng: newLng };
 			startPLoc = EmptyLocation.createLocationByPoint(newPoint);
 

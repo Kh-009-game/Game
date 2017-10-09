@@ -139,8 +139,8 @@ class ClientLocationObject extends EmptyLocation {
 		})
 			.then((location) => {
 				if (!location) {
-					// return new EmptyLocation(locNorthWest);
-					return this.validateLocation(locNorthWest);
+					return new EmptyLocation(locNorthWest);
+					// return this.validateLocation(locNorthWest);
 				}
 				return ClientLocationObject.createClientLocationObjectByIdForUser(
 					location.dataValues.id,
