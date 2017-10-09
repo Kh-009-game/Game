@@ -1,9 +1,10 @@
 const EmptyLocation = require('./grid-service');
-const Config = require('../config');
+// const Config = require('../config');
 const Bounds = require('../models/bounds-orm');
 
 let bounds = [];
 let validateBounds = [];
+
 module.exports.getGameBounds = function () {
 	if (bounds.length > 0) {
 		return new Promise((res, rej) => {
@@ -22,7 +23,7 @@ module.exports.getGameBounds = function () {
 				const pointsArr = calcRegularPolyCoords(50, 0.150, 49.9941, 36.2744);
 				for (let i = 0; i < pointsArr.length; i++) {
 					const valuesObj = {};
-					valuesObj.figure_id = 32;
+					valuesObj.figure_id = 33;
 					valuesObj.lat = pointsArr[i].lat;
 					valuesObj.lng = pointsArr[i].lng;
 					bulkArr.push(valuesObj);
@@ -53,7 +54,7 @@ module.exports.getGameBounds = function () {
 		});
 };
 
-module.exports.getValidationPoints = function () {
+function getValidationPoints() {
 	const defaultLngOffset = 0.00128;
 	const defaultLatOffset = 0.0009;
 	validateBounds = [];
@@ -64,15 +65,11 @@ module.exports.getValidationPoints = function () {
 		let lngOffset = (Math.round(bounds[i].lng * 100000) / 100000) - (Math.round(bounds[i + 1].lng * 100000) / 100000);
 		latOffset = latOffset.toFixed(4);
 		lngOffset = lngOffset.toFixed(5);
-		console.log('in 1 loop');
-		console.log(latOffset);
-		console.log(lngOffset);
 		const sign = latOffset > 0;
 		const sign1 = lngOffset > 0;
 		let newLat = bounds[i].lat;
 		let newLng = bounds[i].lng;
 		while (Math.abs(latOffset) > defaultLatOffset) {
-			console.log('in 1 while loop');
 			if (sign) {
 				newLat -= defaultLatOffset;
 			} else {
@@ -81,10 +78,8 @@ module.exports.getValidationPoints = function () {
 			validateBounds.push({ lat: newLat, lng: bounds[i].lng });
 			latOffset = Math.abs(latOffset) - defaultLatOffset;
 			latOffset = latOffset.toFixed(4);
-			console.log(latOffset);
 		}
 		while (Math.abs(lngOffset) > defaultLngOffset) {
-			console.log('in 2 while loop');
 			if (sign1) {
 				newLng -= defaultLngOffset;
 			} else {
@@ -93,17 +88,57 @@ module.exports.getValidationPoints = function () {
 			validateBounds.push({ lat: bounds[i].lat, lng: newLng });
 			lngOffset = Math.abs(lngOffset) - defaultLngOffset;
 			lngOffset = lngOffset.toFixed(5);
-			console.log(lngOffset);
 		}
 	}
 
 	return validateBounds;
+}
+
+module.exports.getEmptyLocationWithIsAllowedProp = function (northWest) {
+	const validationArr = getValidationPoints();
+	const sameLat = [];
+	let check = false;
+	for (let i = 0; i < validationArr.length; i++) {
+		const roundedLat = Math.round(northWest.lat * 10000) / 10000;
+		const roundedValidLat = Math.round(validationArr[i].lat * 10000) / 10000;
+		if (roundedLat === roundedValidLat) {
+			sameLat.push(validationArr[i]);
+			check = true;
+		}
+	}
+	if (!check) {
+		const emptyLoc = new EmptyLocation(northWest);
+		console.log('!check');
+		emptyLoc.isAllowed = false;
+		return emptyLoc;
+	}
+	console.log(sameLat);
+	let max = sameLat[0].lng;
+	let min = sameLat[1].lng;
+	for (let i = 0; i < sameLat.length; i += 1) {
+		if (sameLat[i].lng > max) {
+			max = sameLat[i].lng;
+		} else if (sameLat[i].lng < min) {
+			min = sameLat[i].lng;
+		}
+	}
+	const first = max > northWest.lng;
+	const second = min <= northWest.lng;
+	sameLat.length = 0;
+	if (first && second) {
+		const emptyLoc = new EmptyLocation(northWest);
+		emptyLoc.isAllowed = true;
+		return emptyLoc;
+	}
+
+	const emptyLoc = new EmptyLocation(northWest);
+	emptyLoc.isAllowed = false;
+	return emptyLoc;
 };
 
 function calcRegularPolyCoords(n, r, centerLat, centerLng) {
 	let angle;
 	const coordsArr = [];
-
 
 	for (let i = 0; i < n; i++) {
 		const pointObj = {};
@@ -116,6 +151,7 @@ function calcRegularPolyCoords(n, r, centerLat, centerLng) {
 	coordsArr.push(coordsArr[0]);
 	return coordsArr;
 }
+
 function calcGameBounds(boundsCoords) {
 	// const boundsCoords = Config.gameBounds;
 	const pointsArr = [];
@@ -189,6 +225,7 @@ function assemblePoints(direction, startPLoc, pointsArr) {
 			return false;
 	}
 }
+
 function checkDirection(p1, p2) {
 	let direction = '';
 	if (p1.lat > p2.lat) {
