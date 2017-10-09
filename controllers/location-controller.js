@@ -24,7 +24,9 @@ module.exports.occupyLocation = (req, res, next) => {
 		.then(() => {
 			res.sendStatus(200);
 		})
-		.catch(err => next(err));
+		.catch((err) => {
+			next(err);
+		});
 };
 
 
@@ -118,6 +120,17 @@ module.exports.restoreLoyalty = (req, res, next) => {
 		req.params.id,
 		req.decoded.id
 	)
+		.then(() => {
+			res.sendStatus(200);
+		})
+		.catch((err) => {
+			next(err);
+		});
+};
+
+
+module.exports.emitLifecycle = (req, res, next) => {
+	LocationService.emitLifecycle()
 		.then(() => {
 			res.sendStatus(200);
 		})

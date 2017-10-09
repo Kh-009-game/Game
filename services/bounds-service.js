@@ -3,7 +3,7 @@ const Config = require('../config');
 const Bounds = require('../models/bounds-orm');
 
 let bounds = [];
-const validateBounds = [];
+let validateBounds = [];
 module.exports.getGameBounds = function () {
 	if (bounds.length > 0) {
 		return new Promise((res, rej) => {
@@ -54,41 +54,46 @@ module.exports.getGameBounds = function () {
 
 module.exports.getValidationPoints = function () {
 	const defaultLngOffset = 0.00128;
-	const defaultLatOffset = 0.09;
+	const defaultLatOffset = 0.0009;
+	validateBounds = [];
 	for (let i = 0; i < bounds.length; i++) {
 		validateBounds.push({ lat: bounds[i].lat, lng: bounds[i].lng });
 		if (!bounds[i + 1]) break;
-		let latOffset = bounds[i].lat.toFixed(5) - bounds[i + 1].lat.toFixed(5);
-		let lngOffset = bounds[i].lng.toFixed(5) - bounds[i + 1].lng.toFixed(5);
+		let latOffset = (Math.round(bounds[i].lat * 10000) / 10000) - (Math.round(bounds[i + 1].lat * 10000) / 10000);
+		let lngOffset = (Math.round(bounds[i].lng * 100000) / 100000) - (Math.round(bounds[i + 1].lng * 100000) / 100000);
+		latOffset = latOffset.toFixed(4);
+		lngOffset = lngOffset.toFixed(5);
+		console.log('in 1 loop');
 		console.log(latOffset);
 		console.log(lngOffset);
-
 		const sign = latOffset > 0;
 		const sign1 = lngOffset > 0;
-		while (Math.abs(latOffset).toFixed(4) > defaultLatOffset) {
+		let newLat = bounds[i].lat;
+		let newLng = bounds[i].lng;
+		while (Math.abs(latOffset) > defaultLatOffset) {
+			console.log('in 1 while loop');
 			if (sign) {
-				validateBounds.push({ lat: bounds[i].lat + defaultLatOffset, lng: bounds[i].lng });
+				newLat -= defaultLatOffset;
 			} else {
-				validateBounds.push({ lat: bounds[i].lat - defaultLatOffset, lng: bounds[i].lng });
+				newLat += defaultLatOffset;
 			}
+			validateBounds.push({ lat: newLat, lng: bounds[i].lng });
 			latOffset = Math.abs(latOffset) - defaultLatOffset;
+			latOffset = latOffset.toFixed(4);
 			console.log(latOffset);
 		}
-		while (Math.abs(lngOffset).toFixed(5) > defaultLngOffset) {
+		while (Math.abs(lngOffset) > defaultLngOffset) {
+			console.log('in 2 while loop');
 			if (sign1) {
-				validateBounds.push({ lat: bounds[i].lat, lng: bounds[i].lng + defaultLngOffset });
+				newLng -= defaultLngOffset;
 			} else {
-				validateBounds.push({ lat: bounds[i].lat, lng: bounds[i].lng - defaultLngOffset });
+				newLng += defaultLngOffset;
 			}
+			validateBounds.push({ lat: bounds[i].lat, lng: newLng });
 			lngOffset = Math.abs(lngOffset) - defaultLngOffset;
+			lngOffset = lngOffset.toFixed(5);
 			console.log(lngOffset);
 		}
-		// if (!bounds[i + 2]) {
-		// 	validateBounds.push({ lat: bounds[i + 1].lat, lng: bounds[i + 1].lng });
-		// 	break;
-		// }
-
-		// validateBounds.push({ lat: bounds[i].lat, lng: bounds[i].lng })
 	}
 
 	return validateBounds;
