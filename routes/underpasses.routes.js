@@ -1,9 +1,6 @@
 const express = require('express');
 const underpassesController = require('../controllers/underpasses-controller');
 const underpassMiddlewares = require('../middleware/underpass-middlewares');
-const locationMiddlewares = require('../middleware/location-middlewares');
-
-
 
 const router = express.Router();
 
@@ -24,7 +21,7 @@ router.get(
 );
 router.post(
 	'/create',
-	locationMiddlewares.checkOwnerAndIsCurrent,
+	underpassMiddlewares.checkOwnerAndIsCurrent,
 	underpassesController.createUnderpass
 );
 

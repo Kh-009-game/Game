@@ -29,7 +29,6 @@ module.exports.occupyLocation = (req, res, next) => {
 		});
 };
 
-
 // '/check-location?lat=xxx&lng=xxx'
 module.exports.getLocationOnPoint = (req, res, next) => {
 	LocationService.getLocationOnPointForUser(
