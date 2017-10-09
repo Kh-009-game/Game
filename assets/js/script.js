@@ -1602,13 +1602,6 @@ function initMap() {
 				});
 			});
 
-			setInterval(() => {
-				game.refreshUserGeodata({
-					lat: game.userGeoData.lat,
-					lng: game.userGeoData.lng
-				});
-			}, 5000);
-
 			game.highlightGridMapListener = map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
 			});
