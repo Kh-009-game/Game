@@ -305,6 +305,40 @@ body {
   text-align: center;
 }
 
+.sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 300px;
+  background-color: #7d7abc;
+  transition: transform 0.3s ease-out;
+}
+
+.sidebar.is-hidden {
+  transform: translateX(300px);
+}
+
+.sidebar ul {
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar li {
+  list-style: none;
+}
+
+.sidebar li + li {
+  border-top: 1px solid white;
+}
+
+.sidebar a {
+  display: block;
+  padding: 1em 1.5em;
+  color: #fff;
+  text-decoration: none;
+}
+
 @media screen and (min-width: 769px) {
   .header-menu {
     max-width: 500px;

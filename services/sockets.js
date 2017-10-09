@@ -1,25 +1,21 @@
 const eventEmitter = require('./eventEmitter-service');
-
-// let ws;
+const ClientLocationObject = require('../services/location-service');
 
 module.exports = function (io) {
 	io.on('connection', (socket) => {
-		// ws = socket;
 		socket.on('editLocationWS', (data) => {
-			// OccupiedLocation.getLocationById(data.locationId)
-			// 	.then((location) => {
-			// 		Object.assign(location, data);
-			// 		location.editLocation();
-			// 		this.io.sockets.emit('update', {
-			// 			type: 'EditLoc',
-			// 			text: `The location with id ${data.locationId} was renamed`
-			// 		});
-			// 	})
-			// 	.catch((err) => {
-			// 		console.log('error', err);
-			// 	});
+			console.log('SOCKET_data', data);
+			ClientLocationObject.updateLocation(data.locationId, data)
+				.catch((err) => {
+					console.log('error', err);
+				});
+			socket.emit('update', {
+				type: 'msgUpdateLoc',
+				text: `
+			Location ${data.locationId} was updated.
+			`
+			});
 		});
-
 
 		eventEmitter.on('location-created', (newLocationData) => {
 			socket.emit('update', {
@@ -59,45 +55,3 @@ module.exports = function (io) {
 		});
 	});
 };
-
-// eventEmitter.on('location-created', (newLocationData) => {
-// 	sendNotification('update', {
-// 		type: 'msgCreateLoc',
-// 		text: `
-// 			The new location was occupied on latitude: ${newLocationData.lat} 
-// 			and longitude: ${newLocationData.lng}.
-// 		`
-// 	});
-// });
-
-// eventEmitter.on('location-updated', (locationData) => {
-// 	sendNotification('update', {
-// 		type: 'msgUpdateLoc',
-// 		text: `
-// 			Location ${locationData.locationId} was updated.
-// 		`
-// 	});
-// });
-
-// eventEmitter.on('location-deleted', (locationData) => {
-// 	sendNotification('update', {
-// 		type: 'msgDeleteLoc',
-// 		text: `
-// 			Location ${locationData.locationId} was deleted.
-// 		`
-// 	});
-// });
-
-// eventEmitter.on('daily-event', () => {
-// 	sendNotification('update', {
-// 		type: 'msgCreateLoc',
-// 		text: `
-// 			New day begins!
-// 		`
-// 	});
-// });
-
-// function sendNotification(message, data) {
-// 	ws.emit(message, data);
-// }
-
