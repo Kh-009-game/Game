@@ -11,7 +11,7 @@ module.exports = (location) => {
 		<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 			width="${width}" height="${height}" xml:space="preserve">
 			<rect width="${width - 20}" height="${height - 20}" x="10" y="10"
-					fill="none" stroke="${location.isMaster && !location.dailyCheckin ? 'gold' : '#777'}"
+					fill="none" stroke="${location.isMaster && location.hasDailyBank ? 'gold' : '#777'}"
 					stroke-width="3"/>
 			<rect width="100%" height="100%" x="0" y="0"
 					fill="none" stroke="${location.isMaster ? 'yellowgreen' : '#999'}"

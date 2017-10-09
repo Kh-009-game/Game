@@ -22,8 +22,10 @@
       <% if (location.population) { %>
         <span><i class="icon material-icons">accessibility</i> <%= location.loyalPopulation %>/<%= location.population %></span>
       <% } %>
-      <% if (location.hasDailyBank !== undefined) { %>
+      <% if (location.hasDailyBank) { %>
         <span><i class="icon material-icons">account_balance</i> <%= location.loyalPopulation %></span>  
+      <% } else {%>
+        <span><i class="icon material-icons">account_balance</i> 0</span>  
       <% } %>
     </p> 
 </div>
