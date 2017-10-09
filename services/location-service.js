@@ -268,7 +268,7 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static restoreLoyalPopulationByUser(locationId, userId) {
-		Location.findById(locationId)
+		return Location.findById(locationId)
 			.then((location) => {
 				const loyalPopulation = location.dataValues.loyal_population;
 				const population = location.dataValues.population;
