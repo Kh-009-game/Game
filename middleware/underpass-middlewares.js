@@ -31,3 +31,21 @@ module.exports.attachClientLocObject = (req, res, next) => {
 			next(err);
 		});
 };
+
+
+module.exports.checkOwnerAndIsCurrent = (req, res, next) => {
+	const locationId = req.body.locIdFrom;
+	const userId = req.decoded.id;
+	ClientLocationObject.checkIsCurrentAndOwnerOrAdminPermission(
+		locationId,
+		req.body.userGeoData,
+		userId,
+		req.decoded.isAdmin
+	)
+		.then(() => {
+			next();
+		})
+		.catch((err) => {
+			next(err);
+		});
+};
