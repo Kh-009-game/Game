@@ -904,7 +904,7 @@ class Game {
 
 	// current location highlighting method
 
-	hightlightCurrentEmptyLocation() {
+	updateCurrentEmptyLocation() {
 		this.removeHighlight();
 		this.currentLocation.isHighlighted = true;
 		this.highlightedLocation = this.currentLocation;
@@ -915,7 +915,15 @@ class Game {
 			featureProps
 		);
 		this.currentLocationMapFeature.setProperty('info', featureProps.info);
-		return this.renderHighlightedLocationTextInfo();
+		return this.updateHighlightedLocationTextInfo();
+	}
+
+	hightlightCurrentEmptyLocation() {
+		return this.updateCurrentEmptyLocation()
+			.then(() => {
+				this.locInfoMenu.className = 'location-menu open';
+				this.locInfoBlock.className = 'location-block show-clicked';
+			});
 	}
 
 	// empty locations highlighting methods
@@ -1331,6 +1339,8 @@ class Game {
 
 	// GOOGLE MAP AND HTML5 GEOLOCATION INTERACTION METHODS
 	refreshUserGeodata(coords) {
+		// const locInfoClassList = this.locInfoBlock.className;
+		// const locMenuClassList = this.locInfoMenu.className;
 		this.setUserGeoData(coords);
 		this.renderCurrentUserMarker();
 
@@ -1343,14 +1353,12 @@ class Game {
 					);
 					if (currentIsHighlighted) {
 						if (!this.currentLocation.locationId) {
-							return this.updateHighlightedLocationTextInfo();
+							return this.updateCurrentEmptyLocation();
 						}
 						this.highlightOccupiedLocation(this.currentLocation);
 						return this.updateHighlightedLocationTextInfo();
 					}
 				}
-
-				return Promise.resolve();
 			})
 			.catch((err) => {
 				this.errorHandler(err);
