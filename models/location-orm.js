@@ -85,10 +85,23 @@ const Location = sequelize.define('location', {
 		allowNull: false,
 		defaultValue: Sequelize.NOW
 	},
+	saved_bank: {
+		type: Sequelize.INTEGER,
+		allowNull: false,
+		defaultValue: 0,
+		validate: {
+			min: 0
+		}
+	},
 	checkin_date: {
 		type: Sequelize.DATE,
 		allowNull: false,
 		defaultValue: Sequelize.NOW
+	},
+	lifecycle_id: {
+		type: Sequelize.INTEGER,
+		allowNull: false,
+		defaultValue: 1
 	}
 },
 {

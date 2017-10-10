@@ -1,11 +1,15 @@
 const Sequelize = require('sequelize');
 const sequelize = require('./db-service-orm');
 const Location = require('../models/location-orm');
+const LifeCycleEvent = require('../models/lifecycle-event');
 const Underpass = require('../models/underpass');
 const User = require('../models/user-orm');
 
 Location.User = Location.belongsTo(User);
 User.Locations = User.hasMany(Location);
+
+Location.LifeCycleEvent = Location.belongsTo(LifeCycleEvent);
+LifeCycleEvent.hasMany(Location);
 
 Location.belongsToMany(Location, {
 	as: 'underpassTo',
@@ -23,24 +27,6 @@ Location.belongsToMany(Location, {
 		primaryKey: true
 	}
 });
-
-// Underpass.hasOne(Location, {
-// 	as: 'underpassFrom',
-// 	targetKey: 'loc_id_1',
-// 	foreignKey: {
-// 		name: 'id',
-// 		primaryKey: true
-// 	}
-// });
-// Underpass.hasOne(Location, {
-// 	as: 'underpassTo',
-// 	targetKey: 'loc_id_2',
-// 	foreignKey: {
-// 		name: 'id',
-// 		primaryKey: true
-// 	}
-// });
-
 Underpass.belongsTo(Location, {
 	as: 'underpassTo',
 	targetKey: 'id',

@@ -127,7 +127,6 @@ class UnderpassClientObject {
 					}
 				});
 			})
-			// })
 			.then((data) => {
 				data.forEach((item) => {
 					allowedIds.push(item.dataValues.id);

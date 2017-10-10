@@ -1,5 +1,6 @@
 const Location = require('../models/location-orm');
 const User = require('../models/user-orm');
+const LifeCycleEvent = require('../models/lifecycle-event');
 const EmptyLocation = require('./grid-service');
 const logService = require('./log-service');
 const Sequelize = require('sequelize');
@@ -15,7 +16,7 @@ class ClientLocationObject extends EmptyLocation {
 	constructor(location, userId) {
 		const locationData = location.dataValues;
 		const masterData = location.user.dataValues;
-		const lastLifeCycleEventDate = locationData.lastLifeCycleEventDate;
+		const lastLifeCycleEventDate = location.user.dataValues.updated_at;
 
 		super({
 			lat: +location.dataValues.lat,
@@ -26,8 +27,11 @@ class ClientLocationObject extends EmptyLocation {
 		this.masterName = masterData.name;
 		this.locationId = locationData.id;
 		this.population = locationData.population;
-		this.hasDailyBank = locationData.taking_bank_date < lastLifeCycleEventDate;
 		this.loyalPopulation = locationData.loyal_population;
+		this.hasDailyBank = locationData.taking_bank_date < lastLifeCycleEventDate;
+		this.dailyBank = this.hasDailyBank ?
+			this.loyalPopulation + locationData.saved_bank :
+			0;
 		this.dailyCheckin = locationData.checkin_date > lastLifeCycleEventDate;
 		this.creationDate = locationData.created_at;
 		this.locationName = locationData.name;
@@ -39,6 +43,8 @@ class ClientLocationObject extends EmptyLocation {
 		return Location.findById(locationId, {
 			include: [{
 				model: User
+			}, {
+				model: LifeCycleEvent
 			}]
 		})
 			.then(location => logService.getLastLifeCycleEventDate()
@@ -53,6 +59,8 @@ class ClientLocationObject extends EmptyLocation {
 		return Location.findAll({
 			include: [{
 				model: User
+			}, {
+				model: LifeCycleEvent
 			}]
 		})
 			.then(locations => logService.getLastLifeCycleEventDate()
@@ -66,27 +74,6 @@ class ClientLocationObject extends EmptyLocation {
 				})
 			);
 	}
-
-	// static getAllUsersClientLocationObjects(userId) {
-	// 	return Location.findAll({
-	// 		where: {
-	// 			user_id: userId
-	// 		},
-	// 		include: [{
-	// 			model: User
-	// 		}]
-	// 	})
-	// 		.then(locations => logService.getLastLifeCycleEventDate()
-	// 			.then((lastLifeCycleEventDate) => {
-	// 				const clientLocationsArray = [];
-	// 				locations.forEach((location) => {
-	// 					location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
-	// 					clientLocationsArray.push(new ClientLocationObject(location, userId));
-	// 				});
-	// 				return clientLocationsArray;
-	// 			})
-	// 		);
-	// }
 
 	static occupyLocationByUser(userId, locData) {
 		const key = {
@@ -111,7 +98,7 @@ class ClientLocationObject extends EmptyLocation {
 					daily_msg: locData.dailyMessage,
 					user_id: userId
 				}, {
-					include: [User],
+					include: [User, LifeCycleEvent],
 					transaction: trans
 				});
 			}))
@@ -196,7 +183,8 @@ class ClientLocationObject extends EmptyLocation {
 	static takeDailyBankById(locationId) {
 		return Location.findById(locationId)
 			.then((location) => {
-				const bank = location.dataValues.loyal_population;
+				const locationData = location.dataValues;
+				const bank = locationData.loyal_population + locationData.saved_bank;
 				const masterId = location.dataValues.user_id;
 				return sequelize.transaction(
 					trans => Location.update({
@@ -256,23 +244,33 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static recalcLocationsLifecycle() {
-		return sequelize.transaction(trans => logService.LogMessage.create({
-			type: 'system',
-			status: 'daily-event',
-			message: 'New day begins!'
-		}, {
-			transaction: trans
+		return sequelize.transaction(trans => LifeCycleEvent.update({}, {
+			where: {
+				id: 1
+			}
 		})
-			.then(() => logService.getLastLifeCycleEventDate()
-				.then(lastLifeCycleEventDate => Location.destroy({
+			.then(() => LifeCycleEvent.findById(1)
+				.then(data => (data.dataValues.updated_at))
+				.then(lastLifeCycleEventDate => Location.update({
+					saved_bank: sequelize.literal('saved_bank + loyal_population')
+				}, {
 					where: {
-						loyal_population: 0,
-						checkin_date: {
+						taking_bank_date: {
 							[Sequelize.Op.lt]: lastLifeCycleEventDate
 						}
 					},
 					transaction: trans
 				})
+					.then(() => Location.update({
+						loyal_population: sequelize.literal('loyal_population - ceil(loyal_population * 0.1)')
+					}, {
+						where: {
+							checkin_date: {
+								[Sequelize.Op.lt]: lastLifeCycleEventDate
+							}
+						},
+						transaction: trans
+					}))
 					.then(() => Location.update({
 						loyal_population: sequelize.literal('loyal_population - ceil(loyal_population * 0.1)')
 					}, {
