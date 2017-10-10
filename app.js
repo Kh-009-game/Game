@@ -58,14 +58,12 @@ app.use((err, req, res, next) => {
 	res.locals.message = err.message;
 	res.locals.error = req.app.get('env') === 'development' ? err : {};
 	console.dir(err);
-	// render the error page
 	logService.error({
 		status: err.status,
 		msg: err.message
 	});
 	res.status(err.status || 500);
 	res.send(err.message);
-	// res.render('error');
 });
 
 
