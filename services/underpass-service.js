@@ -76,7 +76,8 @@ class UnderpassClientObject {
 	static getAvailableLocIdsForUser(locFromId, userId) {
 		return Location.findById(locFromId)
 			.then((location) => {
-				const bounds = UnderpassClientObject.calcPermittedBoundsForLocation(location);
+				const bounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 5);
+				const excludeBounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 1);
 
 				return Underpass.findAll({
 					where: {
@@ -105,17 +106,33 @@ class UnderpassClientObject {
 									[Sequelize.Op.notIn]: ids
 								},
 								lat: {
-									[Sequelize.Op.and]: [{
-										[Sequelize.Op.gte]: bounds.south
+									[Sequelize.Op.or]: [{
+										[Sequelize.Op.and]: [{
+											[Sequelize.Op.gte]: bounds.south
+										}, {
+											[Sequelize.Op.gt]: excludeBounds.north
+										}]
 									}, {
-										[Sequelize.Op.lte]: bounds.north
+										[Sequelize.Op.and]: [{
+											[Sequelize.Op.lt]: excludeBounds.south
+										}, {
+											[Sequelize.Op.lte]: bounds.north
+										}]
 									}]
 								},
 								lng: {
-									[Sequelize.Op.and]: [{
-										[Sequelize.Op.gte]: bounds.west
+									[Sequelize.Op.or]: [{
+										[Sequelize.Op.and]: [{
+											[Sequelize.Op.gte]: bounds.west
+										}, {
+											[Sequelize.Op.lt]: excludeBounds.east
+										}]
 									}, {
-										[Sequelize.Op.lte]: bounds.east
+										[Sequelize.Op.and]: [{
+											[Sequelize.Op.gt]: excludeBounds.west
+										}, {
+											[Sequelize.Op.lte]: bounds.east
+										}]
 									}]
 								}
 							}
@@ -147,7 +164,7 @@ class UnderpassClientObject {
 			}));
 	}
 
-	static calcPermittedBoundsForLocation(location) {
+	static calcPermittedBoundsForLocation(location, index) {
 		const locGridObject = new EmptyLocationObject({
 			lat: +location.dataValues.lat,
 			lng: +location.dataValues.lng
@@ -157,10 +174,10 @@ class UnderpassClientObject {
 		const relLngSize = locGridObject.relLngSize / 10000000;
 
 		return {
-			north: locGridObject.northWest.lat + (relLatSize * 5),
-			south: locGridObject.northWest.lat - (relLatSize * 5),
-			east: locGridObject.northWest.lng + (relLngSize * 5),
-			west: locGridObject.northWest.lng - (relLngSize * 5)
+			north: locGridObject.northWest.lat + (relLatSize * index),
+			south: locGridObject.northWest.lat - (relLatSize * index),
+			east: locGridObject.northWest.lng + (relLngSize * index),
+			west: locGridObject.northWest.lng - (relLngSize * index)
 		};
 	}
 
