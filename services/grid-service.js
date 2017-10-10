@@ -1,8 +1,9 @@
 class EmptyLocation {
-	constructor(northWestPoint) {
+	constructor(northWestPoint, isAllowed) {
 		this.northWest = northWestPoint;
 		this.mapFeatureCoords = this.getMapFeatureCoords();
 		this.center = this.calcCenterPoint();
+		this.isAllowed = isAllowed;
 	}
 
 	get absoluteMercatorWidthToHeight() {
@@ -101,10 +102,10 @@ class EmptyLocation {
 		return result;
 	}
 
-	static createLocationByPoint(point) {
+	static createLocationByPoint(point, isAllowed) {
 		const northWestPoint = EmptyLocation.calcNorthWestByPoint(point);
 
-		return new EmptyLocation(northWestPoint);
+		return new EmptyLocation(northWestPoint, isAllowed);
 	}
 
 	static calcNorthWestByPoint(point) {

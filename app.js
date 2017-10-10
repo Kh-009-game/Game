@@ -11,6 +11,7 @@ const auth = require('./middleware/auth');
 const cookieParser = require('cookie-parser');
 const favicon = require('serve-favicon');
 const logger = require('morgan');
+const lifecycleRoutes = require('./routes/lifecycle.routes');
 const gridRoutes = require('./routes/grid.routes');
 const boundsRoutes = require('./routes/bounds.routes');
 const locationsRoutes = require('./routes/locations.routes');
@@ -40,8 +41,9 @@ app.use(favicon('./assets/favicon.png'));
 app.use('/user', userRoutes);
 app.use('/', auth);
 app.all('/', indexRoutes);
-app.use('/api/grid', gridRoutes);
+app.use('/api/lifecycle', lifecycleRoutes);
 app.use('/api/bounds', boundsRoutes);
+app.use('/api/grid', gridRoutes);
 app.use('/api/locations', locationsRoutes);
 app.use('/api/underpasses', underpassesRoutes);
 
@@ -58,14 +60,12 @@ app.use((err, req, res, next) => {
 	res.locals.message = err.message;
 	res.locals.error = req.app.get('env') === 'development' ? err : {};
 	console.dir(err);
-	// render the error page
 	logService.error({
 		status: err.status,
 		msg: err.message
 	});
 	res.status(err.status || 500);
 	res.send(err.message);
-	// res.render('error');
 });
 
 

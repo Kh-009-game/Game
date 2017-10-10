@@ -215,11 +215,11 @@ function assemblePoints(direction, startPLoc, pointsArr) {
 			return startPLoc;
 		}
 		case 'toTheSouthEast': {
-			pointsArr.push(startPLoc.getMapFeatureCoords()[3]);
-			pointsArr.push(startPLoc.getMapFeatureCoords()[2]);
+			pointsArr.push(startPLoc.mapFeatureCoords[3]);
+			pointsArr.push(startPLoc.mapFeatureCoords[2]);
 			// go to East
-			const newLng = startPLoc.getMapFeatureCoords()[3].lng + 0.001;
-			const newPoint = { lat: startPLoc.getMapFeatureCoords()[2].lat, lng: newLng };
+			const newLng = startPLoc.mapFeatureCoords[3].lng + 0.001;
+			const newPoint = { lat: startPLoc.mapFeatureCoords[2].lat, lng: newLng };
 			startPLoc = EmptyLocation.createLocationByPoint(newPoint);
 			return startPLoc;
 		}

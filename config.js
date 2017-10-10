@@ -5,11 +5,11 @@ class Conf {
 		this.calculatedBounds = [];
 	}
 	static get dbUsername() {
-		return 'smdtzebruscqxv';
+		return process.env.SERVICE_DB_USER;
 	}
 
 	static get dbPassword() {
-		return 'b988acabcae53edc03642deec8eabbbd891f2c549a02100e9f5b134c624ea4cd';
+		return process.env.SERVICE_DB_PASS;
 	}
 
 	static get restrictOccupyingSettings() {
@@ -25,10 +25,10 @@ class Conf {
 		};
 	}
 	static get email() {
-		return 'gamekh009@gmail.com';
+		return process.env.SERVICE_EMAIL;
 	}
 	static get emailPass() {
-		return 'SoftServe';
+		return process.env.SERVICE_EMAIL_PASS;
 	}
 
 	static get gameBounds() {

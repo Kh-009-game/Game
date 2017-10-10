@@ -22,18 +22,16 @@
       <% if (location.population) { %>
         <span><i class="icon material-icons">accessibility</i> <%= location.loyalPopulation %>/<%= location.population %></span>
       <% } %>
-      <% if (location.hasDailyBank) { %>
-        <span><i class="icon material-icons">account_balance</i> <%= location.loyalPopulation %></span>  
-      <% } else {%>
-        <span><i class="icon material-icons">account_balance</i> 0</span>  
+      <% if (location.hasDailyBank !== undefined) { %>
+        <span><i class="icon material-icons">account_balance</i> <%= location.dailyBank %></span>  
       <% } %>
     </p> 
 </div>
 <div class="location-buttons">
-  <% if (!location.masterId && location.isCurrent) { %>
+  <% if (!location.masterId && location.isCurrent && location.isAllowed) { %>
     <button type="button" class="btn" id="occupy-btn">Occupy</button>
   <% } %>
-  <% if (!location.masterId && !location.isCurrent && isAdmin) { %>
+  <% if (!location.masterId && !location.isCurrent && isAdmin && location.isAllowed) { %>
     <button type="button" class="btn" id="occupy-click-btn">Occupy</button>
   <% } %>
   
@@ -55,7 +53,7 @@
   <% } %>
   
 
-<% if (( location.isMaster || isAdmin ) && !location.isCurrent && ( location.loyalPopulation < location.population )) { %>
+<% if (( location.isMaster || isAdmin ) && ( location.loyalPopulation < location.population )) { %>
   <button type="button" class="location-buttons--item" id="feed-btn">
         <i class="material-icons">shopping_basket</i></button>
 <% } %>

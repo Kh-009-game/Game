@@ -11,8 +11,8 @@ class User {
 	}
 
 	saveNewUser() {
-		db.none('insert into users(email, password, reg_date, cash, name, is_admin)' +
-		`values('${this.email}', '${this.pass}', '${this.registrationDate}', '${this.cash}', '${this.name}', ${this.isAdmin})`)
+		db.none('insert into users(email, password, created_at, updated_at, cash, name, is_admin)' +
+		`values('${this.email}', '${this.pass}', '${this.registrationDate}', '${this.registrationDate}', '${this.cash}', '${this.name}', ${this.isAdmin})`)
 			.then(() => console.log('New user was added to db'))
 			.catch(error => console.log('error:', error));
 	}
