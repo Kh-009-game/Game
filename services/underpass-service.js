@@ -1,5 +1,4 @@
 const Sequelize = require('sequelize');
-const sequelize = require('./orm-service');
 const eventEmitter = require('./eventEmitter-service');
 const ClientClusterObject = require('./cluster-service');
 const EmptyLocationObject = require('./grid-service');
@@ -43,23 +42,9 @@ class UnderpassClientObject {
 					});
 				});
 
-				return Underpass.findAll({
-					where: {
-						[Sequelize.Op.or]: [{
-							[Sequelize.Op.or]: userLocIds1
-						}, {
-							[Sequelize.Op.or]: userLocIds2
-						}]
-					},
-					include: [{
-						model: Location,
-						association: 'underpassFrom',
-						as: 'underpassFrom'
-					}, {
-						model: Location,
-						association: 'underpassTo',
-						as: 'underpassTo'
-					}]
+				return Underpass.findAllForByLocIdArray({
+					userLocIds1,
+					userLocIds2
 				});
 			})
 			.then((underpasses) => {
@@ -83,15 +68,7 @@ class UnderpassClientObject {
 				bounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 5);
 				excludeBounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 1);
 
-				return Underpass.findAll({
-					where: {
-						[Sequelize.Op.or]: [{
-							loc_id_1: locFromId
-						}, {
-							loc_id_2: locFromId
-						}]
-					}
-				});
+				return Underpass.findAllForLocId(locFromId)
 			})
 			.then((underpasses) => {
 				const ids = [];

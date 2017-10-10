@@ -21,6 +21,7 @@ class Game {
 		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
 			bubbles: true
 		});
+		this.gameArea;
 		this.occupyBtn = document.getElementById('occupy-btn');
 		this.userMarker = null;
 		this.map = options.map || null;
@@ -355,7 +356,12 @@ class Game {
 	getLocationByCoords(geoCoords) {
 		return new Promise((res, rej) => {
 			const gridXHR = new XMLHttpRequest();
-			gridXHR.open('GET', `/api/locations/check-location?lat=${geoCoords.lat}&lng=${geoCoords.lng}`);
+			const isAllowed = this.checkPointContains(geoCoords);
+			gridXHR.open('GET', `
+				/api/locations/check-location?lat=${geoCoords.lat}
+				&lng=${geoCoords.lng}
+				${isAllowed ? '&isAllowed=true' : ''}
+			`);
 			gridXHR.send();
 			gridXHR.onload = (e) => {
 				const xhr = e.srcElement;
@@ -389,7 +395,12 @@ class Game {
 	getGridByGeoCoords(geoCoords) {
 		return new Promise((res, rej) => {
 			const gridXHR = new XMLHttpRequest();
-			gridXHR.open('GET', `/api/grid?lat=${geoCoords.lat}&lng=${geoCoords.lng}`);
+			const isAllowed = this.checkPointContains(geoCoords);
+			gridXHR.open('GET', `
+				/api/grid?lat=${geoCoords.lat}
+				&lng=${geoCoords.lng}
+				${isAllowed ? '&isAllowed=true' : ''}
+			`);
 			gridXHR.send();
 			gridXHR.onload = (e) => {
 				const xhr = e.srcElement;
@@ -1321,6 +1332,8 @@ class Game {
 					location.isCurrent && location.isHighlighted ? '&' : ''
 				}${
 					location.isHighlighted ? 'highlighted=true' : ''
+				}${
+					location.isAllowed ? '&isAllowed=true' : ''
 				}`;
 			}
 			const xhr = new XMLHttpRequest();
@@ -1439,7 +1452,7 @@ class Game {
 	setupMessageElement(data) {
 		const notifications = document.querySelector('.notification');
 		notifications.classList.add('open');
-		const removedItem = this.createMessageElement(data);		
+		const removedItem = this.createMessageElement(data);
 		setTimeout(() => {
 			removedItem.classList.add('remove');
 			removedItem.addEventListener('animationend', () => {
@@ -1466,7 +1479,7 @@ class Game {
 	emitLifecycle() {
 		return new Promise((res, rej) => {
 			const xhr = new XMLHttpRequest();
-			xhr.open('PUT', 'api/locations/emit-lifecycle');
+			xhr.open('PUT', 'api/lifecycle/emit');
 			xhr.send();
 			xhr.onload = (e) => {
 				const htmlXHR = e.srcElement;
@@ -1484,6 +1497,11 @@ class Game {
 			.catch((err) => {
 				this.errorHandler(err);
 			});
+	}
+
+	checkPointContains(point) {
+		const latLng = new google.maps.LatLng(point.lat, point.lng);
+		return google.maps.geometry.poly.containsLocation(latLng, this.gameArea);
 	}
 }
 
@@ -1545,12 +1563,10 @@ function initMap() {
 			}
 		});
 
-		game.renderOccupiedLocations();
-		game.renderUnderpasses();
 
 		game.getGameBounds()
 			.then((boundsCoords) => {
-				const gameArea = new google.maps.Polygon({
+				game.gameArea = new google.maps.Polygon({
 					path: boundsCoords,
 					strokeColor: '#5B5B5B',
 					strokeOpacity: 1.0,
@@ -1568,12 +1584,16 @@ function initMap() {
 				gameBounds.setMap(map);
 
 				map.addListener('click', (e) => {
-					if (google.maps.geometry.poly.containsLocation(e.latLng, gameArea)) {
+					if (google.maps.geometry.poly.containsLocation(e.latLng, game.gameArea)) {
 						console.log('contains');
 					} else {
 						console.log('out of bounds');
 					}
 				});
+
+
+				game.renderOccupiedLocations();
+				game.renderUnderpasses();
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -1586,7 +1606,7 @@ function initMap() {
 					lat: position.coords.latitude,
 					lng: position.coords.longitude
 				});
-				
+
 				game.showUserGeodata({
 					lat: position.coords.latitude,
 					lng: position.coords.longitude

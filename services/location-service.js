@@ -1,14 +1,7 @@
 const Location = require('../models/location-orm');
-const User = require('../models/user-orm');
-const LifeCycleEvent = require('../models/lifecycle-event');
 const EmptyLocation = require('./grid-service');
-const logService = require('./log-service');
-const Sequelize = require('sequelize');
-const sequelize = require('./orm-service');
 const eventEmitter = require('./eventEmitter-service');
 const Locker = require('./locker-service');
-const schedule = require('node-schedule');
-const boundsService = require('./bounds-service');
 
 const locker = new Locker(new Error('Location is being occupied!'));
 
@@ -16,12 +9,12 @@ class ClientLocationObject extends EmptyLocation {
 	constructor(location, userId) {
 		const locationData = location.dataValues;
 		const masterData = location.user.dataValues;
-		const lastLifeCycleEventDate = location.user.dataValues.updated_at;
+		const lastLifeCycleEventDate = location.lifecycle.dataValues.updated_at;
 
 		super({
 			lat: +location.dataValues.lat,
 			lng: +location.dataValues.lng
-		});
+		}, true);
 
 		this.masterId = locationData.user_id;
 		this.masterName = masterData.name;
@@ -40,39 +33,19 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static createClientLocationObjectByIdForUser(locationId, userId) {
-		return Location.findById(locationId, {
-			include: [{
-				model: User
-			}, {
-				model: LifeCycleEvent
-			}]
-		})
-			.then(location => logService.getLastLifeCycleEventDate()
-				.then((lastLifeCycleEventDate) => {
-					location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
-					return new ClientLocationObject(location, userId);
-				})
-			);
+		return Location.findByIdAllIncluded(locationId)
+			.then(location => new ClientLocationObject(location, userId));
 	}
 
 	static getAllClientLocationObjectsForUser(userId) {
-		return Location.findAll({
-			include: [{
-				model: User
-			}, {
-				model: LifeCycleEvent
-			}]
-		})
-			.then(locations => logService.getLastLifeCycleEventDate()
-				.then((lastLifeCycleEventDate) => {
-					const clientLocationsArray = [];
-					locations.forEach((location) => {
-						location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
-						clientLocationsArray.push(new ClientLocationObject(location, userId));
-					});
-					return clientLocationsArray;
-				})
-			);
+		return Location.findAllAllIncluded()
+			.then((locations) => {
+				const clientLocationsArray = [];
+				locations.forEach((location) => {
+					clientLocationsArray.push(new ClientLocationObject(location, userId));
+				});
+				return clientLocationsArray;
+			});
 	}
 
 	static occupyLocationByUser(userId, locData) {
@@ -83,25 +56,7 @@ class ClientLocationObject extends EmptyLocation {
 
 		locker.validateKey(key);
 
-		return sequelize.transaction(trans => Location.count({
-			where: key,
-			transaction: trans
-		})
-			.then((count) => {
-				if (count !== 0) {
-					throw new Error('Location has been already occupied');
-				}
-				return Location.create({
-					lat: locData.northWest.lat,
-					lng: locData.northWest.lng,
-					name: locData.locationName,
-					daily_msg: locData.dailyMessage,
-					user_id: userId
-				}, {
-					include: [User, LifeCycleEvent],
-					transaction: trans
-				});
-			}))
+		return Location.occupyByUser(userId, locData)
 			.then(() => {
 				eventEmitter.emit('location-created', {
 					lat: locData.northWest.lat,
@@ -115,18 +70,12 @@ class ClientLocationObject extends EmptyLocation {
 			});
 	}
 
-	static getLocationOnPointForUser(userId, geoData) {
+	static getLocationOnPointForUser(userId, geoData, isAllowed) {
 		const locNorthWest = EmptyLocation.calcNorthWestByPoint(geoData);
-		return Location.findOne({
-			where: {
-				lat: locNorthWest.lat,
-				lng: locNorthWest.lng
-			}
-		})
+		return Location.findOnPoint(locNorthWest)
 			.then((location) => {
 				if (!location) {
-					// return new EmptyLocation(locNorthWest);
-					return boundsService.getEmptyLocationWithIsAllowedProp(locNorthWest);
+					return new EmptyLocation(locNorthWest, isAllowed);
 				}
 				return ClientLocationObject.createClientLocationObjectByIdForUser(
 					location.dataValues.id,
@@ -135,16 +84,8 @@ class ClientLocationObject extends EmptyLocation {
 			});
 	}
 
-
 	static updateLocation(locationId, newLocData) {
-		return Location.update({
-			name: newLocData.name,
-			daily_msg: newLocData.dailyMessage
-		}, {
-			where: {
-				id: locationId
-			}
-		})
+		return Location.editById(locationId, newLocData)
 			.then(() => {
 				eventEmitter.emit('location-updated', {
 					locationId
@@ -153,11 +94,7 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static deleteLocationById(locationId) {
-		return Location.destroy({
-			where: {
-				id: locationId
-			}
-		})
+		return Location.deleteById(locationId)
 			.then(() => {
 				eventEmitter.emit('location-deleted', {
 					locationId
@@ -166,13 +103,7 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static doCheckinById(locationId) {
-		return Location.update({
-			checkin_date: new Date()
-		}, {
-			where: {
-				id: locationId
-			}
-		})
+		return Location.doCheckinById(locationId)
 			.then(() => {
 				eventEmitter.emit('location-updated', {
 					locationId
@@ -181,30 +112,7 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static takeDailyBankById(locationId) {
-		return Location.findById(locationId)
-			.then((location) => {
-				const locationData = location.dataValues;
-				const bank = locationData.loyal_population + locationData.saved_bank;
-				const masterId = location.dataValues.user_id;
-				return sequelize.transaction(
-					trans => Location.update({
-						taking_bank_date: new Date()
-					}, {
-						where: {
-							id: locationId
-						},
-						transaction: trans
-					})
-						.then(() => User.update({
-							cash: sequelize.literal(`cash + ${bank}`)
-						}, {
-							where: {
-								id: masterId
-							},
-							transaction: trans
-						}))
-				);
-			})
+		return Location.takeDailyBankById(locationId)
 			.then(() => {
 				eventEmitter.emit('location-updated', {
 					locationId
@@ -213,29 +121,7 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static restoreLoyalPopulationByUser(locationId, userId) {
-		return Location.findById(locationId)
-			.then((location) => {
-				const loyalPopulation = location.dataValues.loyal_population;
-				const population = location.dataValues.population;
-				return sequelize.transaction(
-					trans => Location.update({
-						loyal_population: population
-					}, {
-						where: {
-							id: locationId
-						},
-						transaction: trans
-					})
-						.then(() => User.update({
-							cash: sequelize.literal(`cash - ${population - loyalPopulation}`)
-						}, {
-							where: {
-								id: userId
-							},
-							transaction: trans
-						}))
-				);
-			})
+		return Location.restoreLoyalPopulationByUserById(locationId, userId)
 			.then(() => {
 				eventEmitter.emit('location-updated', {
 					locationId
@@ -243,50 +129,8 @@ class ClientLocationObject extends EmptyLocation {
 			});
 	}
 
-	static recalcLocationsLifecycle() {
-		return sequelize.transaction(trans => LifeCycleEvent.update({}, {
-			where: {
-				id: 1
-			}
-		})
-			.then(() => LifeCycleEvent.findById(1)
-				.then(data => (data.dataValues.updated_at))
-				.then(lastLifeCycleEventDate => Location.update({
-					saved_bank: sequelize.literal('saved_bank + loyal_population')
-				}, {
-					where: {
-						taking_bank_date: {
-							[Sequelize.Op.lt]: lastLifeCycleEventDate
-						}
-					},
-					transaction: trans
-				})
-					.then(() => Location.update({
-						loyal_population: sequelize.literal('loyal_population - ceil(loyal_population * 0.1)')
-					}, {
-						where: {
-							checkin_date: {
-								[Sequelize.Op.lt]: lastLifeCycleEventDate
-							}
-						},
-						transaction: trans
-					}))
-					.then(() => Location.update({
-						loyal_population: sequelize.literal('loyal_population - ceil(loyal_population * 0.1)')
-					}, {
-						where: {
-							checkin_date: {
-								[Sequelize.Op.lt]: lastLifeCycleEventDate
-							}
-						},
-						transaction: trans
-					}))
-				)
-			)
-		)
-			.then(() => {
-				eventEmitter.emit('daily-event');
-			});
+	static recalcLocationsLifecycle(lastLifeCycleEventDate) {
+		return Location.recalcLocationsLifecycle(lastLifeCycleEventDate);
 	}
 
 	static checkOwnerOrAdminPermission(locationId, userId, isAdmin) {
@@ -295,7 +139,7 @@ class ClientLocationObject extends EmptyLocation {
 				isAdmin
 			});
 		}
-		return Location.findById(locationId)
+		return Location.findByIdAllIncluded()
 			.then((location) => {
 				if (userId !== location.dataValues.user_id) {
 					throw new Error('No such rights!');
@@ -328,20 +172,19 @@ class ClientLocationObject extends EmptyLocation {
 		)
 			.then((result) => {
 				if (!result.locationData) {
-					return Location.findById(locationId);
+					return Location.findByIdAllIncluded(locationId);
 				}
 				return result.locationData;
 			})
-			.then(location => logService.getLastLifeCycleEventDate()
-				.then((lastLifeCycleEventDate) => {
-					const takingBankData = location.dataValues.taking_bank_date;
+			.then((location) => {
+				const takingBankData = location.dataValues.taking_bank_date;
+				const lifecycleDate = location.lifecycle.dataValues.updated_at;
 
-					if (takingBankData > lastLifeCycleEventDate) {
-						throw new Error('There\'s no any bank');
-					}
-					location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
-					return location;
-				}));
+				if (takingBankData > lifecycleDate) {
+					throw new Error('There\'s no any bank');
+				}
+				return location;
+			});
 	}
 
 	static checkIsCurrentPermission(locationData, userGeodata, isAdmin) {
@@ -354,21 +197,6 @@ class ClientLocationObject extends EmptyLocation {
 			throw new Error('You have to be there to do that!');
 		}
 	}
-
-	static emitLifecycle() {
-		return ClientLocationObject.recalcLocationsLifecycle();
-	}
 }
-
-schedule.scheduleJob('0 0 3 * * *', () => {
-	ClientLocationObject.recalcLocationsLifecycle()
-		.then(() => {
-			console.log('Daily event!');
-		})
-		.catch((err) => {
-			console.log('Daily event trouble:');
-			console.dir(err);
-		});
-});
 
 module.exports = ClientLocationObject;
