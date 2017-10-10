@@ -566,6 +566,7 @@ class Game {
 				}
 
 				this.showUserIcons();
+				this.locInfoMenu.classList.remove('open');
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -664,16 +665,6 @@ class Game {
 			}
 		}
 	}
-
-	// renderCurrentLocationTextInfo() {
-	// 	return this.getLocInfoHTML(this.currentLocation)
-	// 		.then((response) => {
-	// 			this.currentLocInfo.innerHTML = response;
-	// 			if (this.locInfoBlock.className === 'location-block') {
-	// 				this.locInfoBlock.className = 'location-block show-current';
-	// 			}
-	// 		});
-	// }
 
 	// UNDERPASSES RENDER METHODS
 
