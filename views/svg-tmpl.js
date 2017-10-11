@@ -14,7 +14,8 @@ module.exports = (location) => {
 					fill="none" stroke="${location.isMaster && location.hasDailyBank ? 'gold' : '#777'}"
 					stroke-width="3"/>
 			<rect width="100%" height="100%" x="0" y="0"
-					fill="none" stroke="${location.isMaster ? 'yellowgreen' : '#999'}"
+					fill="none" stroke="${!location.isMaster ? '#999' : 
+																 location.dailyCheckin ? 'darkgreen' : 'lightblue'}"
 					stroke-width="10"/>
 				<text x="15" y="30" font-family="Verdana" width="${width - 30}" font-size="${locationNameFontSize}">
 					${location.locationName}

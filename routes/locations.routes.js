@@ -1,9 +1,11 @@
 const express = require('express');
 const locationController = require('../controllers/location-controller');
 const locationMiddlewares = require('../middleware/location-middlewares');
+const lifecycleMiddleware = require('../middleware/lifecycle-middleware');
 
 const router = express.Router();
 
+router.use(lifecycleMiddleware.checkLifecycle);
 router.get(
 	'/',
 	locationController.getAllLocations

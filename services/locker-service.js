@@ -1,7 +1,26 @@
 class Locker {
 	constructor(err) {
+		this.locker = false;
 		this.lockedKeys = [];
 		this.err = err;
+	}
+
+	lock() {
+		this.locker = true;
+	}
+
+	unlock() {
+		this.locker = false;
+	}
+
+	toggle() {
+		this.locker = !this.locker;
+	}
+
+	check() {
+		if (this.locker) {
+			throw this.err;
+		}
 	}
 
 	validateKey(key) {

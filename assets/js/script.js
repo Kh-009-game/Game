@@ -561,23 +561,36 @@ class Game {
 						userLocations.push(location);
 					}
 				});
-				if (userLocations.length < 2) {
-					console.log('only one loc');
-				} else {
-					userLocations.forEach((location) => {
-						const northWest = location.northWest;
-						console.log(`${northWest.lat} ${northWest.lng}`);
-						const northWestPoint = new google.maps.LatLng(northWest.lat, northWest.lng);
-						// console.dir()
-						this.locInfoBlock.classList.add('hide');
-						// console.dir(northWestPoint);
-						bounds.extend(northWestPoint);
+				if (userLocations.length === 0) {
+					console.log('You have no locations');
+					return;
+				}
+				userLocations.forEach((location) => {
+					const points = [];
+					location.mapFeatureCoords.forEach((point) => {
+						points.push(new google.maps.LatLng(point.lat, point.lng));
 					});
-					this.map.fitBounds(bounds);
+					// console.dir()
+					this.locInfoBlock.classList.add('hide');
+					// console.dir(northWestPoint);
+					points.forEach((point) => {
+						bounds.extend(point);
+					});
+				});
+				this.map.fitBounds(bounds);
+
+				if (userLocations.length === 1) {					
+					this.highlightOccupiedLocation(userLocations[0]);
+					this.renderHighlightedLocationTextInfo();
+				} else {
+					this.locInfoMenu.classList.remove('open');
 				}
 
+				const zoom = this.map.getZoom();
+				if (zoom > 15) {
+					this.map.setZoom(15);
+				}				
 				this.showUserIcons();
-				this.locInfoMenu.classList.remove('open');
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -747,6 +760,8 @@ class Game {
 	initUnderpassCreationHandler() {
 		google.maps.event.removeListener(this.highlightGridMapListener);
 		google.maps.event.removeListener(this.highlightFeatureMapListener);
+		this.centerUserLocationsBtn.style.display = 'none';
+		this.showUserLocationsBtn.style.display = 'none';
 		this.createUnderpassMapListener = this.map.data.addListener('click', (event) => {
 			const feature = event.feature;
 			if (!feature.getProperty('info').underpassAvailable) return;
@@ -803,7 +818,9 @@ class Game {
 			this.renderHightlightedFeatureInfo(event);
 		});
 		this.map.data.addListener(this.highlightFeatureMapListener);
-		google.maps.event.removeListener(this.createUnderpassMapListener);
+		google.maps.event.removeListener(this.createUnderpassMapListener);		
+		this.centerUserLocationsBtn.style.display = 'block';
+		this.showUserLocationsBtn.style.display = 'block';
 		this.clearMap();
 		this.refreshHighlightedLocation();
 		this.renderLocationsArray();
@@ -1389,6 +1406,7 @@ class Game {
 			})
 			.then(() => {
 				this.locInfoMenu.classList.add('open');
+				return Promise.resolve();
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -1503,6 +1521,42 @@ class Game {
 		const latLng = new google.maps.LatLng(point.lat, point.lng);
 		return google.maps.geometry.poly.containsLocation(latLng, this.gameArea);
 	}
+
+	lockUI() {
+		document.documentElement.classList.add('locked');
+	}
+
+	unlockUI() {
+		document.documentElement.classList.remove('locked');
+	}
+
+	initApp() {
+		this.getGameBounds()
+			.then((boundsCoords) => {
+				this.gameArea = new google.maps.Polygon({
+					path: boundsCoords,
+					strokeColor: '#5B5B5B',
+					strokeOpacity: 1.0,
+					strokeWeight: 2,
+					fillOpacity: 0
+				});
+				const gameBounds = new google.maps.Polyline({
+					path: boundsCoords,
+					geodesic: true,
+					strokeColor: '#FF0000',
+					strokeOpacity: 1.0,
+					strokeWeight: 2
+				});
+
+				gameBounds.setMap(this.map);
+
+				this.renderOccupiedLocations();
+				this.renderUnderpasses();
+			})
+			.catch((err) => {
+				this.errorHandler(err);
+			});
+	}
 }
 
 function initMap() {
@@ -1535,6 +1589,18 @@ function initMap() {
 			game.refreshOccupiedLocations();
 		});
 
+		socket.on('lifecycle-started', () => {
+			game.lockUI();
+			game.setupMessageElement({
+				text: 'Get ready for a new day...'
+			});
+		});
+		socket.on('daily-event', () => {
+			game.unlockUI();
+			if (!game.currentLocation) {
+				game.initApp();
+			}
+		});
 
 		map.data.setStyle((feature) => {
 			const defaultStyles = game.mapFeaturesStyles.defaultStyles;
@@ -1564,40 +1630,7 @@ function initMap() {
 		});
 
 
-		game.getGameBounds()
-			.then((boundsCoords) => {
-				game.gameArea = new google.maps.Polygon({
-					path: boundsCoords,
-					strokeColor: '#5B5B5B',
-					strokeOpacity: 1.0,
-					strokeWeight: 2,
-					fillOpacity: 0
-				});
-				const gameBounds = new google.maps.Polyline({
-					path: boundsCoords,
-					geodesic: true,
-					strokeColor: '#FF0000',
-					strokeOpacity: 1.0,
-					strokeWeight: 2
-				});
-
-				gameBounds.setMap(map);
-
-				map.addListener('click', (e) => {
-					if (google.maps.geometry.poly.containsLocation(e.latLng, game.gameArea)) {
-						console.log('contains');
-					} else {
-						console.log('out of bounds');
-					}
-				});
-
-
-				game.renderOccupiedLocations();
-				game.renderUnderpasses();
-			})
-			.catch((err) => {
-				this.errorHandler(err);
-			});
+		game.initApp();
 
 		function initMapInteraction() {
 			navigator.geolocation.getCurrentPosition((position) => {
