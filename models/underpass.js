@@ -1,6 +1,8 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../services/db-service-orm');
 const Location = require('./location-orm');
+// const EmptyLocationObject = require('../services/grid-service');
+
 
 const Underpass = sequelize.define('underpass', {
 	loc_id_1: {
@@ -61,24 +63,25 @@ const Underpass = sequelize.define('underpass', {
 	underscored: true
 });
 
-Underpass.findAllForByLocIdArray = locIdsObj => Underpass.findAll({
-	where: {
-		[Sequelize.Op.or]: [{
-			[Sequelize.Op.or]: locIdsObj.userLocIds1
+Underpass.findAllForByLocIdArray = locIdsObj => Underpass
+	.findAll({
+		where: {
+			[Sequelize.Op.or]: [{
+				[Sequelize.Op.or]: locIdsObj.userLocIds1
+			}, {
+				[Sequelize.Op.or]: locIdsObj.userLocIds2
+			}]
+		},
+		include: [{
+			model: Location,
+			association: 'underpassFrom',
+			as: 'underpassFrom'
 		}, {
-			[Sequelize.Op.or]: locIdsObj.userLocIds2
+			model: Location,
+			association: 'underpassTo',
+			as: 'underpassTo'
 		}]
-	},
-	include: [{
-		model: Location,
-		association: 'underpassFrom',
-		as: 'underpassFrom'
-	}, {
-		model: Location,
-		association: 'underpassTo',
-		as: 'underpassTo'
-	}]
-});
+	});
 
 Underpass.findAllForLocId = locId => Underpass.findAll({
 	where: {
