@@ -1,13 +1,18 @@
 const schedule = require('node-schedule');
 const LifeCycleEvent = require('../models/lifecycle-event');
 const ClientLocationObject = require('./location-service');
+const Locker = require('./locker-service');
 const eventEmitter = require('./eventEmitter-service');
 
+const lifecycleLocker = new Locker(new Error('Database executing lifecycle calculation.'));
 
 function emitLifecycle() {
+	eventEmitter.emit('lifecycle-started');
+	lifecycleLocker.lock();
 	return LifeCycleEvent.updateByTransLifecycleAndReturn()
 		.then(lifeCycleEvent => ClientLocationObject.recalcLocationsLifecycle(lifeCycleEvent))
 		.then(() => {
+			lifecycleLocker.unlock();
 			eventEmitter.emit('daily-event');
 			console.log('Daily event!');
 		});
@@ -40,3 +45,6 @@ checkLifecycleInDB();
 setLifecycleEvent();
 
 module.exports.emitLifecycle = emitLifecycle;
+module.exports.checkDBRecalc = () => {
+	lifecycleLocker.check();
+};

@@ -89,7 +89,10 @@ class UnderpassClientObject {
 				loc_id_2: locationIdTo,
 				distance_lat: distance.distanceLat,
 				distance_lng: distance.distanceLng
-			}));
+			}))
+			.then(() => {
+				eventEmitter.emit('underpass-created');
+			});
 	}
 
 	static calcPermittedBoundsForLocation(northWestPoint, index) {
