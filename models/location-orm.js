@@ -165,25 +165,78 @@ Location.deleteById = locationId => Location.destroy({
 	}
 });
 
-Location.doCheckinById = locationId => Location.update({
-	checkin_date: new Date()
-}, {
-	where: {
-		id: locationId
-	}
-});
+Location.doCheckinById = (locationId) => {
+	let lifeCycleDate;
+	let locIds;
+	return LifeCycleEvent.findById(1, {
+		attributes: ['updated_at']
+	})
+		.then((data) => {
+			lifeCycleDate = data.dataValues.updated_at;
 
-Location.takeDailyBankById = locationId => Location.findById(locationId)
-	.then((location) => {
-		const locationData = location.dataValues;
-		const bank = locationData.loyal_population + locationData.saved_bank;
-		const masterId = location.dataValues.user_id;
-		return sequelize.transaction(
-			trans => Location.update({
+			return Location.findAllConnectedLocIdsById(locationId);
+		})
+		.then((ids) => {
+			locIds = ids;
+			return Location.update({
+				checkin_date: new Date()
+			}, {
+				where: {
+					id: {
+						[Sequelize.Op.in]: locIds
+					},
+					checkin_date: {
+						[Sequelize.Op.lt]: lifeCycleDate
+					}
+				}
+			});
+		});
+};
+
+Location.takeDailyBankById = (locationId) => {
+	let lifeCycleDate;
+	let locIds;
+	let masterId;
+	return LifeCycleEvent.findById(1, {
+		attributes: ['updated_at']
+	})
+		.then((data) => {
+			lifeCycleDate = data.dataValues.updated_at;
+
+			return Location.findAllConnectedLocIdsById(locationId);
+		})
+		.then((ids) => {
+			locIds = ids;
+			return Location.findAll({
+				attributes: ['loyal_population', 'saved_bank', 'user_id'],
+				where: {
+					id: {
+						[Sequelize.Op.in]: locIds
+					},
+					taking_bank_date: {
+						[Sequelize.Op.lt]: lifeCycleDate
+					}
+				}
+			});
+		})
+		.then((locations) => {
+			let bank = 0;
+
+			masterId = locations[0].dataValues.user_id;
+
+			locations.forEach((location) => {
+				bank += location.dataValues.loyal_population;
+				bank += location.dataValues.saved_bank;
+			});
+
+			return sequelize.transaction(trans => Location.update({
+				saved_bank: 0,
 				taking_bank_date: new Date()
 			}, {
 				where: {
-					id: locationId
+					id: {
+						[Sequelize.Op.in]: locIds
+					}
 				},
 				transaction: trans
 			})
@@ -194,9 +247,10 @@ Location.takeDailyBankById = locationId => Location.findById(locationId)
 						id: masterId
 					},
 					transaction: trans
-				}))
-		);
-	});
+				})
+				));
+		});
+};
 
 Location.restoreLoyalPopulationByUserById = (locationId, userId) => Location
 	.findById(locationId)
@@ -223,36 +277,53 @@ Location.restoreLoyalPopulationByUserById = (locationId, userId) => Location
 		);
 	});
 
-Location.recalcLocationsLifecycle = lastLifeCycleEventDate => sequelize
-	.transaction(trans => Location.destroy({
-		where: {
-			loyal_population: 0,
-			checkin_date: {
-				[Sequelize.Op.lt]: lastLifeCycleEventDate
-			}
-		}
-	})
-		.then(() => Location.update({
-			saved_bank: sequelize.literal('saved_bank + loyal_population')
+
+Location.recalcLocationsLifecycle = () => {
+	let LifeCycleEventDate;
+
+	return LifeCycleEvent.findById(1)
+		.then((data) => {
+			LifeCycleEventDate = data.dataValues.updated_at;
+			return Promise.resolve();
+		})
+		.then(() => sequelize.transaction(trans =>	LifeCycleEvent.update({
+			updated_at: Sequelize.NOW
 		}, {
 			where: {
-				taking_bank_date: {
-					[Sequelize.Op.lt]: lastLifeCycleEventDate
-				}
+				id: 1
 			},
 			transaction: trans
-		}))
-		.then(() => Location.update({
-			loyal_population: sequelize.literal('loyal_population - ceil(loyal_population * 0.1)')
-		}, {
-			where: {
-				checkin_date: {
-					[Sequelize.Op.lt]: lastLifeCycleEventDate
+		})
+			.then(() => Location.destroy({
+				where: {
+					loyal_population: 0,
+					checkin_date: {
+						[Sequelize.Op.lt]: LifeCycleEventDate
+					}
 				}
-			},
-			transaction: trans
-		}))
-	);
+			})
+				.then(() => Location.update({
+					saved_bank: sequelize.literal('saved_bank + loyal_population')
+				}, {
+					where: {
+						taking_bank_date: {
+							[Sequelize.Op.lt]: LifeCycleEventDate
+						}
+					},
+					transaction: trans
+				}))
+				.then(() => Location.update({
+					loyal_population: sequelize.literal('loyal_population - ceil(loyal_population * 0.1)')
+				}, {
+					where: {
+						checkin_date: {
+							[Sequelize.Op.lt]: LifeCycleEventDate
+						}
+					},
+					transaction: trans
+				})))
+		));
+};
 
 Location.findUdersLocIdsInRectangleByLocId = (bounds, userId, excludedIds) => {
 	const ids = excludedIds || [];
@@ -276,6 +347,69 @@ Location.findUdersLocIdsInRectangleByLocId = (bounds, userId, excludedIds) => {
 				}, {
 					[Sequelize.Op.lte]: bounds.east
 				}]
+			}
+		}
+	});
+};
+
+Location.findAllLocsIdsExcept = (incIds, excIds) => Location
+	.findAll({
+		attributes: ['id'],
+		where: {
+			id: {
+				[Sequelize.Op.and]: [{
+					[Sequelize.Op.in]: incIds
+				}, {
+					[Sequelize.Op.notIn]: excIds
+				}]
+			}
+		},
+		include: [{
+			model: User
+		}, {
+			attributes: ['id'],
+			model: Location,
+			as: 'underpassTo'
+		}, {
+			attributes: ['id'],
+			model: Location,
+			as: 'underpassFrom'
+		}]
+	});
+
+Location.findAllConnectedLocIdsById = (locId) => {
+	let	includedIds = [locId];
+	let excludedIds = [];
+	return new Promise((res) => {
+		findAllConnectedLocIdsById(includedIds, excludedIds);
+
+		function findAllConnectedLocIdsById(incIds, excIds) {
+			excIds = excIds || [];
+			return Location.findAllLocsIdsExcept(incIds, excIds)
+				.then((locations) => {
+					excludedIds = excludedIds.concat(includedIds);
+
+					includedIds = [];
+
+					locations.forEach((item) => {
+						item.underpassTo.forEach(extractIds);
+						item.underpassFrom.forEach(extractIds);
+					});
+
+					includedIds = includedIds.filter(id => (excludedIds.indexOf(id) === -1));
+
+					if (includedIds.length === 0) {
+						res(excludedIds);
+					}
+
+					findAllConnectedLocIdsById(includedIds, excludedIds);
+				});
+		}
+
+		function extractIds(connectedLoc) {
+			const newId = connectedLoc.dataValues.id;
+			if (includedIds.indexOf(newId) === -1) {
+				includedIds.push(newId);
 			}
 		}
 	});

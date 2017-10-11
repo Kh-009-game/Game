@@ -129,8 +129,8 @@ class ClientLocationObject extends EmptyLocation {
 			});
 	}
 
-	static recalcLocationsLifecycle(lastLifeCycleEventDate) {
-		return Location.recalcLocationsLifecycle(lastLifeCycleEventDate);
+	static recalcLocationsLifecycle() {
+		return Location.recalcLocationsLifecycle();
 	}
 
 	static checkOwnerOrAdminPermission(locationId, userId, isAdmin) {

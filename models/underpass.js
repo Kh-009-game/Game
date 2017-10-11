@@ -90,7 +90,7 @@ Underpass.findAllForLocId = locId => Underpass.findAll({
 	}
 });
 
-Underpass.getLocIdsAvailableInBounds = (locId, userId, bounds, excludedBounds) => {
+Underpass.getLocIdsAvailableInBounds = (locId, userId, bounds) => {
 	const excludedIds = [];
 	return Underpass.findAllForLocId(locId)
 		.then((underpasses) => {
@@ -102,13 +102,17 @@ Underpass.getLocIdsAvailableInBounds = (locId, userId, bounds, excludedBounds) =
 				excludedIds.push(id2);
 			});
 
-			return Location.findUdersLocIdsInRectangleByLocId(excludedBounds, userId);
+			if (!bounds.excludedBounds) {
+				return Promise.resolve();
+			}
+
+			return Location.findUdersLocIdsInRectangleByLocId(bounds.excludedBounds, userId);
 		})
 		.then((data) => {
 			data.forEach((item) => {
 				excludedIds.push(item.dataValues.id);
 			});
-			return Location.findUdersLocIdsInRectangleByLocId(bounds, userId, excludedIds);
+			return Location.findUdersLocIdsInRectangleByLocId(bounds.includedBounds, userId, excludedIds);
 		});
 };
 

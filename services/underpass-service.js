@@ -57,14 +57,17 @@ class UnderpassClientObject {
 	}
 
 	static getAvailableLocIdsForUser(locFromId, userId) {
-		let bounds;
+		let includedBounds;
 		let excludedBounds;
 		return ClientLocationObject.getNorthWestByLocId(locFromId)
 			.then((northWestPoint) => {
-				bounds = UnderpassClientObject.calcPermittedBoundsForLocation(northWestPoint, 5);
+				includedBounds = UnderpassClientObject.calcPermittedBoundsForLocation(northWestPoint, 5);
 				excludedBounds = UnderpassClientObject.calcPermittedBoundsForLocation(northWestPoint, 1);
 
-				return Underpass.getLocIdsAvailableInBounds(locFromId, userId, bounds, excludedBounds);
+				return Underpass.getLocIdsAvailableInBounds(locFromId, userId, {
+					includedBounds,
+					excludedBounds
+				});
 			})
 			.then((allowedIds) => {
 				const ids = [];

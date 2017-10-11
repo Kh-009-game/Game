@@ -95,7 +95,7 @@ module.exports.deleteLocation = (req, res, next) => {
 };
 
 module.exports.doCheckin = (req, res, next) => {
-	LocationService.doCheckinById(req.params.id)
+	LocationService.doCheckinById(+req.params.id)
 		.then(() => {
 			res.sendStatus(200);
 		})

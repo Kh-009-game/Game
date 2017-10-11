@@ -12,8 +12,7 @@ function emitLifecycle() {
 		lifecycleLocker.lock();
 		res();
 	})
-		.then(() => LifeCycleEvent.updateByTransLifecycleAndReturn())
-		.then(lifeCycleEvent => ClientLocationObject.recalcLocationsLifecycle(lifeCycleEvent))
+		.then(() => ClientLocationObject.recalcLocationsLifecycle())
 		.then(() => {
 			lifecycleLocker.unlock();
 			eventEmitter.emit('daily-event');
