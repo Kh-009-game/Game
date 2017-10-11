@@ -1503,6 +1503,14 @@ class Game {
 		const latLng = new google.maps.LatLng(point.lat, point.lng);
 		return google.maps.geometry.poly.containsLocation(latLng, this.gameArea);
 	}
+
+	lockUI() {
+		document.documentElement.classList.add('locked');
+	}
+
+	unlockUI() {
+		document.documentElement.classList.remove('locked');
+	}
 }
 
 function initMap() {
@@ -1535,6 +1543,12 @@ function initMap() {
 			game.refreshOccupiedLocations();
 		});
 
+		socket.on('lifecycle-started', () => {
+			game.lockUI();
+		});
+		socket.on('daily-event', () => {
+			game.unlockUI();
+		});
 
 		map.data.setStyle((feature) => {
 			const defaultStyles = game.mapFeaturesStyles.defaultStyles;
