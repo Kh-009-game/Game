@@ -39,6 +39,10 @@ const Underpass = sequelize.define('underpass', {
 			}
 		}
 	},
+	loc_id_2: {
+		type: Sequelize.INTEGER,
+		allowNull: false
+	},
 	distance_lng: {
 		type: Sequelize.INTEGER,
 		allowNull: false,

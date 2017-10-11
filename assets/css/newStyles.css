@@ -285,6 +285,7 @@ html.locked::before {
 
 .notification {
   position: fixed;
+  z-index: 9999;
   right: 10px;
   top: 5px;
   display: none;

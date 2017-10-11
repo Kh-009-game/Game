@@ -8,8 +8,11 @@ const lifecycleLocker = new Locker(new Error('Database executing lifecycle calcu
 
 function emitLifecycle() {
 	eventEmitter.emit('lifecycle-started');
-	lifecycleLocker.lock();
-	return LifeCycleEvent.updateByTransLifecycleAndReturn()
+	return new Promise((res) => {
+		lifecycleLocker.lock();
+		res();
+	})
+		.then(() => LifeCycleEvent.updateByTransLifecycleAndReturn())
 		.then(lifeCycleEvent => ClientLocationObject.recalcLocationsLifecycle(lifeCycleEvent))
 		.then(() => {
 			lifecycleLocker.unlock();
@@ -24,6 +27,7 @@ function setLifecycleEvent(str) {
 	schedule.scheduleJob(str, () => {
 		emitLifecycle()
 			.catch((err) => {
+				emitLifecycle();
 				console.log('Daily event trouble:');
 				console.dir(err);
 			});
@@ -48,3 +52,5 @@ module.exports.emitLifecycle = emitLifecycle;
 module.exports.checkDBRecalc = () => {
 	lifecycleLocker.check();
 };
+
+module.exports.isLifecycle = () => lifecycleLocker.locker;
