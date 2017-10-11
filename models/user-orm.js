@@ -42,4 +42,12 @@ const User = sequelize.define('user', {
 	underscored: true
 });
 
+// User.saveNewUser = () => 
+//   return UserService({
+// 	name: ,
+// 	email: ,
+// 	password: ,
+// 	 
+// 	  });
+
 module.exports = User;
