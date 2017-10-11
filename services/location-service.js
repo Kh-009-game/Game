@@ -197,6 +197,30 @@ class ClientLocationObject extends EmptyLocation {
 			throw new Error('You have to be there to do that!');
 		}
 	}
+
+	static getUsersLocationIds(userId) {
+		return Location.getUsersLocIds(userId)
+			.then((locations) => {
+				const ids = [];
+
+				locations.forEach((item) => {
+					ids.push(item.dataValues.id);
+				});
+
+				return ids;
+			});
+	}
+
+	static getNorthWestByLocId(locId) {
+		return Location.getNorthWestById(locId)
+			.then((location) => {
+				const northWest = {
+					lat: +location.dataValues.lat,
+					lng: +location.dataValues.lng
+				};
+				return northWest;
+			});
+	}
 }
 
 module.exports = ClientLocationObject;

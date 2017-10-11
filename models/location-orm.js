@@ -254,6 +254,44 @@ Location.recalcLocationsLifecycle = lastLifeCycleEventDate => sequelize
 		}))
 	);
 
+Location.findUdersLocIdsInRectangleByLocId = (bounds, userId, excludedIds) => {
+	const ids = excludedIds || [];
+	return Location.findAll({
+		attributes: ['id'],
+		where: {
+			user_id: userId,
+			id: {
+				[Sequelize.Op.notIn]: ids
+			},
+			lat: {
+				[Sequelize.Op.and]: [{
+					[Sequelize.Op.gte]: bounds.south
+				}, {
+					[Sequelize.Op.lte]: bounds.north
+				}]
+			},
+			lng: {
+				[Sequelize.Op.and]: [{
+					[Sequelize.Op.gte]: bounds.west
+				}, {
+					[Sequelize.Op.lte]: bounds.east
+				}]
+			}
+		}
+	});
+};
+
+Location.getUsersLocIds = userId =>	Location.findAll({
+	attributes: ['id'],
+	where: {
+		user_id: userId
+	}
+});
+
+Location.getNorthWestById = locId => Location.findById(locId, {
+	attributes: ['lat', 'lng']
+});
+
 Location.User = Location.belongsTo(User);
 User.Locations = User.hasMany(Location);
 
