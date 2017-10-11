@@ -70,16 +70,16 @@ class UnderpassClientObject {
 				return Underpass.findAllForLocId(locFromId);
 			})
 			.then((underpasses) => {
-				const ids = [];
-				ids.push(locFromId);
+				const excludedIds = [];
+				excludedIds.push(locFromId);
 				underpasses.forEach((item) => {
 					const id1 = item.dataValues.loc_id_1;
 					const id2 = item.dataValues.loc_id_2;
-					ids.push(id1);
-					ids.push(id2);
+					excludedIds.push(id1);
+					excludedIds.push(id2);
 				});
 
-				return Location.findAllUsersLocIdsWithinRectangle(bounds, userId, ids);
+				return Location.findAllUsersLocIdsWithinRectangle(bounds, userId, excludedIds);
 			})
 			.then((data) => {
 				data.forEach((item) => {

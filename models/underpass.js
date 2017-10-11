@@ -1,6 +1,8 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../services/db-service-orm');
 const Location = require('./location-orm');
+// const EmptyLocationObject = require('../services/grid-service');
+
 
 const Underpass = sequelize.define('underpass', {
 	loc_id_1: {
@@ -57,24 +59,25 @@ const Underpass = sequelize.define('underpass', {
 	underscored: true
 });
 
-Underpass.findAllForByLocIdArray = locIdsObj => Underpass.findAll({
-	where: {
-		[Sequelize.Op.or]: [{
-			[Sequelize.Op.or]: locIdsObj.userLocIds1
+Underpass.findAllForByLocIdArray = locIdsObj => Underpass
+	.findAll({
+		where: {
+			[Sequelize.Op.or]: [{
+				[Sequelize.Op.or]: locIdsObj.userLocIds1
+			}, {
+				[Sequelize.Op.or]: locIdsObj.userLocIds2
+			}]
+		},
+		include: [{
+			model: Location,
+			association: 'underpassFrom',
+			as: 'underpassFrom'
 		}, {
-			[Sequelize.Op.or]: locIdsObj.userLocIds2
+			model: Location,
+			association: 'underpassTo',
+			as: 'underpassTo'
 		}]
-	},
-	include: [{
-		model: Location,
-		association: 'underpassFrom',
-		as: 'underpassFrom'
-	}, {
-		model: Location,
-		association: 'underpassTo',
-		as: 'underpassTo'
-	}]
-});
+	});
 
 Underpass.findAllForLocId = locId => Underpass.findAll({
 	where: {
@@ -86,94 +89,110 @@ Underpass.findAllForLocId = locId => Underpass.findAll({
 	}
 });
 
-Underpass.getLocIdsAvailableForUnderpassByLocId = (locId, userId) => {
-	// const allowedIds = [];
-	// const prohibitedIds = [];
-	// let bounds;
-	// let excludeBounds;
-	// return Location.findById(locId)
-	// 	.then((location) => {
-	// 		bounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 5);
-	// 		excludeBounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 1);
+// Underpass.getAvailableLocIdsForUser = (locFromId, userId) => {
+// 	const allowedIds = [];
+// 	const prohibitedIds = [];
+// 	let bounds;
+// 	let excludeBounds;
+// 	return Location.findById(locFromId)
+// 		.then((location) => {
+// 			bounds = Underpass.calcPermittedBoundsForLocation(location, 5);
+// 			excludeBounds = Underpass.calcPermittedBoundsForLocation(location, 1);
 
-	// 		return Underpass.findAllForLocId(locId)
-	// 	})
-	// 	.then((underpasses) => {
-	// 		const ids = [];
-	// 		ids.push(locId);
-	// 		underpasses.forEach((item) => {
-	// 			const id1 = item.dataValues.loc_id_1;
-	// 			const id2 = item.dataValues.loc_id_2;
-	// 			ids.push(id1);
-	// 			ids.push(id2);
-	// 		});
+// 			return Underpass.findAllForLocId(locFromId);
+// 		})
+// 		.then((underpasses) => {
+// 			const excludedIds = [];
+// 			excludedIds.push(locFromId);
+// 			underpasses.forEach((item) => {
+// 				const id1 = item.dataValues.loc_id_1;
+// 				const id2 = item.dataValues.loc_id_2;
+// 				excludedIds.push(id1);
+// 				excludedIds.push(id2);
+// 			});
 
-	// 		return Location.findAll({
-	// 			attributes: ['id'],
-	// 			where: {
-	// 				user_id: userId,
-	// 				id: {
-	// 					[Sequelize.Op.notIn]: ids
-	// 				},
-	// 				lat: {
-	// 					[Sequelize.Op.and]: [{
-	// 						[Sequelize.Op.gte]: bounds.south
-	// 					}, {
-	// 						[Sequelize.Op.lte]: bounds.north
-	// 					}]
-	// 				},
-	// 				lng: {
-	// 					[Sequelize.Op.and]: [{
-	// 						[Sequelize.Op.gte]: bounds.west
-	// 					}, {
-	// 						[Sequelize.Op.lte]: bounds.east
-	// 					}]
-	// 				}
-	// 			}
-	// 		});
-	// 	})
-	// 	.then((data) => {
-	// 		data.forEach((item) => {
-	// 			allowedIds.push(item.dataValues.id);
-	// 		});
-	// 		return Location.findAll({
-	// 			attributes: ['id'],
-	// 			where: {
-	// 				user_id: userId,
-	// 				lat: {
-	// 					[Sequelize.Op.and]: [{
-	// 						[Sequelize.Op.gte]: excludeBounds.south
-	// 					}, {
-	// 						[Sequelize.Op.lte]: excludeBounds.north
-	// 					}]
-	// 				},
-	// 				lng: {
-	// 					[Sequelize.Op.and]: [{
-	// 						[Sequelize.Op.gte]: excludeBounds.west
-	// 					}, {
-	// 						[Sequelize.Op.lte]: excludeBounds.east
-	// 					}]
-	// 				}
-	// 			}
-	// 		});
-	// 	})
-	// 	.then((data) => {
-	// 		data.forEach((item) => {
-	// 			prohibitedIds.push(item.dataValues.id);
-	// 		});
+// 			return Location.findAllUsersLocIdsWithinRectangle(bounds, userId, excludedIds);
+// 		})
+// 		.then((data) => {
+// 			data.forEach((item) => {
+// 				allowedIds.push(item.dataValues.id);
+// 			});
+// 			return Location.findAllUsersLocIdsWithinRectangle(excludeBounds, userId);
+// 		})
+// 		.then((data) => {
+// 			data.forEach((item) => {
+// 				prohibitedIds.push(item.dataValues.id);
+// 			});
 
-	// 		return allowedIds.filter((item) => {
-	// 			if (!prohibitedIds.length) return item;
-	// 			for (let i = 0, max = prohibitedIds.length; i < max; i += 1) {
-	// 				if (item === prohibitedIds[i]) {
-	// 					prohibitedIds.splice(i, 1);
-	// 					return false;
-	// 				}
-	// 			}
-	// 			return item;
-	// 		});
-	// 	});
-};
+// 			return allowedIds.filter((item) => {
+// 				if (!prohibitedIds.length) return item;
+// 				for (let i = 0, max = prohibitedIds.length; i < max; i += 1) {
+// 					if (item === prohibitedIds[i]) {
+// 						prohibitedIds.splice(i, 1);
+// 						return false;
+// 					}
+// 				}
+// 				return item;
+// 			});
+// 		});
+// };
+
+// Underpass.calcPermittedBoundsForLocation = (location, index) => {
+// 	const locGridObject = new EmptyLocationObject({
+// 		lat: +location.dataValues.lat,
+// 		lng: +location.dataValues.lng
+// 	});
+
+// 	const relLatSize = EmptyLocationObject.relLatSize / 10000000;
+// 	const relLngSize = locGridObject.relLngSize / 10000000;
+
+// 	return {
+// 		north: locGridObject.northWest.lat + (relLatSize * index),
+// 		south: locGridObject.northWest.lat - (relLatSize * index),
+// 		east: locGridObject.northWest.lng + (relLngSize * index),
+// 		west: locGridObject.northWest.lng - (relLngSize * index)
+// 	};
+// };
+
+// Underpass.calcUnderpassDistanceByLocIds = (locationIdFrom, locationIdTo) => {
+// 	let locationFrom;
+// 	let locationTo;
+// 	return Location.findById(locationIdFrom)
+// 		.then((foundLocationFrom) => {
+// 			locationFrom = new EmptyLocationObject({
+// 				lat: +foundLocationFrom.dataValues.lat,
+// 				lng: +foundLocationFrom.dataValues.lng
+// 			});
+
+// 			return Location.findById(locationIdTo);
+// 		})
+// 		.then((foundLocationTo) => {
+// 			locationTo = new EmptyLocationObject({
+// 				lat: +foundLocationTo.dataValues.lat,
+// 				lng: +foundLocationTo.dataValues.lng
+// 			});
+
+// 			return Underpass.calcUnderpassDistance(
+// 				locationFrom,
+// 				locationTo
+// 			);
+// 		});
+// };
+
+// Underpass.calcUnderpassDistance = (locationFrom, locationTo) => {
+// 	let lngDistance = Math.round((locationFrom.northWest.lng - locationTo.northWest.lng)
+// 			/ (locationFrom.relLngSize / 10000000));
+// 	let latDistance = Math.round((locationFrom.northWest.lat - locationTo.northWest.lat)
+// 			/ (EmptyLocationObject.relLatSize / 10000000));
+
+// 	lngDistance = lngDistance < 0 ? -lngDistance : lngDistance;
+// 	latDistance = latDistance < 0 ? -latDistance : latDistance;
+
+// 	return {
+// 		distanceLat: latDistance,
+// 		distanceLng: lngDistance
+// 	};
+// };
 
 Location.belongsToMany(Location, {
 	as: 'underpassTo',
