@@ -583,10 +583,14 @@ class Game {
 					this.highlightOccupiedLocation(userLocations[0]);
 					this.renderHighlightedLocationTextInfo();
 				} else {
-					this.showUserIcons();
 					this.locInfoMenu.classList.remove('open');
 				}
 
+				const zoom = this.map.getZoom();
+				if (zoom > 15) {
+					this.map.setZoom(15);
+				}				
+				this.showUserIcons();
 			})
 			.catch((err) => {
 				this.errorHandler(err);
