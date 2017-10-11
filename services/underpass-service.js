@@ -1,4 +1,3 @@
-const Sequelize = require('sequelize');
 const eventEmitter = require('./eventEmitter-service');
 const ClientClusterObject = require('./cluster-service');
 const EmptyLocationObject = require('./grid-service');
@@ -68,7 +67,7 @@ class UnderpassClientObject {
 				bounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 5);
 				excludeBounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 1);
 
-				return Underpass.findAllForLocId(locFromId)
+				return Underpass.findAllForLocId(locFromId);
 			})
 			.then((underpasses) => {
 				const ids = [];
@@ -80,54 +79,13 @@ class UnderpassClientObject {
 					ids.push(id2);
 				});
 
-				return Location.findAll({
-					attributes: ['id'],
-					where: {
-						user_id: userId,
-						id: {
-							[Sequelize.Op.notIn]: ids
-						},
-						lat: {
-							[Sequelize.Op.and]: [{
-								[Sequelize.Op.gte]: bounds.south
-							}, {
-								[Sequelize.Op.lte]: bounds.north
-							}]
-						},
-						lng: {
-							[Sequelize.Op.and]: [{
-								[Sequelize.Op.gte]: bounds.west
-							}, {
-								[Sequelize.Op.lte]: bounds.east
-							}]
-						}
-					}
-				});
+				return Location.findAllUsersLocIdsWithinRectangle(bounds, userId, ids);
 			})
 			.then((data) => {
 				data.forEach((item) => {
 					allowedIds.push(item.dataValues.id);
 				});
-				return Location.findAll({
-					attributes: ['id'],
-					where: {
-						user_id: userId,
-						lat: {
-							[Sequelize.Op.and]: [{
-								[Sequelize.Op.gte]: excludeBounds.south
-							}, {
-								[Sequelize.Op.lte]: excludeBounds.north
-							}]
-						},
-						lng: {
-							[Sequelize.Op.and]: [{
-								[Sequelize.Op.gte]: excludeBounds.west
-							}, {
-								[Sequelize.Op.lte]: excludeBounds.east
-							}]
-						}
-					}
-				});
+				return Location.findAllUsersLocIdsWithinRectangle(excludeBounds, userId);
 			})
 			.then((data) => {
 				data.forEach((item) => {

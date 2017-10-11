@@ -86,7 +86,7 @@ Underpass.findAllForLocId = locId => Underpass.findAll({
 	}
 });
 
-Underpass.getLocIdsAvailableForUnderpassByLocId = (locId, userId) => {	
+Underpass.getLocIdsAvailableForUnderpassByLocId = (locId, userId) => {
 	// const allowedIds = [];
 	// const prohibitedIds = [];
 	// let bounds;
