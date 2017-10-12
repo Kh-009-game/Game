@@ -28,6 +28,10 @@ module.exports = function (io) {
 		});
 	});
 
+	eventEmitter.on('lifecycle-started', () => {
+		io.sockets.emit('lifecycle-started');
+	});
+
 	eventEmitter.on('location-updated', (locationData) => {
 		io.sockets.emit('update', {
 			type: 'msgUpdateLoc',
@@ -47,11 +51,12 @@ module.exports = function (io) {
 	});
 
 	eventEmitter.on('daily-event', () => {
+		io.sockets.emit('daily-event');
 		io.sockets.emit('update', {
 			type: 'msgCreateLoc',
 			text: `
 				New day begins!
 			`
 		});
-	});	
+	});
 };

@@ -129,8 +129,8 @@ class ClientLocationObject extends EmptyLocation {
 			});
 	}
 
-	static recalcLocationsLifecycle(lastLifeCycleEventDate) {
-		return Location.recalcLocationsLifecycle(lastLifeCycleEventDate);
+	static recalcLocationsLifecycle() {
+		return Location.recalcLocationsLifecycle();
 	}
 
 	static checkOwnerOrAdminPermission(locationId, userId, isAdmin) {
@@ -139,7 +139,7 @@ class ClientLocationObject extends EmptyLocation {
 				isAdmin
 			});
 		}
-		return Location.findByIdAllIncluded()
+		return Location.findByIdAllIncluded(locationId)
 			.then((location) => {
 				if (userId !== location.dataValues.user_id) {
 					throw new Error('No such rights!');
@@ -196,6 +196,30 @@ class ClientLocationObject extends EmptyLocation {
 				(+locationData.lat !== properLocCoords.lat)) {
 			throw new Error('You have to be there to do that!');
 		}
+	}
+
+	static getUsersLocationIds(userId) {
+		return Location.getUsersLocIds(userId)
+			.then((locations) => {
+				const ids = [];
+
+				locations.forEach((item) => {
+					ids.push(item.dataValues.id);
+				});
+
+				return ids;
+			});
+	}
+
+	static getNorthWestByLocId(locId) {
+		return Location.getNorthWestById(locId)
+			.then((location) => {
+				const northWest = {
+					lat: +location.dataValues.lat,
+					lng: +location.dataValues.lng
+				};
+				return northWest;
+			});
 	}
 }
 

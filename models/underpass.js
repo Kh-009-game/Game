@@ -1,6 +1,8 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../services/db-service-orm');
 const Location = require('./location-orm');
+// const EmptyLocationObject = require('../services/grid-service');
+
 
 const Underpass = sequelize.define('underpass', {
 	loc_id_1: {
@@ -39,6 +41,10 @@ const Underpass = sequelize.define('underpass', {
 			}
 		}
 	},
+	loc_id_2: {
+		type: Sequelize.INTEGER,
+		allowNull: false
+	},
 	distance_lng: {
 		type: Sequelize.INTEGER,
 		allowNull: false,
@@ -57,24 +63,25 @@ const Underpass = sequelize.define('underpass', {
 	underscored: true
 });
 
-Underpass.findAllForByLocIdArray = locIdsObj => Underpass.findAll({
-	where: {
-		[Sequelize.Op.or]: [{
-			[Sequelize.Op.or]: locIdsObj.userLocIds1
+Underpass.findAllForByLocIdArray = locIdsObj => Underpass
+	.findAll({
+		where: {
+			[Sequelize.Op.or]: [{
+				[Sequelize.Op.or]: locIdsObj.userLocIds1
+			}, {
+				[Sequelize.Op.or]: locIdsObj.userLocIds2
+			}]
+		},
+		include: [{
+			model: Location,
+			association: 'underpassFrom',
+			as: 'underpassFrom'
 		}, {
-			[Sequelize.Op.or]: locIdsObj.userLocIds2
+			model: Location,
+			association: 'underpassTo',
+			as: 'underpassTo'
 		}]
-	},
-	include: [{
-		model: Location,
-		association: 'underpassFrom',
-		as: 'underpassFrom'
-	}, {
-		model: Location,
-		association: 'underpassTo',
-		as: 'underpassTo'
-	}]
-});
+	});
 
 Underpass.findAllForLocId = locId => Underpass.findAll({
 	where: {
@@ -86,93 +93,30 @@ Underpass.findAllForLocId = locId => Underpass.findAll({
 	}
 });
 
-Underpass.getLocIdsAvailableForUnderpassByLocId = (locId, userId) => {	
-	// const allowedIds = [];
-	// const prohibitedIds = [];
-	// let bounds;
-	// let excludeBounds;
-	// return Location.findById(locId)
-	// 	.then((location) => {
-	// 		bounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 5);
-	// 		excludeBounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 1);
+Underpass.getLocIdsAvailableInBounds = (locId, userId, bounds) => {
+	const excludedIds = [];
+	return Underpass.findAllForLocId(locId)
+		.then((underpasses) => {
+			excludedIds.push(locId);
+			underpasses.forEach((item) => {
+				const id1 = item.dataValues.loc_id_1;
+				const id2 = item.dataValues.loc_id_2;
+				excludedIds.push(id1);
+				excludedIds.push(id2);
+			});
 
-	// 		return Underpass.findAllForLocId(locId)
-	// 	})
-	// 	.then((underpasses) => {
-	// 		const ids = [];
-	// 		ids.push(locId);
-	// 		underpasses.forEach((item) => {
-	// 			const id1 = item.dataValues.loc_id_1;
-	// 			const id2 = item.dataValues.loc_id_2;
-	// 			ids.push(id1);
-	// 			ids.push(id2);
-	// 		});
+			if (!bounds.excludedBounds) {
+				return Promise.resolve();
+			}
 
-	// 		return Location.findAll({
-	// 			attributes: ['id'],
-	// 			where: {
-	// 				user_id: userId,
-	// 				id: {
-	// 					[Sequelize.Op.notIn]: ids
-	// 				},
-	// 				lat: {
-	// 					[Sequelize.Op.and]: [{
-	// 						[Sequelize.Op.gte]: bounds.south
-	// 					}, {
-	// 						[Sequelize.Op.lte]: bounds.north
-	// 					}]
-	// 				},
-	// 				lng: {
-	// 					[Sequelize.Op.and]: [{
-	// 						[Sequelize.Op.gte]: bounds.west
-	// 					}, {
-	// 						[Sequelize.Op.lte]: bounds.east
-	// 					}]
-	// 				}
-	// 			}
-	// 		});
-	// 	})
-	// 	.then((data) => {
-	// 		data.forEach((item) => {
-	// 			allowedIds.push(item.dataValues.id);
-	// 		});
-	// 		return Location.findAll({
-	// 			attributes: ['id'],
-	// 			where: {
-	// 				user_id: userId,
-	// 				lat: {
-	// 					[Sequelize.Op.and]: [{
-	// 						[Sequelize.Op.gte]: excludeBounds.south
-	// 					}, {
-	// 						[Sequelize.Op.lte]: excludeBounds.north
-	// 					}]
-	// 				},
-	// 				lng: {
-	// 					[Sequelize.Op.and]: [{
-	// 						[Sequelize.Op.gte]: excludeBounds.west
-	// 					}, {
-	// 						[Sequelize.Op.lte]: excludeBounds.east
-	// 					}]
-	// 				}
-	// 			}
-	// 		});
-	// 	})
-	// 	.then((data) => {
-	// 		data.forEach((item) => {
-	// 			prohibitedIds.push(item.dataValues.id);
-	// 		});
-
-	// 		return allowedIds.filter((item) => {
-	// 			if (!prohibitedIds.length) return item;
-	// 			for (let i = 0, max = prohibitedIds.length; i < max; i += 1) {
-	// 				if (item === prohibitedIds[i]) {
-	// 					prohibitedIds.splice(i, 1);
-	// 					return false;
-	// 				}
-	// 			}
-	// 			return item;
-	// 		});
-	// 	});
+			return Location.findUdersLocIdsInRectangleByLocId(bounds.excludedBounds, userId);
+		})
+		.then((data) => {
+			data.forEach((item) => {
+				excludedIds.push(item.dataValues.id);
+			});
+			return Location.findUdersLocIdsInRectangleByLocId(bounds.includedBounds, userId, excludedIds);
+		});
 };
 
 Location.belongsToMany(Location, {
