@@ -1,12 +1,24 @@
 const ClientLocationObject = require('../services/location-service');
 
+module.exports.checkOccupationLocker = (req, res, next) => {
+	const key = req.body.locationData.northWest;
+	ClientLocationObject.validateOccupationLocker(key)
+		.then(() => {
+			next();
+		})
+		.catch(err => Promise.reject(err));
+};
+
 module.exports.checkIsCurrent = (req, res, next) => {
 	ClientLocationObject.checkIsCurrentPermission(
 		req.body.locationData.northWest,
 		req.body.userGeoData,
 		req.decoded.isAdmin
-	);
-	next();
+	)
+		.then(() => {
+			next();
+		})
+		.catch(err => Promise.reject(err));
 };
 
 module.exports.checkDailyBank = (req, res, next) => {
@@ -21,9 +33,7 @@ module.exports.checkDailyBank = (req, res, next) => {
 		.then(() => {
 			next();
 		})
-		.catch((err) => {
-			next(err);
-		});
+		.catch(err => Promise.reject(err));
 };
 
 module.exports.checkOwner = (req, res, next) => {
@@ -37,9 +47,7 @@ module.exports.checkOwner = (req, res, next) => {
 		.then(() => {
 			next();
 		})
-		.catch((err) => {
-			next(err);
-		});
+		.catch(err => Promise.reject(err));
 };
 
 module.exports.checkOwnerAndIsCurrent = (req, res, next) => {
@@ -54,9 +62,7 @@ module.exports.checkOwnerAndIsCurrent = (req, res, next) => {
 		.then(() => {
 			next();
 		})
-		.catch((err) => {
-			next(err);
-		});
+		.catch(err => Promise.reject(err));
 };
 
 module.exports.attachClientLocObject = (req, res, next) => {
@@ -70,7 +76,5 @@ module.exports.attachClientLocObject = (req, res, next) => {
 			req.body.requestedLocation = location;
 			next();
 		})
-		.catch((err) => {
-			next(err);
-		});
+		.catch(err => Promise.reject(err));
 };

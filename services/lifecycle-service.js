@@ -3,8 +3,9 @@ const LifeCycleEvent = require('../models/lifecycle-event');
 const ClientLocationObject = require('./location-service');
 const Locker = require('./locker-service');
 const eventEmitter = require('./eventEmitter-service');
+const HttpError = require('./utils/http-error');
 
-const lifecycleLocker = new Locker(new Error('Database executing lifecycle calculation.'));
+const lifecycleLocker = new Locker(new HttpError(403, HttpError.messages.isLifecycle));
 
 function emitLifecycle() {
 	eventEmitter.emit('lifecycle-started');
@@ -48,8 +49,4 @@ checkLifecycleInDB();
 setLifecycleEvent();
 
 module.exports.emitLifecycle = emitLifecycle;
-module.exports.checkDBRecalc = () => {
-	lifecycleLocker.check();
-};
-
-module.exports.isLifecycle = () => lifecycleLocker.locker;
+module.exports.checkDBRecalc = () => lifecycleLocker.check();
