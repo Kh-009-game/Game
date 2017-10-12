@@ -19,6 +19,7 @@ body {
   width: 100%;
 }
 
+.location-menu.locked::before,
 html.locked::before {
   display: block;
   content: '';
