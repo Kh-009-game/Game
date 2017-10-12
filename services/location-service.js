@@ -50,26 +50,24 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static occupyLocationByUser(userId, locData) {
-		const key = {
-			lat: locData.northWest.lat,
-			lng: locData.northWest.lng
-		};
+		const key = locData.northWest;
 
-		return locker.validateKey(key)
-			.then(() => Location.occupyByUser(userId, locData)
-				.then(() => {
-					eventEmitter.emit('location-created', {
-						lat: locData.northWest.lat,
-						lng: locData.northWest.lng
-					});
-				// locker.deleteKey(key);
-				})
-				.catch((err) => {
-					locker.deleteKey(key);
-					return Promise.reject(err);
-				})
+		Location.occupyByUser(userId, locData)
+			.then(() => {
+				eventEmitter.emit('location-created', {
+					lat: locData.northWest.lat,
+					lng: locData.northWest.lng
+				});
+				locker.deleteKey(key);
+			})
+			.catch((err) => {
+				locker.deleteKey(key);
+				return Promise.reject(err);
+			});
+	}
 
-			);
+	static validateOccupationLocker(key) {
+		return locker.validateKey(key);
 	}
 
 	static getLocationOnPointForUser(userId, geoData, isAllowed) {

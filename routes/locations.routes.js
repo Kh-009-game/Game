@@ -16,6 +16,7 @@ router.get(
 );
 router.post(
 	'/create',
+	locationMiddlewares.checkOccupationLocker,
 	locationMiddlewares.checkIsCurrent,
 	locationController.occupyLocation
 );
