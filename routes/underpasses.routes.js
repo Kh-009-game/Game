@@ -1,9 +1,11 @@
 const express = require('express');
 const underpassesController = require('../controllers/underpasses-controller');
 const underpassMiddlewares = require('../middleware/underpass-middlewares');
+const lifecycleMiddleware = require('../middleware/lifecycle-middleware');
 
 const router = express.Router();
 
+router.use(lifecycleMiddleware.checkLifecycle);
 router.get(
 	'/',
 	underpassesController.getAllUnderpasses

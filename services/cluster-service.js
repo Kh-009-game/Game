@@ -24,34 +24,47 @@ class ClientClusterObject extends ClientLocationObject {
 		this.underpassesTo = underpassesTo;
 	}
 
-	static createClientClusterObjectByIdForUser(locationId, userId) {
-		return Location.findById(locationId, {
-			include: [{
-				model: User
-			}, {
-				model: Location,
-				as: 'underpassTo'
-			}, {
-				model: Location,
-				as: 'underpassFrom'
-			}]
-		})
-			.then(location => logService.getLastLifeCycleEventDate()
-				.then((lastLifeCycleEventDate) => {
-					location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
-					return new ClientClusterObject(location, userId);
-				})
-			);
-	}
+	// static createClientClusterObjectByIdForUser(locationId, userId) {
+	// 	return Location.findById(locationId, {
+	// 		include: [{
+	// 			model: User
+	// 		}, {
+	// 			model: Location,
+	// 			as: 'underpassTo'
+	// 		}, {
+	// 			model: Location,
+	// 			as: 'underpassFrom'
+	// 		}]
+	// 	})
+	// 		.then(location => logService.getLastLifeCycleEventDate()
+	// 			.then((lastLifeCycleEventDate) => {
+	// 				location.dataValues.lastLifeCycleEventDate = lastLifeCycleEventDate;
+	// 				return new ClientClusterObject(location, userId);
+	// 			})
+	// 		);
+	// }
 
-	static getUsersLocationIds(userId) {
-		return Location.findAll({
-			attributes: ['id'],
-			where: {
-				user_id: userId
-			}
-		});
-	}
+	// static getUsersLocationIds(userId) {
+	// 	return Location.findAll({
+	// 		attributes: ['id'],
+	// 		where: {
+	// 			user_id: userId
+	// 		}
+	// 	});
+	// }
+
+	// static getNorthWestByLocId(id) {
+	// 	return Location.findById(id, {
+	// 		attributes: ['lat', 'lng']
+	// 	})
+	// 		.then((location) => {
+	// 			const northWest = {
+	// 				lat: location.dataValues.lat,
+	// 				lng: location.dataValues.lng
+	// 			};
+	// 			return northWest;
+	// 		});
+	// }
 }
 
 module.exports = ClientClusterObject;

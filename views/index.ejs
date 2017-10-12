@@ -1,5 +1,9 @@
 <!DOCTYPE html>
+<%if (!isLifecycle) { %>
 <html lang="en">
+<% } else { %>
+<html lang="en" class="locked">
+<% } %>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">

@@ -1,8 +1,7 @@
 const eventEmitter = require('./eventEmitter-service');
-const ClientClusterObject = require('./cluster-service');
+const ClientLocationObject = require('./location-service');
 const EmptyLocationObject = require('./grid-service');
 const Underpass = require('../models/underpass');
-const Location = require('../models/location-orm');
 
 class UnderpassClientObject {
 	constructor(underpass) {
@@ -27,17 +26,17 @@ class UnderpassClientObject {
 	}
 
 	static getAllUnderpassesForUser(userId) {
-		return ClientClusterObject.getUsersLocationIds(userId)
-			.then((data) => {
+		return ClientLocationObject.getUsersLocationIds(userId)
+			.then((ids) => {
 				const userLocIds1 = [];
 				const userLocIds2 = [];
 
-				data.forEach((item) => {
+				ids.forEach((item) => {
 					userLocIds1.push({
-						loc_id_1: item.dataValues.id
+						loc_id_1: item
 					});
 					userLocIds2.push({
-						loc_id_2: item.dataValues.id
+						loc_id_2: item
 					});
 				});
 
@@ -58,50 +57,26 @@ class UnderpassClientObject {
 	}
 
 	static getAvailableLocIdsForUser(locFromId, userId) {
-		const allowedIds = [];
-		const prohibitedIds = [];
-		let bounds;
-		let excludeBounds;
-		return Location.findById(locFromId)
-			.then((location) => {
-				bounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 5);
-				excludeBounds = UnderpassClientObject.calcPermittedBoundsForLocation(location, 1);
+		let includedBounds;
+		let excludedBounds;
+		return ClientLocationObject.getNorthWestByLocId(locFromId)
+			.then((northWestPoint) => {
+				includedBounds = UnderpassClientObject.calcPermittedBoundsForLocation(northWestPoint, 5);
+				excludedBounds = UnderpassClientObject.calcPermittedBoundsForLocation(northWestPoint, 1);
 
-				return Underpass.findAllForLocId(locFromId);
+				return Underpass.getLocIdsAvailableInBounds(locFromId, userId, {
+					includedBounds,
+					excludedBounds
+				});
 			})
-			.then((underpasses) => {
-				const excludedIds = [];
-				excludedIds.push(locFromId);
-				underpasses.forEach((item) => {
-					const id1 = item.dataValues.loc_id_1;
-					const id2 = item.dataValues.loc_id_2;
-					excludedIds.push(id1);
-					excludedIds.push(id2);
+			.then((allowedIds) => {
+				const ids = [];
+
+				allowedIds.forEach((item) => {
+					ids.push(item.dataValues.id);
 				});
 
-				return Location.findAllUsersLocIdsWithinRectangle(bounds, userId, excludedIds);
-			})
-			.then((data) => {
-				data.forEach((item) => {
-					allowedIds.push(item.dataValues.id);
-				});
-				return Location.findAllUsersLocIdsWithinRectangle(excludeBounds, userId);
-			})
-			.then((data) => {
-				data.forEach((item) => {
-					prohibitedIds.push(item.dataValues.id);
-				});
-
-				return allowedIds.filter((item) => {
-					if (!prohibitedIds.length) return item;
-					for (let i = 0, max = prohibitedIds.length; i < max; i += 1) {
-						if (item === prohibitedIds[i]) {
-							prohibitedIds.splice(i, 1);
-							return false;
-						}
-					}
-					return item;
-				});
+				return ids;
 			});
 	}
 
@@ -117,14 +92,14 @@ class UnderpassClientObject {
 				loc_id_2: locationIdTo,
 				distance_lat: distance.distanceLat,
 				distance_lng: distance.distanceLng
-			}));
+			}))
+			.then(() => {
+				eventEmitter.emit('underpass-created');
+			});
 	}
 
-	static calcPermittedBoundsForLocation(location, index) {
-		const locGridObject = new EmptyLocationObject({
-			lat: +location.dataValues.lat,
-			lng: +location.dataValues.lng
-		});
+	static calcPermittedBoundsForLocation(northWestPoint, index) {
+		const locGridObject = new EmptyLocationObject(northWestPoint);
 
 		const relLatSize = EmptyLocationObject.relLatSize / 10000000;
 		const relLngSize = locGridObject.relLngSize / 10000000;
@@ -140,20 +115,14 @@ class UnderpassClientObject {
 	static calcUnderpassDistanceByLocIds(locationIdFrom, locationIdTo) {
 		let locationFrom;
 		let locationTo;
-		return Location.findById(locationIdFrom)
-			.then((foundLocationFrom) => {
-				locationFrom = new EmptyLocationObject({
-					lat: +foundLocationFrom.dataValues.lat,
-					lng: +foundLocationFrom.dataValues.lng
-				});
+		return ClientLocationObject.getNorthWestByLocId(locationIdFrom)
+			.then((northWestPoint) => {
+				locationFrom = new EmptyLocationObject(northWestPoint);
 
-				return Location.findById(locationIdTo);
+				return ClientLocationObject.getNorthWestByLocId(locationIdTo);
 			})
-			.then((foundLocationTo) => {
-				locationTo = new EmptyLocationObject({
-					lat: +foundLocationTo.dataValues.lat,
-					lng: +foundLocationTo.dataValues.lng
-				});
+			.then((northWestPoint) => {
+				locationTo = new EmptyLocationObject(northWestPoint);
 
 				return UnderpassClientObject.calcUnderpassDistance(
 					locationFrom,
