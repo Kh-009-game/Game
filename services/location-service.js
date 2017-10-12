@@ -52,7 +52,7 @@ class ClientLocationObject extends EmptyLocation {
 	static occupyLocationByUser(userId, locData) {
 		const key = locData.northWest;
 
-		Location.occupyByUser(userId, locData)
+		return Location.occupyByUser(userId, locData)
 			.then(() => {
 				eventEmitter.emit('location-created', {
 					lat: locData.northWest.lat,
@@ -188,7 +188,7 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static checkIsCurrentPermission(locationData, userGeodata, isAdmin) {
-		if (isAdmin) Promise.resolve();
+		if (isAdmin) return Promise.resolve();
 
 		const properLocCoords = EmptyLocation.calcNorthWestByPoint(userGeodata);
 

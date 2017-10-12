@@ -18,7 +18,9 @@ module.exports.checkIsCurrent = (req, res, next) => {
 		.then(() => {
 			next();
 		})
-		.catch(err => Promise.reject(err));
+		.catch((err) => {
+			next(err);
+		});
 };
 
 module.exports.checkDailyBank = (req, res, next) => {
@@ -33,7 +35,9 @@ module.exports.checkDailyBank = (req, res, next) => {
 		.then(() => {
 			next();
 		})
-		.catch(err => Promise.reject(err));
+		.catch((err) => {
+			next(err);
+		});
 };
 
 module.exports.checkOwner = (req, res, next) => {
@@ -47,7 +51,9 @@ module.exports.checkOwner = (req, res, next) => {
 		.then(() => {
 			next();
 		})
-		.catch(err => Promise.reject(err));
+		.catch((err) => {
+			next(err);
+		});
 };
 
 module.exports.checkOwnerAndIsCurrent = (req, res, next) => {
@@ -62,7 +68,9 @@ module.exports.checkOwnerAndIsCurrent = (req, res, next) => {
 		.then(() => {
 			next();
 		})
-		.catch(err => Promise.reject(err));
+		.catch((err) => {
+			next(err);
+		});
 };
 
 module.exports.attachClientLocObject = (req, res, next) => {
@@ -76,5 +84,7 @@ module.exports.attachClientLocObject = (req, res, next) => {
 			req.body.requestedLocation = location;
 			next();
 		})
-		.catch(err => Promise.reject(err));
+		.catch((err) => {
+			next(err);
+		});
 };

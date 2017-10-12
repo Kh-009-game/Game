@@ -5,5 +5,7 @@ module.exports.checkLifecycle = (req, res, next) => {
 		.then(() => {
 			next();
 		})
-		.catch(err => Promise.reject(err));
+		.catch((err) => {
+			next(err);
+		});
 };
