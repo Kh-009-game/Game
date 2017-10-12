@@ -1,6 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const User = require('../models/user-orm');
+// const User = require('../models/user-orm');
 const nodemailer = require('nodemailer');
 const db = require('../services/db-transport');
 const Config = require('../config');
@@ -17,17 +17,21 @@ const transporter = nodemailer.createTransport({
 });
 
 router.get(
-	'/',
+	'/login',
 	userController.getLoginForm
 );
-router.post(
-	'/',
-	userController.loginUser
-);
+// router.post(
+// 	'/',
+// 	userController.loginUser
+// );
 router.post(
 	'/register',
 	userController.createUser
 );
+// router.get(
+// 	'/logout',
+// 	userController.logOut
+// );
 
 
 // router.route('/login')
