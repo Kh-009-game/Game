@@ -18,16 +18,22 @@ class Locker {
 	}
 
 	check() {
-		if (this.locker) {
-			throw this.err;
-		}
+		return new Promise((res, rej) => {
+			if (this.locker) {
+				rej(this.err);
+			}
+			res();
+		});
 	}
 
 	validateKey(key) {
-		if (this.checkKey(key)) {
-			throw this.err;
-		}
-		this.addKey(key);
+		return new Promise((res, rej) => {
+			if (this.checkKey(key)) {
+				rej(this.err);
+			}
+			this.addKey(key);
+			res();
+		});
 	}
 
 	findKey(key) {

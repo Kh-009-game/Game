@@ -9,7 +9,7 @@ const router = express.Router();
 router.use(lifecycleMiddleware.checkLifecycle);
 router.put(
 	'/emit',
-	lifecycleMiddleware.isLifecycle,
+	lifecycleMiddleware.checkLifecycle,
 	authorizationMiddleware.isAdmin,
 	LifeCycleController.emitLifecycle
 );
