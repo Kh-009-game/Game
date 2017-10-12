@@ -153,7 +153,6 @@ class BoundService {
 		return nextLoc;
 	}
 
-
 	calcNextLocOnLng(location, i) {
 		const growthCoof = this.growthCoofs[i].lng;
 		const lngDiff = growthCoof * (location.relLngSize / 10000000);
@@ -161,11 +160,41 @@ class BoundService {
 		const nextLocCenterLng = location.center.lng + lngDiff;
 		const nextLocCenter = {
 			lat: location.center.lat,
-			lng: nextLocCenterLng		};
+			lng: nextLocCenterLng
+		};
 
 		const nextLoc = EmptyLocation.createLocationByPoint(nextLocCenter);
 
 		return nextLoc;
+	}
+
+	containsLocByNorthWest(point) {
+		const borderLocsOnLat = [];
+
+		this.borderLocs.forEach((location) => {
+			const borderLat = location.northWest.lat;
+			if (borderLat === point.lat) {
+				borderLocsOnLat.push(location);
+			}
+		});
+
+		const len = borderLocsOnLat.length;
+
+		if (!len) return false;
+
+		for (let i = 0; i < len; i += 2) {
+			const centerLng1 = borderLocsOnLat[i].northWest.lng;
+			const centerLng2 = borderLocsOnLat[i + 1].northWest.lng;
+
+			const lngMax = centerLng1 > centerLng2 ? centerLng1 : centerLng2;
+			const lngMin = centerLng1 < centerLng2 ? centerLng1 : centerLng2;
+
+			if ((point.lng < lngMax) && (point.lng > lngMin)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
 
