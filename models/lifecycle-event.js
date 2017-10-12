@@ -20,4 +20,9 @@ LifeCycleEvent.createIfNone = () => LifeCycleEvent.findById(1)
 		return Promise.resolve();
 	});
 
+LifeCycleEvent.getLifeCycleDate = () =>	LifeCycleEvent.findById(1, {
+	attributes: ['updated_at']
+})
+	.then(data => data.dataValues.updated_at);
+
 module.exports = LifeCycleEvent;

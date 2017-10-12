@@ -2,14 +2,10 @@
 
 class Game {
 	constructor(options) {
-		// use template for output
 		options = options || {};
 
-		// this.locInfoContainer = options.locInfoContainer || document.querySelector('.loc-info');
 		this.locInfoBlock = document.querySelector('.location-block');
 		this.locInfoMenu = document.querySelector('.location-menu');
-		// this.clickedLocInfo = options.locInfoContainer || this.locInfoContainer;
-		// this.currentLocInfo = options.locInfoContainer || this.locInfoContainer;
 		this.clickedLocInfo = document.querySelector('.clicked-loc-info');
 		this.currentLocInfo = document.querySelector('.current-loc-info');
 		this.occupyFormContainer = document.querySelector('.form-container');
@@ -21,7 +17,7 @@ class Game {
 		this.occLocRenderedEvent = new CustomEvent('occloc-ready', {
 			bubbles: true
 		});
-		this.gameArea;
+		this.gameArea = null;
 		this.occupyBtn = document.getElementById('occupy-btn');
 		this.userMarker = null;
 		this.map = options.map || null;
@@ -448,6 +444,7 @@ class Game {
 	}
 
 	refreshOccupiedLocations() {
+		// this.lockLocMenu();
 		this.getOccupiedLocations()
 			.then((locArray) => {
 				console.dir(locArray);
@@ -462,17 +459,23 @@ class Game {
 					this.renderFullLocation(location);
 				});
 
-				return this.renderCurrentLocationInfo();
+				return this.refreshUnderpasses();
 			})
+
+			.then(() => this.renderCurrentLocationInfo())
 			.then(() => this.refreshHighlightedLocation())
+			.then(() => {
+				this.unlockLocMenu();
+			})
 			.catch((err) => {
+				this.unlockLocMenu();
 				this.errorHandler(err);
 			});
 	}
 
 	refreshHighlightedLocation() {
-		if (!this.highlightedLocation) return;
-		this.getLocationByCoords(this.highlightedLocation.northWest)
+		if (!this.highlightedLocation) return Promise.resolve();
+		return this.getLocationByCoords(this.highlightedLocation.northWest)
 			.then((location) => {
 				this.removeHighlight();
 				const locId = location.locationId;
@@ -487,13 +490,11 @@ class Game {
 					} else {
 						this.hightlightCurrentEmptyLocation();
 					}
-					return this.renderHighlightedLocationTextInfo();
-				}
-				if (location.locationId) {
+				} else if (locId) {
 					this.highlightOccupiedLocation(location);
-					return this.renderHighlightedLocationTextInfo();
+				} else {
+					this.highlightEmptyLocation(location);
 				}
-				this.highlightEmptyLocation(location);
 				return this.renderHighlightedLocationTextInfo();
 			})
 			.catch((err) => {
@@ -579,7 +580,7 @@ class Game {
 				});
 				this.map.fitBounds(bounds);
 
-				if (userLocations.length === 1) {					
+				if (userLocations.length === 1) {
 					this.highlightOccupiedLocation(userLocations[0]);
 					this.renderHighlightedLocationTextInfo();
 				} else {
@@ -589,7 +590,7 @@ class Game {
 				const zoom = this.map.getZoom();
 				if (zoom > 15) {
 					this.map.setZoom(15);
-				}				
+				}
 				this.showUserIcons();
 			})
 			.catch((err) => {
@@ -693,7 +694,7 @@ class Game {
 	// UNDERPASSES RENDER METHODS
 
 	renderUnderpasses() {
-		this.getUnderpasses()
+		return this.getUnderpasses()
 			.then((underpasses) => {
 				this.underpasses = underpasses;
 				this.underpasses.forEach((item) => {
@@ -716,7 +717,7 @@ class Game {
 
 	refreshUnderpasses() {
 		this.clearUnderpasses();
-		this.renderUnderpasses();
+		return this.renderUnderpasses();
 	}
 
 	renderUnderpass(underpass) {
@@ -743,7 +744,7 @@ class Game {
 
 	initUnderpassCreation() {
 		const locId = this.highlightedLocation.locationId;
-
+		this.lockLocMenu();
 		this.showUnderpassCreationForm()
 			.then(() => this.getAvailableLocsForConnection(locId))
 			.then((ids) => {
@@ -751,8 +752,10 @@ class Game {
 				this.highlightAvailableForUnderpass();
 				this.initUnderpassCreationHandler();
 				console.log(ids);
+				this.unlockLocMenu();
 			})
 			.catch((err) => {
+				this.unlockLocMenu();
 				this.errorHandler(err);
 			});
 	}
@@ -776,6 +779,7 @@ class Game {
 		const locId1 = +form['loc-from-id'].value;
 		const locId2 = +form['loc-to-id'].value;
 
+		this.lockLocMenu();
 		this.createUnderpass(locId1, locId2)
 			.then(() => {
 				this.resetUnderpassCreationHandler();
@@ -818,12 +822,19 @@ class Game {
 			this.renderHightlightedFeatureInfo(event);
 		});
 		this.map.data.addListener(this.highlightFeatureMapListener);
-		google.maps.event.removeListener(this.createUnderpassMapListener);		
+		google.maps.event.removeListener(this.createUnderpassMapListener);
 		this.centerUserLocationsBtn.style.display = 'block';
 		this.showUserLocationsBtn.style.display = 'block';
 		this.clearMap();
-		this.refreshHighlightedLocation();
 		this.renderLocationsArray();
+		this.refreshHighlightedLocation()
+			.then(() => {
+				this.unlockLocMenu();
+			})
+			.catch((err) => {
+				this.unlockLocMenu();
+				this.errorHandler(err);
+			});
 	}
 
 	chooseUnderpassLocToId(locToId) {
@@ -1012,17 +1023,23 @@ class Game {
 	}
 
 	renderHighlightedLocationTextInfo() {
+		this.lockLocMenu();
 		return this.updateHighlightedLocationTextInfo()
 			.then(() => {
 				this.locInfoMenu.className = 'location-menu open';
 				this.locInfoBlock.className = 'location-block show-clicked';
+				this.unlockLocMenu();
 			});
 	}
 
 	updateHighlightedLocationTextInfo() {
+		if (this.locInfoBlock.classList.contains('show-clicked')) {
+			this.lockLocMenu();
+		}
 		return this.getLocInfoHTML(this.highlightedLocation)
 			.then((response) => {
 				this.clickedLocInfo.innerHTML = response;
+				this.unlockLocMenu();
 				return Promise.resolve();
 			});
 	}
@@ -1058,25 +1075,31 @@ class Game {
 	}
 
 	showOccupationForm() {
+		this.lockLocMenu();
 		this.getLocOccupFormHTML()
 			.then((response) => {
 				this.occupyFormContainer.innerHTML = response;
 				this.locInfoBlock.className = 'location-block show-form';
+				this.unlockLocMenu();
 				document.getElementById('loc-name-field').focus();
 			})
 			.catch((err) => {
+				this.unlockLocMenu();
 				this.errorHandler(err);
 			});
 	}
 
 	showHighlightedOccupationForm() {
+		this.lockLocMenu();
 		this.getClickedLocOccupFormHTML()
 			.then((response) => {
 				this.occupyFormContainer.innerHTML = response;
 				this.locInfoBlock.className = 'location-block show-form';
+				this.unlockLocMenu();
 				document.getElementById('loc-name-field').focus();
 			})
 			.catch((err) => {
+				this.unlockLocMenu();
 				this.errorHandler(err);
 			});
 	}
@@ -1106,23 +1129,27 @@ class Game {
 	}
 
 	occupyCurrentLocation() {
+		this.lockLocMenu();
 		this.occupyLocation(this.currentLocation)
 			.then(() => {
 				console.log('Congrats! You\'ve occupied the location!');
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
+				this.unlockLocMenu();
 				this.errorHandler(err);
 				this.hideOccupationForm();
 			});
 	}
 
 	occupyHighlightedLocation() {
+		this.lockLocMenu();
 		this.occupyLocation(this.highlightedLocation)
 			.then(() => {
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
+				this.unlockLocMenu();
 				this.errorHandler(err);
 				this.hideOccupationForm();
 			});
@@ -1150,6 +1177,7 @@ class Game {
 	}
 
 	showEditingLocForm() {
+		this.lockLocMenu();
 		this.getLocOccupFormHTML(
 			this.highlightedLocation
 		)
@@ -1157,7 +1185,12 @@ class Game {
 				this.occupyFormContainer.innerHTML = response;
 				this.locInfoBlock.className = 'location-block';
 				this.locInfoBlock.classList.add('show-form');
+				this.unlockLocMenu();
 				document.getElementById('loc-name-field').focus();
+			})
+			.catch((err) => {
+				this.unlockLocMenu();
+				this.errorHandler(err);
 			});
 	}
 
@@ -1194,16 +1227,22 @@ class Game {
 	}
 
 	deleteLocHandler() {
+		this.lockLocMenu();
 		const confirmation = confirm(`Are you sure you want to delete ${this.highlightedLocation.locationName}?`);
 
-		if (!confirmation) return;
+		if (!confirmation) {
+			this.unlockLocMenu();
+			return;
+		}
 
 		this.deleteHighlightedLocation()
 			.then(() => {
 				// need refresh locations method
+				this.unlockLocMenu();
 				console.log('You\'ve deleted location');
 			})
 			.catch((err) => {
+				this.unlockLocMenu();
 				this.errorHandler(err);
 			});
 	}
@@ -1260,6 +1299,7 @@ class Game {
 	}
 
 	takeDailyBank() {
+		this.lockLocMenu();
 		return new Promise((res, rej) => {
 			const createLocationXHR = new XMLHttpRequest();
 			createLocationXHR.open('PUT', `api/locations/${this.currentLocation.locationId}/get-bank`);
@@ -1282,8 +1322,10 @@ class Game {
 			.then(() => {
 				this.currentLocation.dailyBank = 0;
 				this.renderCurrentOccupiedLocation(this.currentLocation);
+				this.unlockLocMenu();
 			})
 			.catch((err) => {
+				this.unlockLocMenu();
 				this.errorHandler(err);
 			});
 	}
@@ -1399,14 +1441,14 @@ class Game {
 	showUserGeodata(coords) {
 		this.setUserGeoData(coords);
 		this.renderCurrentUserMarker();
-		this.renderCurrentLocationInfo()
+		return this.renderCurrentLocationInfo()
 			.then(() => {
 				this.highlightCurrentLocation();
 				return this.renderHighlightedLocationTextInfo();
 			})
 			.then(() => {
 				this.locInfoMenu.classList.add('open');
-				return Promise.resolve();
+				this.unlockUI();
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -1530,6 +1572,14 @@ class Game {
 		document.documentElement.classList.remove('locked');
 	}
 
+	lockLocMenu() {
+		this.locInfoMenu.classList.add('locked');
+	}
+
+	unlockLocMenu() {
+		this.locInfoMenu.classList.remove('locked');
+	}
+
 	initApp() {
 		this.getGameBounds()
 			.then((boundsCoords) => {
@@ -1596,8 +1646,9 @@ function initMap() {
 			});
 		});
 		socket.on('daily-event', () => {
-			game.unlockUI();
-			if (!game.currentLocation) {
+			if (game.currentLocation) {
+				game.unlockUI();
+			} else {
 				game.initApp();
 			}
 		});

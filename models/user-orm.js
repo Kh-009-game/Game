@@ -42,4 +42,22 @@ const User = sequelize.define('user', {
 	underscored: true
 });
 
+User.giveCashById = (userId, cash, trans) => User.update({
+	cash: sequelize.literal(`cash + ${cash}`)
+}, {
+	where: {
+		id: userId
+	},
+	transaction: trans
+});
+
+User.takeCashById = (userId, cash, trans) => User.update({
+	cash: sequelize.literal(`cash - ${cash}`)
+}, {
+	where: {
+		id: userId
+	},
+	transaction: trans
+});
+
 module.exports = User;
