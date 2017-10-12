@@ -1,4 +1,5 @@
 const boundsService = require('../services/bounds-service');
+const bounds = require('../services/fieldBounds-service');
 
 // gameBounds
 module.exports.getGameBounds = (req, res, next) => {
