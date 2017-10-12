@@ -139,7 +139,7 @@ class ClientLocationObject extends EmptyLocation {
 				isAdmin
 			});
 		}
-		return Location.findByIdAllIncluded()
+		return Location.findByIdAllIncluded(locationId)
 			.then((location) => {
 				if (userId !== location.dataValues.user_id) {
 					throw new Error('No such rights!');
