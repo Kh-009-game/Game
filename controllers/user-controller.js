@@ -8,7 +8,7 @@ module.exports.getLoginForm = (req, res) => {
 // 	const password = req.body['log-pass'];
 // 	UserService.findUser(email, password);
 // };
-module.exports.createUser = (req, res) => {	
+module.exports.createUser = (req, res) => {
 	const userData = {
 		name: req.body['reg-name'],
 		email: req.body['reg-email'],
@@ -16,7 +16,11 @@ module.exports.createUser = (req, res) => {
 		passCheck: req.body['reg-pass-repeat']
 	};
 	console.log(userData);
-	UserService.createNewUser(userData);
+	UserService.createNewUser(userData)
+		.then(() => {
+			UserService.sendLetter(userData.email);
+		});
+
 	res.redirect('../');
 };
 

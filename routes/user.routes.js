@@ -1,20 +1,20 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 // const User = require('../models/user-orm');
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer');
 const db = require('../services/db-transport');
 const Config = require('../config');
 const userController = require('../controllers/user-controller');
 
 const router = express.Router();
 
-const transporter = nodemailer.createTransport({
-	service: 'gmail',
-	auth: {
-		user: process.env.SERVICE_EMAIL || Config.email,
-		pass: process.env.SERVICE_EMAIL_PASS || Config.emailPass
-	}
-});
+// const transporter = nodemailer.createTransport({
+// 	service: 'gmail',
+// 	auth: {
+// 		user: process.env.SERVICE_EMAIL || Config.email,
+// 		pass: process.env.SERVICE_EMAIL_PASS || Config.emailPass
+// 	}
+// });
 
 router.get(
 	'/login',
@@ -71,7 +71,7 @@ router.post(
 // 				res.redirect('/login');
 // 			});
 // 	});
-
+// -----------------------------------------------------
 // router.post('/register', (req, res) => {
 // 	const name = req.body['reg-name'];
 // 	const email = req.body['reg-email'];
