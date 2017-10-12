@@ -204,8 +204,6 @@ html.locked::before {
   line-height: 1;
   border-radius: 100px;
   display: block;
-  /* justify-content: center;
-  align-items: center; */
   border: none;
   outline: none;
   margin: 10px 0;
