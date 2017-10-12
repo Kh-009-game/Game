@@ -458,8 +458,10 @@ class Game {
 					this.renderFullLocation(location);
 				});
 
-				return this.renderCurrentLocationInfo();
+				return this.refreshUnderpasses();
 			})
+
+			.then(() => this.renderCurrentLocationInfo())
 			.then(() => this.refreshHighlightedLocation())
 			.catch((err) => {
 				this.errorHandler(err);
@@ -687,7 +689,7 @@ class Game {
 	// UNDERPASSES RENDER METHODS
 
 	renderUnderpasses() {
-		this.getUnderpasses()
+		return this.getUnderpasses()
 			.then((underpasses) => {
 				this.underpasses = underpasses;
 				this.underpasses.forEach((item) => {
@@ -710,7 +712,7 @@ class Game {
 
 	refreshUnderpasses() {
 		this.clearUnderpasses();
-		this.renderUnderpasses();
+		return this.renderUnderpasses();
 	}
 
 	renderUnderpass(underpass) {
