@@ -5,7 +5,7 @@
   box-sizing: border-box;
 }
 .material-icons {
-  vertical-align: -3px;
+   vertical-align: -3px; 
   font-size: 1.2em;
 }
 body {
@@ -194,17 +194,18 @@ html.locked::before {
   transform: rotate(0);
 }
 .main-btns .btn-icon {
-  width: 1.5em;
-  height: 1.5em;
+  padding: 5px;
+  padding-top: 6px;
+  padding-bottom: 4px;
   background-color: #fff;
   color: #7d7abc;
   font-size: 1.7em;
   box-shadow: 0 0 20px 0px rgba(0,0,0,.2);
   line-height: 1;
   border-radius: 100px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display: block;
+  /* justify-content: center;
+  align-items: center; */
   border: none;
   outline: none;
   margin: 10px 0;
