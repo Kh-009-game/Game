@@ -444,6 +444,7 @@ class Game {
 	}
 
 	refreshOccupiedLocations() {
+		// this.lockLocMenu();
 		this.getOccupiedLocations()
 			.then((locArray) => {
 				console.dir(locArray);
@@ -463,7 +464,11 @@ class Game {
 
 			.then(() => this.renderCurrentLocationInfo())
 			.then(() => this.refreshHighlightedLocation())
+			.then(() => {
+				this.unlockLocMenu();
+			})
 			.catch((err) => {
+				this.unlockLocMenu();
 				this.errorHandler(err);
 			});
 	}
@@ -1018,17 +1023,23 @@ class Game {
 	}
 
 	renderHighlightedLocationTextInfo() {
+		this.lockLocMenu();
 		return this.updateHighlightedLocationTextInfo()
 			.then(() => {
 				this.locInfoMenu.className = 'location-menu open';
 				this.locInfoBlock.className = 'location-block show-clicked';
+				this.unlockLocMenu();
 			});
 	}
 
 	updateHighlightedLocationTextInfo() {
+		if (this.locInfoBlock.classList.contains('show-clicked')) {
+			this.lockLocMenu();
+		}
 		return this.getLocInfoHTML(this.highlightedLocation)
 			.then((response) => {
 				this.clickedLocInfo.innerHTML = response;
+				this.unlockLocMenu();
 				return Promise.resolve();
 			});
 	}
@@ -1121,7 +1132,6 @@ class Game {
 		this.lockLocMenu();
 		this.occupyLocation(this.currentLocation)
 			.then(() => {
-				this.unlockLocMenu();
 				console.log('Congrats! You\'ve occupied the location!');
 				this.hideOccupationForm();
 			})
@@ -1136,7 +1146,6 @@ class Game {
 		this.lockLocMenu();
 		this.occupyLocation(this.highlightedLocation)
 			.then(() => {
-				this.unlockLocMenu();
 				this.hideOccupationForm();
 			})
 			.catch((err) => {
@@ -1221,7 +1230,10 @@ class Game {
 		this.lockLocMenu();
 		const confirmation = confirm(`Are you sure you want to delete ${this.highlightedLocation.locationName}?`);
 
-		if (!confirmation) return;
+		if (!confirmation) {
+			this.unlockLocMenu();
+			return;
+		}
 
 		this.deleteHighlightedLocation()
 			.then(() => {
@@ -1429,14 +1441,14 @@ class Game {
 	showUserGeodata(coords) {
 		this.setUserGeoData(coords);
 		this.renderCurrentUserMarker();
-		this.renderCurrentLocationInfo()
+		return this.renderCurrentLocationInfo()
 			.then(() => {
 				this.highlightCurrentLocation();
 				return this.renderHighlightedLocationTextInfo();
 			})
 			.then(() => {
 				this.locInfoMenu.classList.add('open');
-				return Promise.resolve();
+				this.unlockUI();
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -1634,8 +1646,9 @@ function initMap() {
 			});
 		});
 		socket.on('daily-event', () => {
-			game.unlockUI();
-			if (!game.currentLocation) {
+			if (game.currentLocation) {
+				game.unlockUI();
+			} else {
 				game.initApp();
 			}
 		});
