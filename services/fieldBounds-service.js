@@ -119,6 +119,7 @@ class BoundService {
 	}
 
 	calcNextLocationByPointIndex(location, i) {
+		let nextLoc;
 		const nextLatLoc = this.calcNextLocOnLat(location, i);
 
 		const latForCheck = nextLatLoc.center.lat;
@@ -130,12 +131,12 @@ class BoundService {
 		});
 
 		if (northWest.lng === nextLatLoc.northWest.lng) {
-			return nextLatLoc;
+			nextLoc = nextLatLoc;
+		} else {
+			nextLoc = this.calcNextLocOnLng(location, i);
 		}
 
-		const nextLngLoc = this.calcNextLocOnLng(location, i);
-
-		return nextLngLoc;
+		return nextLoc;
 	}
 
 	calcNextLocOnLat(location, i) {
@@ -308,19 +309,18 @@ class BoundService {
 		const next = growthCoofs.next;
 		if (
 			((prev.lat !== 0) && (prev.lng !== 0)) &&
-						((next.lat !== 0) && (next.lng !== 0))
+			((next.lat !== 0) && (next.lng !== 0))
 		) {
 			growthCoofs.description = 'sharpAngle';
-			return growthCoofs;
 		} else if ((prev.lat === 0) && (next.lat === 0)) {
 			growthCoofs.description = 'horizontal';
-			return growthCoofs;
 		} else if ((prev.lng === 0) && (next.lng === 0)) {
 			growthCoofs.description = 'vertical';
-			return growthCoofs;
+		} else {
+			growthCoofs.description = 'rectangle';
+			growthCoofs = this.setGrowthCoofsRectangleProps(growthCoofs);
 		}
-		growthCoofs.description = 'rectangle';
-		return this.setGrowthCoofsRectangleProps(growthCoofs);
+		return growthCoofs;
 	}
 
 	setGrowthCoofsRectangleProps(growthCoofs) {
