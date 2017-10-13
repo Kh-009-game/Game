@@ -41,7 +41,7 @@ class BoundService {
 			borderLocs = borderLocs.concat(locsOnBorder);
 		}
 
-		return borderLocs;
+		return this.getPreparedBorderLocs(borderLocs);
 	}
 
 	get borderEquations() {
@@ -172,9 +172,170 @@ class BoundService {
 		return this.extractContour;
 	}
 
-	extractContour() {
+	// extractContour() {    
+	// 	const contourA = [];
+	//   const contourB = [];
 
+	//   const 
+
+	//   const startPointA = 
+	//   const startPointB = 
+	// }
+
+	divideLocPoints(location, locGrowthCoofs) {
+		const locPoints = location.mapFeatureCoords;
+
+		let dividedPoints;
+		let pointsA;
+		let pointsB;
+
+		switch (locGrowthCoofs.description) {
+			case 'sharpAngle':
+				pointsA = locPoints;
+				pointsB = [];
+				break;
+			case 'horizontal':
+				pointsA = [locPoints[1], locPoints[4]];
+				pointsB = [locPoints[2], locPoints[3]];
+				break;
+			case 'vertical':
+				pointsA = [locPoints[1], locPoints[2]];
+				pointsB = [locPoints[3], locPoints[4]];
+				break;
+			default:
+				dividedPoints = this.divideRectangleLocPoints(locPoints, locGrowthCoofs);
+		}
+
+		dividedPoints = dividedPoints || {
+			pointsA,
+			pointsB
+		};
+
+		return dividedPoints;
 	}
+
+	divideRectangleLocPoints(locPoints, locGrowthCoofs) {
+		let pointsA;
+		let pointsB;
+
+		switch (locGrowthCoofs.angleDirection) {
+			case 'northWest':
+				pointsA = [locPoints[1], locPoints[2], locPoints[4]];
+				pointsB = [locPoints[3]];
+				break;
+			case 'northEast':
+				pointsA = [locPoints[1], locPoints[3], locPoints[4]];
+				pointsB = [locPoints[2]];
+				break;
+			case 'southWest':
+				pointsA = [locPoints[1], locPoints[2], locPoints[3]];
+				pointsB = [locPoints[4]];
+				break;
+			case 'southEast':
+				pointsA = [locPoints[2], locPoints[3], locPoints[4]];
+				pointsB = [locPoints[1]];
+				break;
+			default:
+				pointsA = [];
+				pointsB = [];
+		}
+
+		return {
+			pointsA,
+			pointsB
+		};
+	}
+
+	prepareBorderLocs(locArray) {
+		const preparedLocsArray = locArray.slice(0);
+
+		for (let i = 0, len = locArray.length; i < len; i += 1) {
+			const locCoofs = this.getLocGrowsCoofs(0, locArray);
+			if (!(locCoofs.description === 'sharpAngle')) return preparedLocsArray;
+
+			const currentLoc = preparedLocsArray.shift();
+			preparedLocsArray.push(currentLoc);
+		}
+
+		return [];
+	}
+
+	getBorderLocGrowsCoofsByIndex(i) {
+		return this.getLocGrowsCoofs(i, this.borderLocations);
+	}
+
+	getLocGrowsCoofs(i, locArray) {
+		const len = locArray.length;
+		const currentLoc = locArray[i];
+		const prevLoc = locArray[i - 1] || locArray[len - 1];
+		const nextLoc = locArray[i + 1] || locArray[0];
+
+		const prevCoofs = this.getGrowthCoofsForTwoLocs(prevLoc, currentLoc);
+		const nextCoofs = this.getGrowthCoofsForTwoLocs(currentLoc, nextLoc);
+
+		return {
+			prev: prevCoofs,
+			next: nextCoofs
+		};
+	}
+
+	getGrowthCoofsForTwoLocs(prevLoc, nextLoc) {
+		const prevNorthWest = prevLoc.northWest;
+		const nextNorthWest = nextLoc.northWest;
+
+		const latCoof = this.calcLocGrowthCoof(prevNorthWest.lat, nextNorthWest.lat);
+		const lngCoof = this.calcLocGrowthCoof(prevNorthWest.lng, nextNorthWest.lng);
+
+		return this.setGrowthCoofsQuickProps({
+			lat: latCoof,
+			lng: lngCoof
+		});
+	}
+
+	calcLocGrowthCoof(prevValue, nextValue) {
+		prevValue = Math.round(prevValue * 10000000);
+		nextValue = Math.round(nextValue * 10000000);
+
+		const diff = prevValue - nextValue;
+
+		if (diff === 0) return 0;
+
+		return diff > 0 ? 1 : -1;
+	}
+
+	setGrowthCoofsProps(growthCoofs) {
+		const prev = growthCoofs.prev;
+		const next = growthCoofs.next;
+		if (
+			((prev.lat !== 0) && (prev.lng !== 0)) &&
+						((next.lat !== 0) && (next.lng !== 0))
+		) {
+			growthCoofs.description = 'sharpAngle';
+			return growthCoofs;
+		} else if ((prev.lat === 0) && (next.lat === 0)) {
+			growthCoofs.description = 'horizontal';
+			return growthCoofs;
+		} else if ((prev.lng === 0) && (next.lng === 0)) {
+			growthCoofs.description = 'vertical';
+			return growthCoofs;
+		}
+		growthCoofs.description = 'rectangle';
+		return this.setGrowthCoofsRectangleProps(growthCoofs);
+	}
+
+	setGrowthCoofsRectangleProps(growthCoofs) {
+		const prev = growthCoofs.prev;
+		const next = growthCoofs.next;
+		const vertCoofs = prev.lat === 0 ? prev : next;
+		const horCoofs = prev.lng === 0 ? prev : next;
+
+		const vertical = horCoofs.lat > 0 ? 'north' : 'south';
+		const horizontal = vertCoofs.lng > 0 ? 'East' : 'West';
+
+		growthCoofs.angleDirection = vertical + horizontal;
+		return growthCoofs;
+	}
+
 
 	// containsLocByNorthWest(point) {
 	// 	const borderLocsOnLat = [];
