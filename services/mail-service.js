@@ -14,8 +14,8 @@ class Letter {
 			from: '"Game team" <gamekh009@gmail.com>', // sender address
 			to: email, // receivers
 			subject: 'Hello! new user! ✔', // Subject line
-			text: 'Hello! We are glad that you joined our game', // plain text body
-			html: '<b>Hello! We are glad that you joined our game!</b>' // html body
+			text: 'Hello! We are glad that you joined our game on https://mice-lord.herokuapp.com/', // plain text body
+			html: '<b>Hello! We are glad that you joined our game on https://mice-lord.herokuapp.com/!</b>' // html body
 		};
 	}
 

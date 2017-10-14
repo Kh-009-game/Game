@@ -1,5 +1,5 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
+// const jwt = require('jsonwebtoken');
 // const User = require('../models/user-orm');
 // const nodemailer = require('nodemailer');
 const db = require('../services/db-transport');
@@ -20,24 +20,25 @@ router.get(
 	'/login',
 	userController.getLoginForm
 );
-// router.post(
-// 	'/',
-// 	userController.loginUser
-// );
+router.post(
+	'/login',
+	userController.loginUser
+);
 router.post(
 	'/register',
 	userController.createUser
 );
-// router.get(
-// 	'/logout',
-// 	userController.logOut
-// );
+router.get(
+	'/logout',
+	userController.logOut
+);
 
 
 // router.route('/login')
 // 	.get((req, res) => {
 // 		res.render('login');
 // 	})
+// ---------------------
 // 	.post((req, res) => {
 // 		const email = req.body['log-email'];
 // 		const password = req.body['log-pass'];

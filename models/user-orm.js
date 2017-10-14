@@ -48,4 +48,10 @@ User.makeUser = userData => User.create({
 	password: userData.password
 });
 
+User.findPerson = mail => User.findOne({
+	where: {
+		email: mail
+	}
+});
+
 module.exports = User;
