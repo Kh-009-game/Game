@@ -6,6 +6,10 @@ const BoundPoint = sequelize.define('field_bound', {
 		type: Sequelize.INTEGER,
 		allowNull: false
 	},
+	point_order: {
+		type: Sequelize.INTEGER,
+		allowNull: false
+	},
 	lat: {
 		type: Sequelize.DECIMAL,
 		unique: 'coords',
@@ -35,6 +39,7 @@ BoundPoint.getFigurePointsById = id => BoundPoint.findAll({
 	}
 })
 	.then((points) => {
+		points.sort((pointA, pointB) => pointA.point_order - pointB.point_order);
 		const pointsArray = [];
 		points.forEach((point) => {
 			pointsArray.push({
@@ -45,33 +50,5 @@ BoundPoint.getFigurePointsById = id => BoundPoint.findAll({
 
 		return pointsArray;
 	});
-
-
-// BoundPoint.sync()
-// 	.then(() => BoundPoint.create({
-// 		figure_id: 1,
-// 		lat: 49.88562,
-// 		lng: 36.38594
-// 	}))
-// 	.then(() => BoundPoint.create({
-// 		figure_id: 1,
-// 		lat: 49.88612,
-// 		lng: 36.38527
-// 	}))
-// 	.then(() => BoundPoint.create({
-// 		figure_id: 1,
-// 		lat: 50.105247,
-// 		lng: 36.263049
-// 	}))
-// 	.then(() => BoundPoint.create({
-// 		figure_id: 1,
-// 		lat: 50.036626,
-// 		lng: 36.125492
-// 	}))
-// 	.then(() => BoundPoint.create({
-// 		figure_id: 1,
-// 		lat: 49.881126,
-// 		lng: 36.150734
-//   }));
 
 module.exports = BoundPoint;
