@@ -474,6 +474,7 @@ class Game {
 	}
 
 	refreshHighlightedLocation() {
+		const locOld = this.highlightedLocation;
 		if (!this.highlightedLocation) return Promise.resolve();
 		return this.getLocationByCoords(this.highlightedLocation.northWest)
 			.then((location) => {
@@ -495,7 +496,9 @@ class Game {
 				} else {
 					this.highlightEmptyLocation(location);
 				}
-				return this.renderHighlightedLocationTextInfo();
+				if (this.isLocationUpdated(locOld, this.highlightedLocation)) {
+					return this.renderHighlightedLocationTextInfo();
+				}
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -1415,10 +1418,10 @@ class Game {
 		// const locInfoClassList = this.locInfoBlock.className;
 		// const locMenuClassList = this.locInfoMenu.className;
 		this.setUserGeoData(coords);
-		this.renderCurrentUserMarker();
 
 		this.renderCurrentLocationInfo()
 			.then(() => {
+				this.renderCurrentUserMarker();
 				if (this.highlightedLocation) {
 					const currentIsHighlighted = (
 						(this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat) &&
@@ -1564,6 +1567,18 @@ class Game {
 		return google.maps.geometry.poly.containsLocation(latLng, this.gameArea);
 	}
 
+	isLocationUpdated(locOld, locNew) {
+		const keys = Object.keys(locNew);
+
+		for (let i = 0, len = keys.length; i < len; i += 1) {
+			const key = keys[i];
+			if (locOld[key] !== locNew[key]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	lockUI() {
 		document.documentElement.classList.add('locked');
 	}
@@ -1679,7 +1694,6 @@ function initMap() {
 				game.clearIcons();
 			}
 		});
-
 
 		game.initApp();
 
