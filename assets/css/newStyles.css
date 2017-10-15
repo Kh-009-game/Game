@@ -23,7 +23,7 @@ body {
 html.locked::before {
   display: block;
   content: '';
-  background-image: url('../img/loading.gif');
+  background-image: url('../img/loading.svg');
   background-repeat: no-repeat;
   background-position: 50% 50%;
   position: absolute;
