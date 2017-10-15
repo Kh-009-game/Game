@@ -9,7 +9,7 @@ module.exports.loginUser = (req, res) => {
 	const password = req.body['log-pass'];
 	UserService.findUser(email)
 		.then((data) => {
-			console.log(data);
+			// console.log(data);
 			if (data.password !== password) {
 				res.redirect('/login');
 			}
@@ -42,13 +42,15 @@ module.exports.createUser = (req, res) => {
 		password: req.body['reg-pass'],
 		passCheck: req.body['reg-pass-repeat']
 	};
-	console.log(userData);
 	if (userData.password !== userData.passCheck) {
 		res.send('Passwords didn\'t match.');
 	} else {
 		UserService.createNewUser(userData)
 			.then(() => {
+				console.log('New user was added to db');
 				UserService.sendLetter(userData.email);
+			}).catch((error) => {
+				console.log('error:', error);
 			});
 		res.redirect('../');
 	}

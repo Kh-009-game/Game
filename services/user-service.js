@@ -8,9 +8,7 @@ class UserObject {
 	}
 
 	static createNewUser(userData) {
-		return User.makeUser(userData)
-			.then(() => console.log('New user was added to db'))
-			.catch(error => console.log('error:', error));
+		return User.makeUser(userData);
 	}
 
 	static sendLetter(email) {
