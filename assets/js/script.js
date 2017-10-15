@@ -1415,9 +1415,9 @@ class Game {
 
 	// GOOGLE MAP AND HTML5 GEOLOCATION INTERACTION METHODS
 	refreshUserGeodata(coords) {
-		// const locInfoClassList = this.locInfoBlock.className;
-		// const locMenuClassList = this.locInfoMenu.className;
 		this.setUserGeoData(coords);
+
+		const oldHighLoc = this.highlightedLocation;
 
 		this.renderCurrentLocationInfo()
 			.then(() => {
@@ -1432,7 +1432,9 @@ class Game {
 							return this.updateCurrentEmptyLocation();
 						}
 						this.highlightOccupiedLocation(this.currentLocation);
-						return this.updateHighlightedLocationTextInfo();
+						if (this.isLocationUpdated(oldHighLoc, this.highlightedLocation)) {
+							return this.updateHighlightedLocationTextInfo();
+						}
 					}
 				}
 			})
@@ -1694,6 +1696,7 @@ function initMap() {
 				game.clearIcons();
 			}
 		});
+
 
 		game.initApp();
 
