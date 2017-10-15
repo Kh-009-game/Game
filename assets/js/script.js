@@ -1432,7 +1432,7 @@ class Game {
 							return this.updateCurrentEmptyLocation();
 						}
 						this.highlightOccupiedLocation(this.currentLocation);
-						if (this.isLocationUpdated(oldHighLoc, this.highlightedLocation)) {
+						if (!oldHighLoc || this.isLocationUpdated(oldHighLoc, this.highlightedLocation)) {
 							return this.updateHighlightedLocationTextInfo();
 						}
 					}
@@ -1574,8 +1574,13 @@ class Game {
 
 		for (let i = 0, len = keys.length; i < len; i += 1) {
 			const key = keys[i];
+			if (typeof locNew[key] === "object") {
+				const result = this.isLocationUpdated(locOld[key], locNew[key]);
+
+				if (result === true) return result;
+			}
 			if (locOld[key] !== locNew[key]) {
-				return true;
+				return true;				
 			}
 		}
 		return false;
@@ -1723,6 +1728,13 @@ function initMap() {
 					lng: position.coords.longitude
 				});
 			});
+
+			// setInterval(() => {
+			// 	game.refreshUserGeodata({
+			// 		lat: game.userGeoData.lat,
+			// 		lng: game.userGeoData.lng
+			// 	});
+			// }, 5000);
 
 			game.highlightGridMapListener = map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
