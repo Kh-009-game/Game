@@ -51,17 +51,38 @@ class EmptyLocation {
 			lng: +this.northWest.lng
 		}, {
 			// south west
-			lat: ((this.northWest.lat * 10000000) - EmptyLocation.relLatSize) / 10000000,
+			lat: (Math.round(this.northWest.lat * 10000000) - EmptyLocation.relLatSize) / 10000000,
 			lng: +this.northWest.lng
 		}, {
 			// south east
-			lat: ((this.northWest.lat * 10000000) - EmptyLocation.relLatSize) / 10000000,
-			lng: ((this.northWest.lng * 10000000) + this.relLngSize) / 10000000
+			lat: (Math.round(this.northWest.lat * 10000000) - EmptyLocation.relLatSize) / 10000000,
+			lng: (Math.round(this.northWest.lng * 10000000) + this.relLngSize) / 10000000
 		}, {
 			// north east
 			lat: +this.northWest.lat,
-			lng: ((this.northWest.lng * 10000000) + this.relLngSize) / 10000000
+			lng: (Math.round(this.northWest.lng * 10000000) + this.relLngSize) / 10000000
 		}];
+	}
+
+	intersectLine(lineFuncs) {
+		const points = this.mapFeatureCoords;
+		const north = points[0].lat;
+		const south = points[1].lat;
+		const east = points[2].lng;
+		const west = points[1].lng;
+		const northIntLng = lineFuncs.getLng(north);
+		const southIntLng = lineFuncs.getLng(south);
+
+		if (
+			(northIntLng <= east && northIntLng >= west) ||
+			(southIntLng <= east && southIntLng >= west) ||
+			(northIntLng >= east && southIntLng <= west) ||
+			(southIntLng >= east && northIntLng <= west)
+		) {
+			return true;
+		}
+
+		return false;
 	}
 
 	static calcRelLatSize() {
@@ -155,7 +176,7 @@ class EmptyLocation {
 		let lngPrimeFactorsArr = EmptyLocation.findPrimeFactors(
 			3600000000 / EmptyLocation.initialRelativeLngSize
 		);
-		lngPrimeFactorsArr.splice(-1);
+		lngPrimeFactorsArr.pop();
 
 		lngPrimeFactorsArr = lngPrimeFactorsArr.map((item) => {
 			if (item > 2) {
@@ -257,52 +278,67 @@ class EmptyLocation {
 	}
 
 
-	static get equatorLength() {
-		return 40075696;
-	}
+	// static get equatorLength() {
+	// 	return 40075696;
+	// }
 
-	static get planetRadius() {
-		return 6370997;
-	}
+	// static get planetRadius() {
+	// 	return 6370997;
+	// }
 
-	static get meridianLength() {
-		return 20004274;
-	}
+	// static get meridianLength() {
+	// 	return 20004274;
+	// }
 
-	static get preferableLocSideSize() {
-		return 100;
-	}
+	// static get preferableLocSideSize() {
+	// 	return 100;
+	// }
 
-	static get locSideMetersSizeOnEquatorLat() {
-		return EmptyLocation.preferableLocSideSize * 1.5;
-	}
+	// static get locSideMetersSizeOnEquatorLat() {
+	// 	return EmptyLocation.preferableLocSideSize * 1.5;
+	// }
 
-	static get minAbsoluteLatSize() {
-		return EmptyLocation.meridianLength / 1800000000;
-	}
+	// static get minAbsoluteLatSize() {
+	// 	return EmptyLocation.meridianLength / 1800000000;
+	// }
 
-	static get minAbsoluteLngSize() {
-		return EmptyLocation.equatorLength / 3600000000;
-	}
+	// static get minAbsoluteLngSize() {
+	// 	return EmptyLocation.equatorLength / 3600000000;
+	// }
 
-	static get lngSizeCoefficients() {
-		return this.getLatutideBreakpointsObject();
-	}
+	// static get lngSizeCoefficients() {
+	// 	return this.getLatutideBreakpointsObject();
+	// }
 
-	static get latBreakPoints() {
-		return Object.keys(EmptyLocation.lngSizeCoefficients);
-	}
+	// static get latBreakPoints() {
+	// 	return Object.keys(EmptyLocation.lngSizeCoefficients);
+	// }
 
-	static get relLatSize() {
-		return EmptyLocation.calcRelLatSize();
-	}
+	// static get relLatSize() {
+	// 	return EmptyLocation.calcRelLatSize();
+	// }
 
-	static get initialRelativeLngSize() {
-		return EmptyLocation.getClosestRelSize(
-			Math.round(
-				EmptyLocation.locSideMetersSizeOnEquatorLat / EmptyLocation.minAbsoluteLngSize
-			), 'lng');
-	}
+	// static get initialRelativeLngSize() {
+	// 	return EmptyLocation.getClosestRelSize(
+	// 		Math.round(
+	// 			EmptyLocation.locSideMetersSizeOnEquatorLat / EmptyLocation.minAbsoluteLngSize
+	// 		), 'lng');
+	// }
 }
+
+EmptyLocation.equatorLength = 40075696;
+EmptyLocation.planetRadius = 6370997;
+EmptyLocation.meridianLength = 20004274;
+EmptyLocation.preferableLocSideSize = 100;
+EmptyLocation.locSideMetersSizeOnEquatorLat = EmptyLocation.preferableLocSideSize * 1.5;
+EmptyLocation.minAbsoluteLatSize = EmptyLocation.meridianLength / 1800000000;
+EmptyLocation.minAbsoluteLngSize = EmptyLocation.equatorLength / 3600000000;
+EmptyLocation.relLatSize = EmptyLocation.calcRelLatSize();
+EmptyLocation.initialRelativeLngSize = EmptyLocation.getClosestRelSize(
+	Math.round(
+		EmptyLocation.locSideMetersSizeOnEquatorLat / EmptyLocation.minAbsoluteLngSize
+	), 'lng');
+EmptyLocation.lngSizeCoefficients = EmptyLocation.getLatutideBreakpointsObject();
+EmptyLocation.latBreakPoints = Object.keys(EmptyLocation.lngSizeCoefficients);
 
 module.exports = EmptyLocation;
