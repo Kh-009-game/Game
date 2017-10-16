@@ -341,4 +341,9 @@ EmptyLocation.initialRelativeLngSize = EmptyLocation.getClosestRelSize(
 EmptyLocation.lngSizeCoefficients = EmptyLocation.getLatutideBreakpointsObject();
 EmptyLocation.latBreakPoints = Object.keys(EmptyLocation.lngSizeCoefficients);
 
+console.dir(EmptyLocation.calcNorthWestByPoint({
+	lat: 1,
+	lng: 1
+}));
+
 module.exports = EmptyLocation;
