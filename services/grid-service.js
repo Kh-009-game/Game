@@ -1,3 +1,5 @@
+const config = require('../config.json');
+
 class EmptyLocation {
 	constructor(northWestPoint, isAllowed) {
 		this.northWest = northWestPoint;
@@ -256,21 +258,20 @@ class EmptyLocation {
 		return checkedLng === lng;
 	}
 
-
 	static get equatorLength() {
-		return 40075696;
+		return config.equator;
 	}
 
 	static get planetRadius() {
-		return 6370997;
+		return config.planetRadius;
 	}
 
 	static get meridianLength() {
-		return 20004274;
+		return config.meridian;
 	}
 
 	static get preferableLocSideSize() {
-		return 100;
+		return config.LocSideSize;
 	}
 
 	static get locSideMetersSizeOnEquatorLat() {
