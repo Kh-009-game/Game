@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const config = require('../config.json');
 
-const database = config.dbNmme;
+const database = config.dbName;
 const user = process.env[config.dbUser];
 const password = process.env[config.dbPass];
 const host = config.dbHost;
