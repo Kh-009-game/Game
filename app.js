@@ -39,7 +39,7 @@ app.use(express.static('assets'));
 app.use(favicon('./assets/favicon.png'));
 
 app.use('/user', userRoutes);
-app.use('/', auth);
+app.use('/', auth.checkToken);
 app.all('/', indexRoutes);
 app.use('/api/lifecycle', lifecycleRoutes);
 app.use('/api/bounds', boundsRoutes);

@@ -1,5 +1,6 @@
 const User = require('../models/user-orm');
 const Letter = require('../services/mail-service');
+const jwt = require('jsonwebtoken');
 
 class UserObject {
 	constructor(userData) {
@@ -18,6 +19,17 @@ class UserObject {
 
 	static findUser(email) {
 		return User.findPerson(email);
+	}
+
+	static verifyToken(token) {
+		return new Promise((resolve, reject) => {
+			jwt.verify(token.auth, 'secret', (err, decoded) => {
+				if (err) {
+					reject(err);
+				}
+				resolve(decoded);
+			});
+		});
 	}
 }
 
