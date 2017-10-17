@@ -1,3 +1,5 @@
+const config = require('../config.json');
+
 class EmptyLocation {
 	constructor(northWestPoint, isAllowed) {
 		this.northWest = northWestPoint;
@@ -277,53 +279,21 @@ class EmptyLocation {
 		return checkedLng === lng;
 	}
 
+	static get equatorLength() {
+		return config.equator;
+	}
 
-	// static get equatorLength() {
-	// 	return 40075696;
-	// }
+	static get planetRadius() {
+		return config.planetRadius;
+	}
 
-	// static get planetRadius() {
-	// 	return 6370997;
-	// }
+	static get meridianLength() {
+		return config.meridian;
+	}
 
-	// static get meridianLength() {
-	// 	return 20004274;
-	// }
-
-	// static get preferableLocSideSize() {
-	// 	return 100;
-	// }
-
-	// static get locSideMetersSizeOnEquatorLat() {
-	// 	return EmptyLocation.preferableLocSideSize * 1.5;
-	// }
-
-	// static get minAbsoluteLatSize() {
-	// 	return EmptyLocation.meridianLength / 1800000000;
-	// }
-
-	// static get minAbsoluteLngSize() {
-	// 	return EmptyLocation.equatorLength / 3600000000;
-	// }
-
-	// static get lngSizeCoefficients() {
-	// 	return this.getLatutideBreakpointsObject();
-	// }
-
-	// static get latBreakPoints() {
-	// 	return Object.keys(EmptyLocation.lngSizeCoefficients);
-	// }
-
-	// static get relLatSize() {
-	// 	return EmptyLocation.calcRelLatSize();
-	// }
-
-	// static get initialRelativeLngSize() {
-	// 	return EmptyLocation.getClosestRelSize(
-	// 		Math.round(
-	// 			EmptyLocation.locSideMetersSizeOnEquatorLat / EmptyLocation.minAbsoluteLngSize
-	// 		), 'lng');
-	// }
+	static get preferableLocSideSize() {
+		return config.LocSideSize;
+	}
 }
 
 EmptyLocation.equatorLength = 40075696;
