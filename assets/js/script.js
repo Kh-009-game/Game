@@ -1421,28 +1421,45 @@ class Game {
 
 		this.renderCurrentLocationInfo()
 			.then(() => {
-				this.renderCurrentUserMarker();
-				if (this.highlightedLocation) {
-					const currentIsHighlighted = (
-						(this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat) &&
-						(this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng)
-					);
-					if (currentIsHighlighted) {
-						if (!this.currentLocation.locationId) {
-							return this.updateCurrentEmptyLocation();
-						}
-						this.highlightOccupiedLocation(this.currentLocation);
-						if (!oldHighLoc || this.isLocationUpdated(oldHighLoc, this.highlightedLocation)) {
-							return this.updateHighlightedLocationTextInfo();
+				if (!this.checkIfLocContainsThePoint(coords, this.currentLocation)) {
+					// this.renderCurrentUserMarker();
+
+					if (this.highlightedLocation) {
+						const currentIsHighlighted = (
+							(this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat) &&
+								(this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng)
+						);
+						if (currentIsHighlighted) {
+							if (!this.currentLocation.locationId) {
+								return this.updateCurrentEmptyLocation();
+							}
+							this.highlightOccupiedLocation(this.currentLocation);
+							if (!oldHighLoc || this.isLocationUpdated(oldHighLoc, this.highlightedLocation)) {
+								return this.updateHighlightedLocationTextInfo();
+							}
 						}
 					}
 				}
+			})
+			.then(() => {
+				this.renderCurrentUserMarker();
 			})
 			.catch((err) => {
 				this.errorHandler(err);
 			});
 	}
 
+
+	checkIfLocContainsThePoint(point, loc) {
+		const latLng = new google.maps.LatLng(point.lat, point.lng);
+		const locGeometry = new google.maps.Polygon({ paths: [loc.mapFeatureCoords] });
+		if (google.maps.geometry.poly.containsLocation(latLng, locGeometry)) {
+			console.log('contains');
+			return true;
+		}
+		console.log('does not contain');
+		return false;
+	}
 	showUserGeodata(coords) {
 		this.setUserGeoData(coords);
 		this.renderCurrentUserMarker();
@@ -1574,13 +1591,13 @@ class Game {
 
 		for (let i = 0, len = keys.length; i < len; i += 1) {
 			const key = keys[i];
-			if (typeof locNew[key] === "object") {
+			if (typeof locNew[key] === 'object') {
 				const result = this.isLocationUpdated(locOld[key], locNew[key]);
 
 				if (result === true) return result;
 			}
 			if (locOld[key] !== locNew[key]) {
-				return true;				
+				return true;
 			}
 		}
 		return false;
@@ -1728,7 +1745,6 @@ function initMap() {
 					lng: position.coords.longitude
 				});
 			});
-
 			// setInterval(() => {
 			// 	game.refreshUserGeodata({
 			// 		lat: game.userGeoData.lat,
