@@ -26,7 +26,7 @@ const Location = sequelize.define('location', {
 					lng: this.dataValues.lng
 				};
 
-				BoundsService.validateGameBoundsByBoundsId(latLng)
+				BoundsService.validateGameBoundsByBoundsId(latLng, 1)
 					.then((result) => {
 						if (!result) throw new Error('Out of bounds');
 					});

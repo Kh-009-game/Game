@@ -12,5 +12,6 @@
   "equator":40075696,
   "planetRadius":6370997,
   "meridian":20004274,
-  "LocSideSize":100
+  "LocSideSize":100,
+  "boundsId": 1
 }

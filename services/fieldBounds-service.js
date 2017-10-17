@@ -615,22 +615,26 @@ class BoundService {
 		};
 	}
 
-	static getGameBounds(id) {
+	static getBoundsById(id) {
 		if (BoundService.cache[id]) {
-			return Promise.resolve(BoundService.cache[id].contourPoly);
+			return Promise.resolve(BoundService.cache[id]);
 		}
 
 		return FieldBound.getFigurePointsById(id)
 			.then((points) => {
 				const bounds = new BoundService(points);
 				BoundService.cache[id] = bounds;
-
-				return bounds.contourPoly;
+				return bounds;
 			});
 	}
 
+	static getGameBoundsPolygon(id) {
+		return BoundService.getBoundsById(id)
+			.then(bounds => bounds.contourPoly);
+	}
+
 	static validateGameBoundsByBoundsId(northWest, id) {
-		return BoundService.getGameBounds(id)
+		return BoundService.getBoundsById(id)
 			.then(bounds => bounds.containsLocByNorthWest(northWest));
 	}
 }
