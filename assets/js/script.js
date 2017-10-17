@@ -474,6 +474,7 @@ class Game {
 	}
 
 	refreshHighlightedLocation() {
+		const locOld = this.highlightedLocation;
 		if (!this.highlightedLocation) return Promise.resolve();
 		return this.getLocationByCoords(this.highlightedLocation.northWest)
 			.then((location) => {
@@ -495,7 +496,9 @@ class Game {
 				} else {
 					this.highlightEmptyLocation(location);
 				}
-				return this.renderHighlightedLocationTextInfo();
+				if (this.isLocationUpdated(locOld, this.highlightedLocation)) {
+					return this.renderHighlightedLocationTextInfo();
+				}
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -1412,13 +1415,13 @@ class Game {
 
 	// GOOGLE MAP AND HTML5 GEOLOCATION INTERACTION METHODS
 	refreshUserGeodata(coords) {
-		// const locInfoClassList = this.locInfoBlock.className;
-		// const locMenuClassList = this.locInfoMenu.className;
 		this.setUserGeoData(coords);
-		this.renderCurrentUserMarker();
+
+		const oldHighLoc = this.highlightedLocation;
 
 		this.renderCurrentLocationInfo()
 			.then(() => {
+				this.renderCurrentUserMarker();
 				if (this.highlightedLocation) {
 					const currentIsHighlighted = (
 						(this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat) &&
@@ -1429,7 +1432,9 @@ class Game {
 							return this.updateCurrentEmptyLocation();
 						}
 						this.highlightOccupiedLocation(this.currentLocation);
-						return this.updateHighlightedLocationTextInfo();
+						if (!oldHighLoc || this.isLocationUpdated(oldHighLoc, this.highlightedLocation)) {
+							return this.updateHighlightedLocationTextInfo();
+						}
 					}
 				}
 			})
@@ -1562,6 +1567,23 @@ class Game {
 	checkPointContains(point) {
 		const latLng = new google.maps.LatLng(point.lat, point.lng);
 		return google.maps.geometry.poly.containsLocation(latLng, this.gameArea);
+	}
+
+	isLocationUpdated(locOld, locNew) {
+		const keys = Object.keys(locNew);
+
+		for (let i = 0, len = keys.length; i < len; i += 1) {
+			const key = keys[i];
+			if (typeof locNew[key] === "object") {
+				const result = this.isLocationUpdated(locOld[key], locNew[key]);
+
+				if (result === true) return result;
+			}
+			if (locOld[key] !== locNew[key]) {
+				return true;				
+			}
+		}
+		return false;
 	}
 
 	lockUI() {
@@ -1706,6 +1728,13 @@ function initMap() {
 					lng: position.coords.longitude
 				});
 			});
+
+			// setInterval(() => {
+			// 	game.refreshUserGeodata({
+			// 		lat: game.userGeoData.lat,
+			// 		lng: game.userGeoData.lng
+			// 	});
+			// }, 5000);
 
 			game.highlightGridMapListener = map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
