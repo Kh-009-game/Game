@@ -133,6 +133,13 @@ Location.occupyByUser = (userId, locData) => sequelize
 				transaction: trans
 			});
 		})
+		.then(() => User.update({
+			cash: sequelize.literal('cash - 150')
+		}, {
+			where: {
+				id: userId
+			}
+		}))
 	);
 
 Location.findOnPoint = point => Location.findOne({
