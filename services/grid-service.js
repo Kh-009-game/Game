@@ -278,28 +278,12 @@ class EmptyLocation {
 		});
 		return checkedLng === lng;
 	}
-
-	static get equatorLength() {
-		return config.equator;
-	}
-
-	static get planetRadius() {
-		return config.planetRadius;
-	}
-
-	static get meridianLength() {
-		return config.meridian;
-	}
-
-	static get preferableLocSideSize() {
-		return config.LocSideSize;
-	}
 }
 
-EmptyLocation.equatorLength = 40075696;
-EmptyLocation.planetRadius = 6370997;
-EmptyLocation.meridianLength = 20004274;
-EmptyLocation.preferableLocSideSize = 100;
+EmptyLocation.equatorLength = config.equator;
+EmptyLocation.planetRadius = config.planetRadius;
+EmptyLocation.meridianLength = config.meridian;
+EmptyLocation.preferableLocSideSize = config.LocSideSize;
 EmptyLocation.locSideMetersSizeOnEquatorLat = EmptyLocation.preferableLocSideSize * 1.5;
 EmptyLocation.minAbsoluteLatSize = EmptyLocation.meridianLength / 1800000000;
 EmptyLocation.minAbsoluteLngSize = EmptyLocation.equatorLength / 3600000000;
@@ -310,10 +294,5 @@ EmptyLocation.initialRelativeLngSize = EmptyLocation.getClosestRelSize(
 	), 'lng');
 EmptyLocation.lngSizeCoefficients = EmptyLocation.getLatutideBreakpointsObject();
 EmptyLocation.latBreakPoints = Object.keys(EmptyLocation.lngSizeCoefficients);
-
-console.dir(EmptyLocation.calcNorthWestByPoint({
-	lat: 1,
-	lng: 1
-}));
 
 module.exports = EmptyLocation;
