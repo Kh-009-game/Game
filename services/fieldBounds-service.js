@@ -195,17 +195,18 @@ class BoundService {
 
 	getStartPoint(isExcluded) {
 		const locGrowthCoofs = this.getLocGrowthCoofsByIndex(0);
+		const prev = locGrowthCoofs.prev;
 		let startPoints = this.getStartPoints(isExcluded);
 		const pointsLen = startPoints.length;
 
-		if (pointsLen === 2) {
-			startPoints = startPoints.sort((pointA, pointB) => this
-				.pointsSortFuncs.forTwo(pointA, pointB, locGrowthCoofs));
-		}
+		if (pointsLen > 1) {
+			startPoints = this.sortStartPoints(startPoints);
 
-		if (pointsLen === 3) {
-			startPoints = startPoints.sort((pointA, pointB) => this
-				.pointsSortFuncs.forThree(pointA, pointB, locGrowthCoofs));
+			if (prev.lat > 0 || prev.lng > 0) {
+				startPoints.pop();
+			} else {
+				startPoints.shift();
+			}
 		}
 
 		return startPoints[0];
@@ -216,6 +217,35 @@ class BoundService {
 		const startPoints = this.extractContourPoints(startLoc, isExcluded);
 
 		return startPoints;
+	}
+
+	sortStartPoints(points) {
+		const pointsLen = points.length;
+
+
+		if (pointsLen === 3) {
+			for (let i = 0; i < pointsLen; i += 1) {
+				const prevPoint = points[i - 1] || points[pointsLen - 1];
+				const nextPoint = points[i + 1] || points[0];
+				const prevPointCoof = this.calcGrowthCoofForLocPoints(prevPoint, points[i]);
+				const nextPointCoof = this.calcGrowthCoofForLocPoints(points[i], nextPoint);
+				if (
+					(prevPointCoof.lat === 0 || prevPointCoof.lng === 0) &&
+					(nextPointCoof.lat === 0 || nextPointCoof.lng === 0)
+				) {
+					points.splice(i, 1);
+				}
+			}
+		}
+
+		return points.sort((pointA, pointB) => {
+			const latDiff = pointA.lat - pointB.lat;
+			if (latDiff) {
+				return latDiff;
+			}
+
+			return pointA.lng - pointB.lng;
+		});
 	}
 
 	extractContourPoints(location, isExcluded) {
