@@ -2,7 +2,8 @@ const UnderpassClientObject = require('../services/underpass-service');
 
 module.exports.getAllUnderpasses = (req, res, next) => {
 	const userId = req.decoded.id;
-	UnderpassClientObject.getAllUnderpassesForUser(userId)
+	const isAdmin = req.decoded.isAdmin;
+	UnderpassClientObject.getAllUnderpassesForUser(userId, isAdmin)
 		.then((underpasses) => {
 			res.json(underpasses);
 		})

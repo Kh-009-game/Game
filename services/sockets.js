@@ -50,6 +50,13 @@ module.exports = function (io) {
 		});
 	});
 
+	eventEmitter.on('underpass-created', () => {
+		io.sockets.emit('underpass-update', {
+			type: 'msgUpdate',
+			text: 'Underpass has been created.'
+		});
+	});
+
 	eventEmitter.on('daily-event', () => {
 		io.sockets.emit('daily-event');
 		io.sockets.emit('update', {

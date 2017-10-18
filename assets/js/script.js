@@ -1663,6 +1663,12 @@ function initMap() {
 				text: 'Get ready for a new day...'
 			});
 		});
+
+		socket.on('underpass-update', (data) => {
+			game.setupMessageElement(data);
+			game.refreshUnderpasses();
+		});
+
 		socket.on('daily-event', () => {
 			if (game.currentLocation) {
 				game.unlockUI();
