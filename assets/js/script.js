@@ -1418,12 +1418,12 @@ class Game {
 		this.setUserGeoData(coords);
 
 		const oldHighLoc = this.highlightedLocation;
-
-		this.renderCurrentLocationInfo()
-			.then(() => {
-				if (!this.checkIfLocContainsThePoint(coords, this.currentLocation)) {
+		const loc = this.currentLocation;
+		if (loc === null || !this.checkIfLocContainsThePoint(coords, loc)) {
+			console.log(1);
+			this.renderCurrentLocationInfo()
+				.then(() => {
 					// this.renderCurrentUserMarker();
-
 					if (this.highlightedLocation) {
 						const currentIsHighlighted = (
 							(this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat) &&
@@ -1439,14 +1439,16 @@ class Game {
 							}
 						}
 					}
-				}
-			})
-			.then(() => {
-				this.renderCurrentUserMarker();
-			})
-			.catch((err) => {
-				this.errorHandler(err);
-			});
+				})
+				.then(() => {
+					this.renderCurrentUserMarker();
+				})
+				.catch((err) => {
+					this.errorHandler(err);
+				});
+		} else {
+			this.renderCurrentUserMarker();
+		}
 	}
 
 
@@ -1454,10 +1456,8 @@ class Game {
 		const latLng = new google.maps.LatLng(point.lat, point.lng);
 		const locGeometry = new google.maps.Polygon({ paths: [loc.mapFeatureCoords] });
 		if (google.maps.geometry.poly.containsLocation(latLng, locGeometry)) {
-			console.log('contains');
 			return true;
 		}
-		console.log('does not contain');
 		return false;
 	}
 	showUserGeodata(coords) {
