@@ -1,0 +1,17 @@
+{
+  "dbUser":"SERVICE_DB_USER",
+  "dbPass":"SERVICE_DB_PASS",
+  "dbHost":"ec2-23-21-85-76.compute-1.amazonaws.com",
+  "dbName":"detamp7dm7n5kt",  
+  "_dbName":"dc4ro46n0d2omf",
+  "_dbUser":"MY_DB_USER",
+  "_dbPass":"MY_DB_PASS",
+  "_dbHost":"ec2-46-137-108-117.eu-west-1.compute.amazonaws.com",
+  "serviceEmail":"SERVICE_EMAIL",
+  "serviceEmailPass":"SERVICE_EMAIL_PASS",
+  "equator":40075696,
+  "planetRadius":6370997,
+  "meridian":20004274,
+  "LocSideSize":100,
+  "boundsId": 1
+}

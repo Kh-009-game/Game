@@ -828,6 +828,7 @@ class Game {
 		google.maps.event.removeListener(this.createUnderpassMapListener);
 		this.centerUserLocationsBtn.style.display = 'block';
 		this.showUserLocationsBtn.style.display = 'block';
+		this.hideOccupationForm();
 		this.clearMap();
 		this.renderLocationsArray();
 		this.refreshHighlightedLocation()
@@ -1574,13 +1575,13 @@ class Game {
 
 		for (let i = 0, len = keys.length; i < len; i += 1) {
 			const key = keys[i];
-			if (typeof locNew[key] === "object") {
+			if (typeof locNew[key] === 'object') {
 				const result = this.isLocationUpdated(locOld[key], locNew[key]);
 
 				if (result === true) return result;
 			}
 			if (locOld[key] !== locNew[key]) {
-				return true;				
+				return true;
 			}
 		}
 		return false;

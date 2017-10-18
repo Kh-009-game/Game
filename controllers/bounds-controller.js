@@ -1,11 +1,11 @@
-const boundsService = require('../services/bounds-service');
+const BoundsService = require('../services/fieldBounds-service');
+const config = require('../config.json');
 
 // gameBounds
 module.exports.getGameBounds = (req, res, next) => {
-	boundsService.getGameBounds()
+	BoundsService.getGameBoundsPolygon(config.boundsId)
 		.then((points) => {
 			res.json(points);
 		})
 		.catch(err => next(err));
-	// res.json(boundsService.getGameBounds());
 };

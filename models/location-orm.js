@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../services/db-service-orm');
 const EmptyLocation = require('../services/grid-service');
-const boundsService = require('../services/bounds-service');
+const BoundsService = require('../services/fieldBounds-service');
 const LifeCycleEvent = require('../models/lifecycle-event');
 const User = require('../models/user-orm');
 
@@ -25,9 +25,11 @@ const Location = sequelize.define('location', {
 					lat: this.dataValues.lat,
 					lng: this.dataValues.lng
 				};
-				if (!boundsService.getEmptyLocationWithIsAllowedProp(latLng, true)) {
-					throw new Error('Out of bounds');
-				}
+
+				BoundsService.validateGameBoundsByBoundsId(latLng, 1)
+					.then((result) => {
+						if (!result) throw new Error('Out of bounds');
+					});
 			}
 		}
 	},
@@ -44,15 +46,6 @@ const Location = sequelize.define('location', {
 					this.dataValues.lng
 				)) {
 					throw new Error('Longitude is not valid!');
-				}
-			},
-			isAllowed() {
-				const latLng = {
-					lat: this.dataValues.lat,
-					lng: this.dataValues.lng
-				};
-				if (!boundsService.getEmptyLocationWithIsAllowedProp(latLng, true)) {
-					throw new Error('Out of bounds');
 				}
 			}
 		}
