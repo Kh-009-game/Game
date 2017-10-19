@@ -53,5 +53,22 @@ User.findPerson = mail => User.findOne({
 		email: mail
 	}
 });
+User.giveCashById = (userId, cash, trans) => User.update({
+	cash: sequelize.literal(`cash + ${cash}`)
+}, {
+	where: {
+		id: userId
+	},
+	transaction: trans
+});
+
+User.takeCashById = (userId, cash, trans) => User.update({
+	cash: sequelize.literal(`cash - ${cash}`)
+}, {
+	where: {
+		id: userId
+	},
+	transaction: trans
+});
 
 module.exports = User;

@@ -33,7 +33,6 @@ class Game {
 		this.occupiedLocationsIcons = {};
 		this.underpasses = [];
 		this.underpassesPolys = [];
-		this.infoBtn = document.getElementById('my-info');
 		this.sidebar = document.querySelector('.sidebar');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
@@ -144,10 +143,6 @@ class Game {
 					window.location.replace(srcXHR.responseURL);
 				});
 			});
-		});
-		this.infoBtn.addEventListener('click', (e) => {
-			e.preventDefault();
-			this.sidebar.classList.toggle('is-hidden');
 		});
 	}
 
@@ -474,6 +469,7 @@ class Game {
 	}
 
 	refreshHighlightedLocation() {
+		const locOld = this.highlightedLocation;
 		if (!this.highlightedLocation) return Promise.resolve();
 		return this.getLocationByCoords(this.highlightedLocation.northWest)
 			.then((location) => {
@@ -495,7 +491,9 @@ class Game {
 				} else {
 					this.highlightEmptyLocation(location);
 				}
-				return this.renderHighlightedLocationTextInfo();
+				if (this.isLocationUpdated(locOld, this.highlightedLocation)) {
+					return this.renderHighlightedLocationTextInfo();
+				}
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -825,6 +823,7 @@ class Game {
 		google.maps.event.removeListener(this.createUnderpassMapListener);
 		this.centerUserLocationsBtn.style.display = 'block';
 		this.showUserLocationsBtn.style.display = 'block';
+		this.hideOccupationForm();
 		this.clearMap();
 		this.renderLocationsArray();
 		this.refreshHighlightedLocation()
@@ -1412,32 +1411,51 @@ class Game {
 
 	// GOOGLE MAP AND HTML5 GEOLOCATION INTERACTION METHODS
 	refreshUserGeodata(coords) {
-		// const locInfoClassList = this.locInfoBlock.className;
-		// const locMenuClassList = this.locInfoMenu.className;
 		this.setUserGeoData(coords);
-		this.renderCurrentUserMarker();
 
-		this.renderCurrentLocationInfo()
-			.then(() => {
-				if (this.highlightedLocation) {
-					const currentIsHighlighted = (
-						(this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat) &&
-						(this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng)
-					);
-					if (currentIsHighlighted) {
-						if (!this.currentLocation.locationId) {
-							return this.updateCurrentEmptyLocation();
+		const oldHighLoc = this.highlightedLocation;
+		const loc = this.currentLocation;
+		if (loc === null || !this.checkIfLocContainsThePoint(coords, loc)) {
+			console.log(1);
+			this.renderCurrentLocationInfo()
+				.then(() => {
+					// this.renderCurrentUserMarker();
+					if (this.highlightedLocation) {
+						const currentIsHighlighted = (
+							(this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat) &&
+								(this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng)
+						);
+						if (currentIsHighlighted) {
+							if (!this.currentLocation.locationId) {
+								return this.updateCurrentEmptyLocation();
+							}
+							this.highlightOccupiedLocation(this.currentLocation);
+							if (!oldHighLoc || this.isLocationUpdated(oldHighLoc, this.highlightedLocation)) {
+								return this.updateHighlightedLocationTextInfo();
+							}
 						}
-						this.highlightOccupiedLocation(this.currentLocation);
-						return this.updateHighlightedLocationTextInfo();
 					}
-				}
-			})
-			.catch((err) => {
-				this.errorHandler(err);
-			});
+				})
+				.then(() => {
+					this.renderCurrentUserMarker();
+				})
+				.catch((err) => {
+					this.errorHandler(err);
+				});
+		} else {
+			this.renderCurrentUserMarker();
+		}
 	}
 
+
+	checkIfLocContainsThePoint(point, loc) {
+		const latLng = new google.maps.LatLng(point.lat, point.lng);
+		const locGeometry = new google.maps.Polygon({ paths: [loc.mapFeatureCoords] });
+		if (google.maps.geometry.poly.containsLocation(latLng, locGeometry)) {
+			return true;
+		}
+		return false;
+	}
 	showUserGeodata(coords) {
 		this.setUserGeoData(coords);
 		this.renderCurrentUserMarker();
@@ -1564,6 +1582,23 @@ class Game {
 		return google.maps.geometry.poly.containsLocation(latLng, this.gameArea);
 	}
 
+	isLocationUpdated(locOld, locNew) {
+		const keys = Object.keys(locNew);
+
+		for (let i = 0, len = keys.length; i < len; i += 1) {
+			const key = keys[i];
+			if (typeof locNew[key] === 'object') {
+				const result = this.isLocationUpdated(locOld[key], locNew[key]);
+
+				if (result === true) return result;
+			}
+			if (locOld[key] !== locNew[key]) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	lockUI() {
 		document.documentElement.classList.add('locked');
 	}
@@ -1645,6 +1680,12 @@ function initMap() {
 				text: 'Get ready for a new day...'
 			});
 		});
+
+		socket.on('underpass-update', (data) => {
+			game.setupMessageElement(data);
+			game.refreshUnderpasses();
+		});
+
 		socket.on('daily-event', () => {
 			if (game.currentLocation) {
 				game.unlockUI();
@@ -1706,6 +1747,12 @@ function initMap() {
 					lng: position.coords.longitude
 				});
 			});
+			// setInterval(() => {
+			// 	game.refreshUserGeodata({
+			// 		lat: game.userGeoData.lat,
+			// 		lng: game.userGeoData.lng
+			// 	});
+			// }, 5000);
 
 			game.highlightGridMapListener = map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);

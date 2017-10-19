@@ -19,15 +19,17 @@ class Locker {
 
 	check() {
 		if (this.locker) {
-			throw this.err;
+			return Promise.reject(this.err);
 		}
+		return Promise.resolve();
 	}
 
 	validateKey(key) {
 		if (this.checkKey(key)) {
-			throw this.err;
+			return Promise.reject(this.err);
 		}
 		this.addKey(key);
+		return Promise.resolve();
 	}
 
 	findKey(key) {

@@ -1,10 +1,9 @@
 const Sequelize = require('sequelize');
 const sequelize = require('../services/db-service-orm');
 const EmptyLocation = require('../services/grid-service');
-const boundsService = require('../services/bounds-service');
+const BoundsService = require('../services/fieldBounds-service');
 const LifeCycleEvent = require('../models/lifecycle-event');
 const User = require('../models/user-orm');
-
 
 const Location = sequelize.define('location', {
 	lat: {
@@ -26,9 +25,11 @@ const Location = sequelize.define('location', {
 					lat: this.dataValues.lat,
 					lng: this.dataValues.lng
 				};
-				if (!boundsService.getEmptyLocationWithIsAllowedProp(latLng, true)) {
-					throw new Error('Out of bounds');
-				}
+
+				BoundsService.validateGameBoundsByBoundsId(latLng, 1)
+					.then((result) => {
+						if (!result) throw new Error('Out of bounds');
+					});
 			}
 		}
 	},
@@ -45,15 +46,6 @@ const Location = sequelize.define('location', {
 					this.dataValues.lng
 				)) {
 					throw new Error('Longitude is not valid!');
-				}
-			},
-			isAllowed() {
-				const latLng = {
-					lat: this.dataValues.lat,
-					lng: this.dataValues.lng
-				};
-				if (!boundsService.getEmptyLocationWithIsAllowedProp(latLng, true)) {
-					throw new Error('Out of bounds');
 				}
 			}
 		}
@@ -141,6 +133,13 @@ Location.occupyByUser = (userId, locData) => sequelize
 				transaction: trans
 			});
 		})
+		.then(() => User.update({
+			cash: sequelize.literal('cash - 150')
+		}, {
+			where: {
+				id: userId
+			}
+		}))
 	);
 
 Location.findOnPoint = point => Location.findOne({
@@ -165,116 +164,105 @@ Location.deleteById = locationId => Location.destroy({
 	}
 });
 
-Location.doCheckinById = (locationId) => {
-	let lifeCycleDate;
-	let locIds;
-	return LifeCycleEvent.findById(1, {
-		attributes: ['updated_at']
-	})
-		.then((data) => {
-			lifeCycleDate = data.dataValues.updated_at;
+Location.doCheckinById = locationId => Location
+	.findAllConnectedLocIdsById(locationId)
+	.then(ids => Location.doCheckinByLocIds(ids));
 
-			return Location.findAllConnectedLocIdsById(locationId);
-		})
-		.then((ids) => {
-			locIds = ids;
-			return Location.update({
-				checkin_date: new Date()
-			}, {
-				where: {
-					id: {
-						[Sequelize.Op.in]: locIds
-					},
-					checkin_date: {
-						[Sequelize.Op.lt]: lifeCycleDate
-					}
-				}
-			});
-		});
-};
+Location.doCheckinByLocIds = locIds => LifeCycleEvent.getLifeCycleDate()
+	.then(date => Location.update({
+		checkin_date: new Date()
+	}, {
+		where: {
+			id: {
+				[Sequelize.Op.in]: locIds
+			},
+			checkin_date: {
+				[Sequelize.Op.lt]: date
+			}
+		}
+	}));
 
 Location.takeDailyBankById = (locationId) => {
-	let lifeCycleDate;
 	let locIds;
 	let masterId;
-	return LifeCycleEvent.findById(1, {
-		attributes: ['updated_at']
-	})
-		.then((data) => {
-			lifeCycleDate = data.dataValues.updated_at;
-
+	return Location.getMasterIdById(locationId)
+		.then((userId) => {
+			masterId = userId;
 			return Location.findAllConnectedLocIdsById(locationId);
 		})
 		.then((ids) => {
 			locIds = ids;
-			return Location.findAll({
-				attributes: ['loyal_population', 'saved_bank', 'user_id'],
-				where: {
-					id: {
-						[Sequelize.Op.in]: locIds
-					},
-					taking_bank_date: {
-						[Sequelize.Op.lt]: lifeCycleDate
-					}
-				}
-			});
+			return Location.getBankValueByIds(locIds);
 		})
-		.then((locations) => {
-			let bank = 0;
-
-			masterId = locations[0].dataValues.user_id;
-
-			locations.forEach((location) => {
-				bank += location.dataValues.loyal_population;
-				bank += location.dataValues.saved_bank;
-			});
-
-			return sequelize.transaction(trans => Location.update({
-				saved_bank: 0,
-				taking_bank_date: new Date()
-			}, {
-				where: {
-					id: {
-						[Sequelize.Op.in]: locIds
-					}
-				},
-				transaction: trans
-			})
-				.then(() => User.update({
-					cash: sequelize.literal(`cash + ${bank}`)
-				}, {
-					where: {
-						id: masterId
-					},
-					transaction: trans
-				})
-				));
-		});
+		.then(bank => Location.dailyBankTransaction(locIds, masterId, bank));
 };
+
+Location.getMasterIdById = locId => Location.findById(locId, {
+	attributes: ['user_id']
+})
+	.then(data => data.dataValues.user_id);
+
+Location.getBankValueByIds = ids => LifeCycleEvent.getLifeCycleDate()
+	.then(lifeCycleDate => Location.findAll({
+		attributes: ['loyal_population', 'saved_bank'],
+		where: {
+			id: {
+				[Sequelize.Op.in]: ids
+			},
+			taking_bank_date: {
+				[Sequelize.Op.lt]: lifeCycleDate
+			}
+		}
+	}))
+	.then((locations) => {
+		let bank = 0;
+
+		locations.forEach((location) => {
+			bank += location.dataValues.loyal_population;
+			bank += location.dataValues.saved_bank;
+		});
+
+		return bank;
+	});
+
+Location.dailyBankTransaction = (locIds, userId, bank) => sequelize
+	.transaction(trans => Location.resetDailyBankByIds(locIds, trans)
+		.then(() => User.giveCashById(userId, bank, trans))
+	);
+
+Location.resetDailyBankByIds = (ids, trans) => Location.update({
+	saved_bank: 0,
+	taking_bank_date: new Date()
+}, {
+	where: {
+		id: {
+			[Sequelize.Op.in]: ids
+		}
+	},
+	transaction: trans
+});
+
 
 Location.restoreLoyalPopulationByUserById = (locationId, userId) => Location
 	.findById(locationId)
 	.then((location) => {
 		const loyalPopulation = location.dataValues.loyal_population;
 		const population = location.dataValues.population;
+		const price = population - loyalPopulation;
 		return sequelize.transaction(
-			trans => Location.update({
-				loyal_population: population
-			}, {
-				where: {
-					id: locationId
-				},
-				transaction: trans
-			})
-				.then(() => User.update({
-					cash: sequelize.literal(`cash - ${population - loyalPopulation}`)
-				}, {
-					where: {
-						id: userId
-					},
-					transaction: trans
-				}))
+			trans => Location.setLoyalPopulation(locationId, population, trans)
+				.then(() => User.takeCashById(userId, price, trans))
 		);
+	});
+
+Location.setLoyalPopulation = (locId, population, trans) => Location
+	.update({
+		loyal_population: population
+	}, {
+		where: {
+			id: locId
+		},
+		transaction: trans
 	});
 
 

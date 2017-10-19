@@ -63,6 +63,18 @@ const Underpass = sequelize.define('underpass', {
 	underscored: true
 });
 
+Underpass.findAllIncluded = () => Underpass.findAll({
+	include: [{
+		model: Location,
+		association: 'underpassFrom',
+		as: 'underpassFrom'
+	}, {
+		model: Location,
+		association: 'underpassTo',
+		as: 'underpassTo'
+	}]
+});
+
 Underpass.findAllForByLocIdArray = locIdsObj => Underpass
 	.findAll({
 		where: {

@@ -2,8 +2,9 @@ const Location = require('../models/location-orm');
 const EmptyLocation = require('./grid-service');
 const eventEmitter = require('./eventEmitter-service');
 const Locker = require('./locker-service');
+const HttpError = require('./utils/http-error');
 
-const locker = new Locker(new Error('Location is being occupied!'));
+const locker = new Locker(new HttpError(409, HttpError.messages.occupationLocked));
 
 class ClientLocationObject extends EmptyLocation {
 	constructor(location, userId) {
@@ -49,12 +50,7 @@ class ClientLocationObject extends EmptyLocation {
 	}
 
 	static occupyLocationByUser(userId, locData) {
-		const key = {
-			lat: locData.northWest.lat,
-			lng: locData.northWest.lng
-		};
-
-		locker.validateKey(key);
+		const key = locData.northWest;
 
 		return Location.occupyByUser(userId, locData)
 			.then(() => {
@@ -66,8 +62,12 @@ class ClientLocationObject extends EmptyLocation {
 			})
 			.catch((err) => {
 				locker.deleteKey(key);
-				throw err;
+				return Promise.reject(err);
 			});
+	}
+
+	static validateOccupationLocker(key) {
+		return locker.validateKey(key);
 	}
 
 	static getLocationOnPointForUser(userId, geoData, isAllowed) {
@@ -142,7 +142,7 @@ class ClientLocationObject extends EmptyLocation {
 		return Location.findByIdAllIncluded(locationId)
 			.then((location) => {
 				if (userId !== location.dataValues.user_id) {
-					throw new Error('No such rights!');
+					return Promise.reject(new HttpError(403, HttpError.messages.isNotOwner));
 				}
 				return {
 					locationData: location
@@ -181,21 +181,22 @@ class ClientLocationObject extends EmptyLocation {
 				const lifecycleDate = location.lifecycle.dataValues.updated_at;
 
 				if (takingBankData > lifecycleDate) {
-					throw new Error('There\'s no any bank');
+					return Promise.reject(new HttpError(400, HttpError.messages.isNoBank));
 				}
 				return location;
 			});
 	}
 
 	static checkIsCurrentPermission(locationData, userGeodata, isAdmin) {
-		if (isAdmin) return;
+		if (isAdmin) return Promise.resolve();
 
 		const properLocCoords = EmptyLocation.calcNorthWestByPoint(userGeodata);
 
 		if ((+locationData.lng !== properLocCoords.lng) ||
 				(+locationData.lat !== properLocCoords.lat)) {
-			throw new Error('You have to be there to do that!');
+			return Promise.reject(new HttpError(403, HttpError.messages.isNotCurrent));
 		}
+		return Promise.resolve();
 	}
 
 	static getUsersLocationIds(userId) {
