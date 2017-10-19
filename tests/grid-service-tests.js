@@ -9,10 +9,6 @@ describe('Grid service', () => {
 	});
 
 	describe('Relative longitude location size calculation', () => {
-<<<<<<< HEAD
-		for (let lat = 0; lat < 90; lat += 10) {
-			it('Result of dividing total longitude degrees must be integer', () => {
-=======
 		for (let lat = 0; lat < 90; lat += 90) {
 			it('Result is positive', () => {
 				assert.equal(true, (EmptyLocation.calcRelLngSize(lat) > 0));
@@ -23,15 +19,11 @@ describe('Grid service', () => {
 				));
 			});
 			it('Result of dividing total longitude degrees is integer', () => {
->>>>>>> 9c95fe909581df49a6fa79eb3c00fdb91816dd6c
 				assert.equal(0, 3600000000 % EmptyLocation.calcRelLngSize(lat));
 				assert.equal(0, 3600000000 % EmptyLocation.calcRelLngSize(-lat));
 			});
 		}
 	});
-<<<<<<< HEAD
-	
-=======
 
 	describe('Location north-west point latitude validation', () => {
 		it('Result is boolean', () => {
@@ -74,5 +66,4 @@ describe('Grid service', () => {
 			});
 		}
 	});
->>>>>>> 9c95fe909581df49a6fa79eb3c00fdb91816dd6c
 });
