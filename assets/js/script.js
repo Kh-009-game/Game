@@ -1566,16 +1566,23 @@ class Game {
 	}
 
 	isLocationUpdated(locOld, locNew) {
-		const keys = Object.keys(locNew);
+		const result1 = this.deepDiff(locOld, locNew);
+		const result2 = this.deepDiff(locNew, locOld);
+
+		return result1 || result2;
+	}
+
+	deepDiff(obj1, obj2) {
+		const keys = Object.keys(obj2);
 
 		for (let i = 0, len = keys.length; i < len; i += 1) {
 			const key = keys[i];
-			if (typeof locNew[key] === 'object') {
-				const result = this.isLocationUpdated(locOld[key], locNew[key]);
+			if (typeof obj2[key] === 'object') {
+				const result = this.deepDiff(obj1[key], obj2[key]);
 
 				if (result === true) return result;
 			}
-			if (locOld[key] !== locNew[key]) {
+			if (obj1[key] !== obj2[key]) {
 				return true;
 			}
 		}
