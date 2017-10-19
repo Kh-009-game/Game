@@ -1,39 +1,35 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
-
-const router = express.Router();
 const regexp = new RegExp(/^\/?api.*$/);
+const UserService = require('../services/user-service');
 
-router.use((req, res, next) => {
+module.exports.checkToken = (req, res, next) => {
 	const token = req.cookies || req.body.token || req.query.token || req.headers['x-access-token'];
 	if (req.url.match(regexp)) {
 		if (token.auth) {
-			jwt.verify(token.auth, 'secret', (err, decoded) => {
-				if (err) {
-					res.status(403).send('Forbidden');
-				} else {
+			UserService.verifyToken(token)
+				.then((decoded) => {
 					req.decoded = decoded;
 					next();
-				}
-			});
+				})
+				.catch((err) => {
+					res.status(403).send('Forbidden');
+				});
 		} else {
 			res.status(401).send('UNAUTHORIZED');
 		}
 	}
+
 	if (!req.url.match(regexp)) {
 		if (token.auth) {
-			jwt.verify(token.auth, 'secret', (err, decoded) => {
-				if (err) {
-					res.redirect('/user/login');
-				} else {
+			UserService.verifyToken(token)
+				.then((decoded) => {
 					req.decoded = decoded;
 					next();
-				}
-			});
+				})
+				.catch((err) => {
+					res.redirect('/user/login');
+				});
 		} else {
 			res.redirect('/user/login');
 		}
 	}
-});
-
-module.exports = router;
+};

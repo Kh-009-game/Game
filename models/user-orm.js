@@ -42,6 +42,17 @@ const User = sequelize.define('user', {
 	underscored: true
 });
 
+User.makeUser = userData => User.create({
+	name: userData.name,
+	email: userData.email,
+	password: userData.password
+});
+
+User.findPerson = mail => User.findOne({
+	where: {
+		email: mail
+	}
+});
 User.giveCashById = (userId, cash, trans) => User.update({
 	cash: sequelize.literal(`cash + ${cash}`)
 }, {
