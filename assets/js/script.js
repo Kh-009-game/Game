@@ -491,9 +491,9 @@ class Game {
 				} else {
 					this.highlightEmptyLocation(location);
 				}
-				if (this.isLocationUpdated(locOld, this.highlightedLocation)) {
-					return this.renderHighlightedLocationTextInfo();
-				}
+				// if (this.isLocationUpdated(locOld, this.highlightedLocation)) {
+				return this.renderHighlightedLocationTextInfo();
+				// }
 			})
 			.catch((err) => {
 				this.errorHandler(err);
