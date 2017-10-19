@@ -93,12 +93,6 @@ class EmptyLocation {
 			'lat'
 		);
 	}
-	static get isAllowed() {
-		return this.isAllowed;
-	}
-	static set isAllowed(value) {
-		this.isAllowed = value;
-	}
 	static calcRelLngSize(pointLat) {
 		let result;
 		const lngSizeCoefficients = EmptyLocation.lngSizeCoefficients;
