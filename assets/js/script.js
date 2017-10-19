@@ -33,7 +33,6 @@ class Game {
 		this.occupiedLocationsIcons = {};
 		this.underpasses = [];
 		this.underpassesPolys = [];
-		this.infoBtn = document.getElementById('my-info');
 		this.sidebar = document.querySelector('.sidebar');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
@@ -144,10 +143,6 @@ class Game {
 					window.location.replace(srcXHR.responseURL);
 				});
 			});
-		});
-		this.infoBtn.addEventListener('click', (e) => {
-			e.preventDefault();
-			this.sidebar.classList.toggle('is-hidden');
 		});
 	}
 
@@ -828,6 +823,7 @@ class Game {
 		google.maps.event.removeListener(this.createUnderpassMapListener);
 		this.centerUserLocationsBtn.style.display = 'block';
 		this.showUserLocationsBtn.style.display = 'block';
+		this.hideOccupationForm();
 		this.clearMap();
 		this.renderLocationsArray();
 		this.refreshHighlightedLocation()
@@ -1684,6 +1680,12 @@ function initMap() {
 				text: 'Get ready for a new day...'
 			});
 		});
+
+		socket.on('underpass-update', (data) => {
+			game.setupMessageElement(data);
+			game.refreshUnderpasses();
+		});
+
 		socket.on('daily-event', () => {
 			if (game.currentLocation) {
 				game.unlockUI();
