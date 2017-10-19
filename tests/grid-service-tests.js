@@ -1,52 +1,66 @@
-const assert = require('assert');
+const assert = require('chai').assert;
 const EmptyLocation = require('../services/grid-service');
 
 describe('Grid service', () => {
+	describe('Grid properties', () => {
+		it('Equator', () => {
+			assert.typeOf(EmptyLocation.equatorLength, 'number');
+		});
+		it('Planet radius', () => {
+			assert.typeOf(EmptyLocation.planetRadius, 'number');
+		});
+		it('Meridian length', () => {
+			assert.typeOf(EmptyLocation.meridianLength, 'number');
+		});
+		it('Preferable location size', () => {
+			assert.typeOf(EmptyLocation.preferableLocSideSize, 'number');
+		});
+	});
 	describe('Relative latitude location size calculation', () => {
 		it('Result of dividing total latitude degrees is integer', () => {
-			assert.equal(0, 1800000000 % EmptyLocation.calcRelLatSize());
+			assert.strictEqual(0, 1800000000 % EmptyLocation.calcRelLatSize());
 		});
 	});
 
 	describe('Relative longitude location size calculation', () => {
 		for (let lat = 0; lat < 90; lat += 90) {
 			it('Result is positive', () => {
-				assert.equal(true, (EmptyLocation.calcRelLngSize(lat) > 0));
+				assert.isTrue((EmptyLocation.calcRelLngSize(lat) > 0));
 			});
 			it('Result is integer', () => {
-				assert.equal(true, (
+				assert.isTrue(
 					Math.round(EmptyLocation.calcRelLngSize(lat)) === EmptyLocation.calcRelLngSize(lat)
-				));
+				);
 			});
 			it('Result of dividing total longitude degrees is integer', () => {
-				assert.equal(0, 3600000000 % EmptyLocation.calcRelLngSize(lat));
-				assert.equal(0, 3600000000 % EmptyLocation.calcRelLngSize(-lat));
+				assert.strictEqual(0, 3600000000 % EmptyLocation.calcRelLngSize(lat));
+				assert.strictEqual(0, 3600000000 % EmptyLocation.calcRelLngSize(-lat));
 			});
 		}
 	});
 
 	describe('Location north-west point latitude validation', () => {
 		it('Result is boolean', () => {
-			assert.equal('boolean', typeof EmptyLocation.validateLatitude(0));
+			assert.typeOf(EmptyLocation.validateLatitude(0), 'boolean');
 		});
 
 		for (let lat = 0; lat < 90; lat += 90) {
 			it('Result of calculated north-west location point latitude is true', () => {
 				const locLat = EmptyLocation.getNorthWestLocationLatitudeByPoint(lat);
-				assert.equal(true, EmptyLocation.validateLatitude(locLat));
+				assert.isTrue(EmptyLocation.validateLatitude(locLat));
 			});
 
 			it('Result of not calculated latitude is false', () => {
 				let locLat = EmptyLocation.getNorthWestLocationLatitudeByPoint(lat);
 				locLat += EmptyLocation.relLatSize / 20000000;
-				assert.equal(false, EmptyLocation.validateLatitude(locLat));
+				assert.isFalse(EmptyLocation.validateLatitude(locLat));
 			});
 		}
 	});
 
 	describe('Location north-west point longitude validation', () => {
 		it('Result is boolean', () => {
-			assert.equal('boolean', typeof EmptyLocation.validateLongitude(0, 0));
+			assert.typeOf(EmptyLocation.validateLongitude(0, 0), 'boolean');
 		});
 
 		for (let lat = 0, lng = lat * 2; lat < 90; lat += 90, lng = lat * 2) {
@@ -56,14 +70,20 @@ describe('Grid service', () => {
 			});
 
 			it('Result of calculated north-west location point longitude is true', () => {
-				assert.equal(true, EmptyLocation.validateLongitude(loc.northWest.lat, loc.northWest.lng));
+				assert.isTrue(EmptyLocation.validateLongitude(loc.northWest.lat, loc.northWest.lng));
 			});
 
 			it('Result of not calculated longitude is false', () => {
 				const locLat = loc.northWest.lat + (EmptyLocation.relLatSize / 20000000);
 				const locLng = loc.northWest.lng + (EmptyLocation.relLngSize / 20000000);
-				assert.equal(false, EmptyLocation.validateLongitude(locLat, locLng));
+				assert.isFalse(false, EmptyLocation.validateLongitude(locLat, locLng));
 			});
 		}
+	});
+
+	describe('Prime factors separation', () => {
+		it('', () => {
+			assert.strictEqual(0, EmptyLocation.findPrimeFactors(0)[0]);
+		});
 	});
 });
