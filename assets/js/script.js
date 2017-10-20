@@ -491,9 +491,9 @@ class Game {
 				} else {
 					this.highlightEmptyLocation(location);
 				}
-				// if (this.isLocationUpdated(locOld, this.highlightedLocation)) {
-				return this.renderHighlightedLocationTextInfo();
-				// }
+				if (this.isLocationUpdated(locOld, this.highlightedLocation)) {
+					return this.renderHighlightedLocationTextInfo();
+				}
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -1414,48 +1414,31 @@ class Game {
 		this.setUserGeoData(coords);
 
 		const oldHighLoc = this.highlightedLocation;
-		const loc = this.currentLocation;
-		if (loc === null || !this.checkIfLocContainsThePoint(coords, loc)) {
-			console.log(1);
-			this.renderCurrentLocationInfo()
-				.then(() => {
-					// this.renderCurrentUserMarker();
-					if (this.highlightedLocation) {
-						const currentIsHighlighted = (
-							(this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat) &&
-								(this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng)
-						);
-						if (currentIsHighlighted) {
-							if (!this.currentLocation.locationId) {
-								return this.updateCurrentEmptyLocation();
-							}
-							this.highlightOccupiedLocation(this.currentLocation);
-							if (!oldHighLoc || this.isLocationUpdated(oldHighLoc, this.highlightedLocation)) {
-								return this.updateHighlightedLocationTextInfo();
-							}
+
+		this.renderCurrentLocationInfo()
+			.then(() => {
+				this.renderCurrentUserMarker();
+				if (this.highlightedLocation) {
+					const currentIsHighlighted = (
+						(this.currentLocation.northWest.lat === this.highlightedLocation.northWest.lat) &&
+						(this.currentLocation.northWest.lng === this.highlightedLocation.northWest.lng)
+					);
+					if (currentIsHighlighted) {
+						if (!this.currentLocation.locationId) {
+							return this.updateCurrentEmptyLocation();
 						}
+						this.highlightOccupiedLocation(this.currentLocation);
+						// if (!oldHighLoc || this.isLocationUpdated(oldHighLoc, this.highlightedLocation)) {
+						return this.updateHighlightedLocationTextInfo();
+						// }
 					}
-				})
-				.then(() => {
-					this.renderCurrentUserMarker();
-				})
-				.catch((err) => {
-					this.errorHandler(err);
-				});
-		} else {
-			this.renderCurrentUserMarker();
-		}
+				}
+			})
+			.catch((err) => {
+				this.errorHandler(err);
+			});
 	}
 
-
-	checkIfLocContainsThePoint(point, loc) {
-		const latLng = new google.maps.LatLng(point.lat, point.lng);
-		const locGeometry = new google.maps.Polygon({ paths: [loc.mapFeatureCoords] });
-		if (google.maps.geometry.poly.containsLocation(latLng, locGeometry)) {
-			return true;
-		}
-		return false;
-	}
 	showUserGeodata(coords) {
 		this.setUserGeoData(coords);
 		this.renderCurrentUserMarker();
@@ -1754,12 +1737,13 @@ function initMap() {
 					lng: position.coords.longitude
 				});
 			});
-			// setInterval(() => {
-			// 	game.refreshUserGeodata({
-			// 		lat: game.userGeoData.lat,
-			// 		lng: game.userGeoData.lng
-			// 	});
-			// }, 5000);
+
+			setInterval(() => {
+				game.refreshUserGeodata({
+					lat: game.userGeoData.lat,
+					lng: game.userGeoData.lng
+				});
+			}, 5000);
 
 			game.highlightGridMapListener = map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
