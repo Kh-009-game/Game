@@ -7,14 +7,18 @@ module.exports = function (io) {
 			console.log('SOCKET_data', data);
 			ClientLocationObject.updateLocation(data.locationId, data)
 				.catch((err) => {
-					console.log('error', err);
+					console.log('error_SOKET', err);
+					socket.emit('my_error', err);
+				})
+				.then(() => {
+					console.log('done!');
+					socket.emit('update', {
+						type: 'msgUpdateLoc',
+						text: `
+					Location ${data.locationId} was updated.
+					`
+					})				
 				});
-			socket.emit('update', {
-				type: 'msgUpdateLoc',
-				text: `
-			Location ${data.locationId} was updated.
-			`
-			});
 		});
 	});
 
