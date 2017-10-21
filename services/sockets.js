@@ -4,21 +4,22 @@ const ClientLocationObject = require('../services/location-service');
 module.exports = function (io) {
 	io.sockets.on('connection', (socket) => {
 		socket.on('editLocationWS', (data) => {
-			console.log('SOCKET_data', data);
-			ClientLocationObject.updateLocation(data.locationId, data)
-				.catch((err) => {
-					console.log('error_SOKET', err);
-					socket.emit('my_error', err);
-				})
-				.then(() => {
-					console.log('done!');
-					socket.emit('update', {
+			ClientLocationObject.updateLocation(data.locationId, data)	
+				.then(() => {					
+					io.socket.emit('update', {
 						type: 'msgUpdateLoc',
 						text: `
 					Location ${data.locationId} was updated.
 					`
 					})				
-				});
+				})
+				.catch((err) => {
+					const message = err.errors[0];
+					socket.emit('my_error', {
+						type: 'updateEr',
+						text: message.message
+					});
+				})
 		});
 	});
 
