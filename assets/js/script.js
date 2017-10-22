@@ -36,11 +36,9 @@ class Game {
 		this.sidebar = document.querySelector('.sidebar');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
-			// let target = event.target;
 			this.showAllUserLocations();
 		});
 		this.centerUserLocationsBtn.addEventListener('click', (event) => {
-			// let target = event.target;
 			this.centerMapByUserGeoData(undefined, undefined, 16);
 			this.highlightCurrentLocation();
 			this.renderHighlightedLocationTextInfo();
@@ -53,8 +51,6 @@ class Game {
 				this.removeHighlight();
 				this.locInfoBlock.classList.remove('show-clicked');
 				this.locInfoBlock.classList.add('show-current');
-
-				// close #clicked-loc-info
 				return;
 			}
 			if (target.closest('#occupy-btn')) {
@@ -439,7 +435,7 @@ class Game {
 	}
 
 	refreshOccupiedLocations() {
-		// this.lockLocMenu();
+		this.saveOldHighlightedLoc();
 		this.getOccupiedLocations()
 			.then((locArray) => {
 				console.dir(locArray);
@@ -456,7 +452,6 @@ class Game {
 
 				return this.refreshUnderpasses();
 			})
-
 			.then(() => this.renderCurrentLocationInfo())
 			.then(() => this.refreshHighlightedLocation())
 			.then(() => {
@@ -469,7 +464,6 @@ class Game {
 	}
 
 	refreshHighlightedLocation() {
-		const locOld = this.highlightedLocation;
 		if (!this.highlightedLocation) return Promise.resolve();
 		return this.getLocationByCoords(this.highlightedLocation.northWest)
 			.then((location) => {
@@ -491,7 +485,7 @@ class Game {
 				} else {
 					this.highlightEmptyLocation(location);
 				}
-				if (this.isLocationUpdated(locOld, this.highlightedLocation)) {
+				if (this.isLocationUpdated(this.oldHighLoc, this.highlightedLocation)) {
 					return this.renderHighlightedLocationTextInfo();
 				}
 			})
@@ -569,9 +563,7 @@ class Game {
 					location.mapFeatureCoords.forEach((point) => {
 						points.push(new google.maps.LatLng(point.lat, point.lng));
 					});
-					// console.dir()
 					this.locInfoBlock.classList.add('hide');
-					// console.dir(northWestPoint);
 					points.forEach((point) => {
 						bounds.extend(point);
 					});
@@ -646,7 +638,6 @@ class Game {
 	renderCurrentEmptyLocation(currentLocation) {
 		this.currentLocation = currentLocation;
 		this.currentLocation.isCurrent = true;
-		// this.currentLocation.isAllowed = currentLocation.isAllowed;
 		this.currentLocationMapFeature = this.getAndRenderFeatureByLocObj(
 			this.currentLocation
 		);
@@ -734,7 +725,6 @@ class Game {
 			}],
 			strokeColor: 'purple',
 			strokeOpacity: 0
-			// strokeWeight: 2
 		});
 		this.underpassesPolys.push(underpassPoly);
 		underpassPoly.setMap(this.map);
@@ -1195,6 +1185,8 @@ class Game {
 
 	editLocationInfoHandler(event) {
 		event.preventDefault();
+		this.lockLocMenu();
+		this.hideOccupationForm();
 		const form = event.target;
 		const locName = form['location-name'].value;
 		const dailyMsg = form['daily-msg'].value;
@@ -1236,8 +1228,6 @@ class Game {
 
 		this.deleteHighlightedLocation()
 			.then(() => {
-				// need refresh locations method
-				this.unlockLocMenu();
 				console.log('You\'ve deleted location');
 			})
 			.catch((err) => {
@@ -1251,6 +1241,7 @@ class Game {
 	}
 
 	restorePopulation() {
+		this.lockLocMenu();
 		return new Promise((res, rej) => {
 			const createLocationXHR = new XMLHttpRequest();
 			createLocationXHR.open('PUT', `api/locations/${this.highlightedLocation.locationId}/restore-population`);
@@ -1266,9 +1257,7 @@ class Game {
 			};
 		})
 			.then(() => {
-				this.highlightedLocation.loyalPopulation = this.highlightedLocation.population;
-				this.highlightOccupiedLocation(this.highlightedLocation);
-				return this.renderHighlightedLocationTextInfo();
+				console.log('Population restored.');
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -1319,9 +1308,7 @@ class Game {
 			};
 		})
 			.then(() => {
-				this.currentLocation.dailyBank = 0;
-				this.renderCurrentOccupiedLocation(this.currentLocation);
-				this.unlockLocMenu();
+				console.log('Bank has been taken.');
 			})
 			.catch((err) => {
 				this.unlockLocMenu();
@@ -1412,9 +1399,7 @@ class Game {
 	// GOOGLE MAP AND HTML5 GEOLOCATION INTERACTION METHODS
 	refreshUserGeodata(coords) {
 		this.setUserGeoData(coords);
-
-		const oldHighLoc = this.highlightedLocation;
-
+		this.saveOldHighlightedLoc();
 		this.renderCurrentLocationInfo()
 			.then(() => {
 				this.renderCurrentUserMarker();
@@ -1428,9 +1413,9 @@ class Game {
 							return this.updateCurrentEmptyLocation();
 						}
 						this.highlightOccupiedLocation(this.currentLocation);
-						// if (!oldHighLoc || this.isLocationUpdated(oldHighLoc, this.highlightedLocation)) {
-						return this.updateHighlightedLocationTextInfo();
-						// }
+						if (!this.oldHighLoc || this.isLocationUpdated(this.oldHighLoc, this.highlightedLocation)) {
+							return this.updateHighlightedLocationTextInfo();
+						}
 					}
 				}
 			})
@@ -1581,12 +1566,19 @@ class Game {
 				const result = this.deepDiff(obj1[key], obj2[key]);
 
 				if (result === true) return result;
-			}
-			if (obj1[key] !== obj2[key]) {
+			} else if (obj1[key] !== obj2[key]) {
+				console.log(`${key} : ${obj1[key]}`);
+				console.log(`${key} : ${obj2[key]}`);
 				return true;
 			}
 		}
 		return false;
+	}
+
+	saveOldHighlightedLoc() {
+		if (this.highlightedLocation) {
+			this.oldHighLoc = Object.assign({}, this.highlightedLocation);
+		}
 	}
 
 	lockUI() {
@@ -1738,12 +1730,12 @@ function initMap() {
 				});
 			});
 
-			setInterval(() => {
-				game.refreshUserGeodata({
-					lat: game.userGeoData.lat,
-					lng: game.userGeoData.lng
-				});
-			}, 5000);
+			// setInterval(() => {
+			// 	game.refreshUserGeodata({
+			// 		lat: game.userGeoData.lat,
+			// 		lng: game.userGeoData.lng
+			// 	});
+			// }, 5000);
 
 			game.highlightGridMapListener = map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);

@@ -1,7 +1,7 @@
 {
   "isNotOwner": "This location is not belongs to you.",
   "occupationLocked": "Location is being occupied by someone else.",
-  "isNoBank": "Location daily has been already taken.",
+  "isNoBank": "Location daily bank has been already taken.",
   "isNotCurrent": "You have to be there to do it!",
   "isLifecycle": "New day begins. Please, wait...",
   "isNotAdmin": "No such rights!"
