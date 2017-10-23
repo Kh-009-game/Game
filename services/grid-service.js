@@ -242,6 +242,7 @@ class EmptyLocation {
 	}
 
 	static findPrimeFactors(value) {
+		if (value < 2) return [];
 		let tempValue = value;
 		let checker = 2;
 		const result = [];

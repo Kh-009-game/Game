@@ -82,8 +82,29 @@ describe('Grid service', () => {
 	});
 
 	describe('Prime factors separation', () => {
-		it('', () => {
-			assert.strictEqual(0, EmptyLocation.findPrimeFactors(0)[0]);
+		it('For values less than 2 result is empty array', () => {
+			for (let i = -10; i < 2; i += 1) {
+				assert.strictEqual(0, EmptyLocation.findPrimeFactors(i).length);
+			}
 		});
+
+		it('All values of result array are prime', () => {
+			for (let i = 0; i < 3; i += 1) {
+				const value = Math.round(Math.random() * 1000000);
+				const valuePrimeFactors = EmptyLocation.findPrimeFactors(value);
+				valuePrimeFactors.forEach((item) => {
+					assert.isTrue(isPrimeFactor(item));
+				});
+			}
+		});
+
+		function isPrimeFactor(num) {
+			for (let i = 2; i < num; i += 1) {
+				if ((num % i) === 0) {
+					return false;
+				}
+			}
+			return true;
+		}
 	});
 });
