@@ -17,8 +17,25 @@ class UserObject {
 		Letter.sendMail(letter);
 	}
 
-	static findUser(email) {
-		return User.findPerson(email);
+	static findUser(email, password) {
+		return User.findPerson(email)
+			.then((data) => {
+				if (data.dataValues.password === password) {
+					const payload = {
+						id: data.dataValues.id,
+						email: data.dataValues.email,
+						name: data.dataValues.name,
+						isAdmin: data.dataValues.is_admin
+					};
+					const token = jwt.sign(payload, 'secret', {
+						expiresIn: 86400
+					});
+					return token;
+				}
+			})
+			.catch((err) => {
+				return err;
+			});
 	}
 
 	static verifyToken(token) {
