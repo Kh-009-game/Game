@@ -1482,7 +1482,6 @@ class Game {
 	setUserGeoData(userCoord) {
 		this.userGeoData = userCoord;
 	}
-	// The function creates a notification with the specified body and header.
 
 	createMessageElement(data) {
 		const notification = document.createElement('div');
@@ -1494,7 +1493,6 @@ class Game {
 		return notification;
 	}
 
-	// Running
 	setupMessageElement(data) {
 		const notifications = document.querySelector('.notification');
 		notifications.classList.add('open');
@@ -1657,7 +1655,7 @@ function initMap() {
 		});
 
 		socket.on('my_error', (err) => {
-			game.setupMessageElement(err);			
+			game.setupMessageElement(err);
 		});
 
 		socket.on('lifecycle-started', () => {
@@ -1707,7 +1705,6 @@ function initMap() {
 			}
 		});
 
-
 		game.initApp();
 
 		function initMapInteraction() {
@@ -1723,7 +1720,6 @@ function initMap() {
 					lng: position.coords.longitude
 				});
 			}, () => {
-				// THERE HAVE TO BE CODE FOR TURNED OFF GEOLOCATION NOTIFICATION
 				alert('Your geolocation is not working. Probably you forgot to turn it on. Please, turn on geolocation and give proper access to this app');
 			});
 
@@ -1733,13 +1729,6 @@ function initMap() {
 					lng: position.coords.longitude
 				});
 			});
-
-			// setInterval(() => {
-			// 	game.refreshUserGeodata({
-			// 		lat: game.userGeoData.lat,
-			// 		lng: game.userGeoData.lng
-			// 	});
-			// }, 5000);
 
 			game.highlightGridMapListener = map.addListener('click', (event) => {
 				game.renderEmptyLocationInfo(event);
