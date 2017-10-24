@@ -1,13 +1,11 @@
 const express = require('express');
+const userController = require('../controllers/user-controller');
 
 const router = express.Router();
 
-router.get('/',
-	(req, res) => {
-		res.render('index', {
-			isAdmin: req.decoded.isAdmin
-		});
-	}
+router.get(
+	'/',
+	userController.getIndexPage
 );
 
 

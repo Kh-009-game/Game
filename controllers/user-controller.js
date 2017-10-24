@@ -1,37 +1,33 @@
 const UserService = require('../services/user-service');
-const jwt = require('jsonwebtoken');
+// const jwt = require('jsonwebtoken');
+const HttpError = require('../services/utils/http-error');
 
 module.exports.getLoginForm = (req, res) => {
 	res.render('login');
 };
-module.exports.loginUser = (req, res) => {
+module.exports.loginUser = (req, res, next) => {
 	const email = req.body['log-email'];
-	const password = req.body['log-pass'];
-	UserService.findUser(email)
-		.then((data) => {
-			// console.log(data);
-			if (data.password !== password) {
-				res.redirect('/login');
-			}
-			if (data.password === password) {
-			// create a token
-				const payload = {
-					id: data.id,
-					email: data.email,
-					name: data.name,
-					isAdmin: data.is_admin
-				};
-				const token = jwt.sign(payload, 'secret', {
-					expiresIn: 86400
-				});
-				res.cookie('auth', token);
-				res.redirect('../');
-			} else {
-				res.redirect('/login');
-			}
-		}).catch((err) => {
-			console.log(err);
+	const pass = req.body['log-pass'];
+	UserService.findUser(email, pass)
+		.then((token) => {
+			res.cookie('auth', token);
+			res.redirect('../');
+		})
+		.catch((err) => {
+			next(new HttpError(401, HttpError.messages.unautorized));
 			res.redirect('/login');
+		});
+};
+
+module.exports.getIndexPage = (req, res, next) => {
+	const userId = req.decoded.id;
+	UserService.createUserObjectById(userId)
+		.then((userData) => {
+			console.log('result', userData);
+			res.render('index', userData);
+		})
+		.catch((err) => {
+			next(err);
 		});
 };
 

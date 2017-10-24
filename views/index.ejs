@@ -17,9 +17,10 @@
         <div class="header-menu">
             <button class="header-btn btn-burger" type="button"><i class="material-icons">menu</i></button>
             <div class="header-info">
-            <h2> UserName</h2>
-            <span><i class="material-icons">account_balance_wallet</i> 200</span>
-            UserLocations
+            <h2><%= name %></h2>
+            <span><i class="material-icons">account_balance_wallet</i>
+              <span id="cash-contanier"><%= cash %></span>
+            </span>            
             </div>
             <% if (isAdmin) { %>
               <button class="header-btn btn-lifecycle" id="lifecycle-btn" type="button"><i class="material-icons">wb_sunny</i></button>

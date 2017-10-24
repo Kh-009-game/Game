@@ -5,7 +5,6 @@ require('dotenv').config();
 const sslRedirect = require('heroku-ssl-redirect');
 const express = require('express');
 const bodyParser = require('body-parser');
-// const pgp = require('pg-promise')();
 const path = require('path');
 const auth = require('./middleware/auth');
 const cookieParser = require('cookie-parser');
@@ -21,9 +20,6 @@ const underpassesRoutes = require('./routes/underpasses.routes');
 const logService = require('./services/log-service');
 
 const app = express();
-// const port = process.env.PORT || 8080;
-// const eventEmitter = new EventEmitter();
-
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

@@ -53,6 +53,17 @@ User.findPerson = mail => User.findOne({
 		email: mail
 	}
 });
+User.findById = userId => User.findOne({
+	where: {
+		id: userId
+	}
+});
+User.findCashByName = userName => User.findOne({
+	where: {
+		name: userName
+	}
+});
+
 User.giveCashById = (userId, cash, trans) => User.update({
 	cash: sequelize.literal(`cash + ${cash}`)
 }, {

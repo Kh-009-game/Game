@@ -1656,6 +1656,10 @@ function initMap() {
 			game.refreshOccupiedLocations();
 		});
 
+		socket.on('my_error', (err) => {
+			game.setupMessageElement(err);			
+		});
+
 		socket.on('lifecycle-started', () => {
 			game.lockUI();
 			game.setupMessageElement({
