@@ -5,7 +5,7 @@ const HttpError = require('../services/utils/http-error');
 module.exports.getLoginForm = (req, res) => {
 	res.render('login');
 };
-module.exports.loginUser = (req, res) => {
+module.exports.loginUser = (req, res, next) => {
 	const email = req.body['log-email'];
 	const pass = req.body['log-pass'];
 	UserService.findUser(email, pass)
@@ -14,8 +14,20 @@ module.exports.loginUser = (req, res) => {
 			res.redirect('../');
 		})
 		.catch((err) => {
-			res.send(new HttpError(401, HttpError.messages.unautorized));
+			next(new HttpError(401, HttpError.messages.unautorized));
 			res.redirect('/login');
+		});
+};
+
+module.exports.getIndexPage = (req, res, next) => {
+	const userId = req.decoded.id;
+	UserService.createUserObjectById(userId)
+		.then((userData) => {
+			console.log('result', userData);
+			res.render('index', userData);
+		})
+		.catch((err) => {
+			next(err);
 		});
 };
 

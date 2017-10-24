@@ -3,9 +3,18 @@ const Letter = require('../services/mail-service');
 const jwt = require('jsonwebtoken');
 
 class UserObject {
-	constructor(userData) {
-		this.name = userData.name;
-		this.cash = 150;
+	constructor(data) {
+		this.name = data.dataValues.name;
+		this.cash = data.dataValues.cash;
+		this.isAdmin = data.dataValues.is_admin;
+	}
+
+	static createUserObjectById(id) {
+		return User.findById(id)
+			.then((data) => {
+				console.log('obj', data);
+				return new UserObject(data);
+			});
 	}
 
 	static createNewUser(userData) {
@@ -33,9 +42,7 @@ class UserObject {
 					return token;
 				}
 			})
-			.catch((err) => {
-				return err;
-			});
+			.catch(err => err);
 	}
 
 	static verifyToken(token) {
