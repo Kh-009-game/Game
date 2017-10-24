@@ -26,7 +26,7 @@ const Location = sequelize.define('location', {
 					lng: this.dataValues.lng
 				};
 
-				BoundsService.validateGameBoundsByBoundsId(latLng)
+				BoundsService.validateGameBoundsByBoundsId(latLng, 1)
 					.then((result) => {
 						if (!result) throw new Error('Out of bounds');
 					});
@@ -133,6 +133,13 @@ Location.occupyByUser = (userId, locData) => sequelize
 				transaction: trans
 			});
 		})
+		.then(() => User.update({
+			cash: sequelize.literal('cash - 150')
+		}, {
+			where: {
+				id: userId
+			}
+		}))
 	);
 
 Location.findOnPoint = point => Location.findOne({

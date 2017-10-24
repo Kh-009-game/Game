@@ -25,26 +25,29 @@ class UnderpassClientObject {
 		];
 	}
 
-	static getAllUnderpassesForUser(userId) {
-		return ClientLocationObject.getUsersLocationIds(userId)
-			.then((ids) => {
-				const userLocIds1 = [];
-				const userLocIds2 = [];
+	static getAllUnderpassesForUser(userId, isAdmin) {
+		const promise = isAdmin ?
+			Underpass.findAllIncluded() :
+			ClientLocationObject.getUsersLocationIds(userId)
+				.then((ids) => {
+					const userLocIds1 = [];
+					const userLocIds2 = [];
 
-				ids.forEach((item) => {
-					userLocIds1.push({
-						loc_id_1: item
+					ids.forEach((item) => {
+						userLocIds1.push({
+							loc_id_1: item
+						});
+						userLocIds2.push({
+							loc_id_2: item
+						});
 					});
-					userLocIds2.push({
-						loc_id_2: item
+
+					return Underpass.findAllForByLocIdArray({
+						userLocIds1,
+						userLocIds2
 					});
 				});
-
-				return Underpass.findAllForByLocIdArray({
-					userLocIds1,
-					userLocIds2
-				});
-			})
+		return promise
 			.then((underpasses) => {
 				const underpassesClientObjects = [];
 

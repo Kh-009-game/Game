@@ -33,15 +33,12 @@ class Game {
 		this.occupiedLocationsIcons = {};
 		this.underpasses = [];
 		this.underpassesPolys = [];
-		this.infoBtn = document.getElementById('my-info');
 		this.sidebar = document.querySelector('.sidebar');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
-			// let target = event.target;
 			this.showAllUserLocations();
 		});
 		this.centerUserLocationsBtn.addEventListener('click', (event) => {
-			// let target = event.target;
 			this.centerMapByUserGeoData(undefined, undefined, 16);
 			this.highlightCurrentLocation();
 			this.renderHighlightedLocationTextInfo();
@@ -54,8 +51,6 @@ class Game {
 				this.removeHighlight();
 				this.locInfoBlock.classList.remove('show-clicked');
 				this.locInfoBlock.classList.add('show-current');
-
-				// close #clicked-loc-info
 				return;
 			}
 			if (target.closest('#occupy-btn')) {
@@ -144,10 +139,6 @@ class Game {
 					window.location.replace(srcXHR.responseURL);
 				});
 			});
-		});
-		this.infoBtn.addEventListener('click', (e) => {
-			e.preventDefault();
-			this.sidebar.classList.toggle('is-hidden');
 		});
 	}
 
@@ -444,7 +435,7 @@ class Game {
 	}
 
 	refreshOccupiedLocations() {
-		// this.lockLocMenu();
+		this.saveOldHighlightedLoc();
 		this.getOccupiedLocations()
 			.then((locArray) => {
 				console.dir(locArray);
@@ -461,7 +452,6 @@ class Game {
 
 				return this.refreshUnderpasses();
 			})
-
 			.then(() => this.renderCurrentLocationInfo())
 			.then(() => this.refreshHighlightedLocation())
 			.then(() => {
@@ -474,7 +464,6 @@ class Game {
 	}
 
 	refreshHighlightedLocation() {
-		const locOld = this.highlightedLocation;
 		if (!this.highlightedLocation) return Promise.resolve();
 		return this.getLocationByCoords(this.highlightedLocation.northWest)
 			.then((location) => {
@@ -496,7 +485,7 @@ class Game {
 				} else {
 					this.highlightEmptyLocation(location);
 				}
-				if (this.isLocationUpdated(locOld, this.highlightedLocation)) {
+				if (this.isLocationUpdated(this.oldHighLoc, this.highlightedLocation)) {
 					return this.renderHighlightedLocationTextInfo();
 				}
 			})
@@ -574,9 +563,7 @@ class Game {
 					location.mapFeatureCoords.forEach((point) => {
 						points.push(new google.maps.LatLng(point.lat, point.lng));
 					});
-					// console.dir()
 					this.locInfoBlock.classList.add('hide');
-					// console.dir(northWestPoint);
 					points.forEach((point) => {
 						bounds.extend(point);
 					});
@@ -651,7 +638,6 @@ class Game {
 	renderCurrentEmptyLocation(currentLocation) {
 		this.currentLocation = currentLocation;
 		this.currentLocation.isCurrent = true;
-		// this.currentLocation.isAllowed = currentLocation.isAllowed;
 		this.currentLocationMapFeature = this.getAndRenderFeatureByLocObj(
 			this.currentLocation
 		);
@@ -739,7 +725,6 @@ class Game {
 			}],
 			strokeColor: 'purple',
 			strokeOpacity: 0
-			// strokeWeight: 2
 		});
 		this.underpassesPolys.push(underpassPoly);
 		underpassPoly.setMap(this.map);
@@ -828,6 +813,7 @@ class Game {
 		google.maps.event.removeListener(this.createUnderpassMapListener);
 		this.centerUserLocationsBtn.style.display = 'block';
 		this.showUserLocationsBtn.style.display = 'block';
+		this.hideOccupationForm();
 		this.clearMap();
 		this.renderLocationsArray();
 		this.refreshHighlightedLocation()
@@ -1199,6 +1185,8 @@ class Game {
 
 	editLocationInfoHandler(event) {
 		event.preventDefault();
+		this.lockLocMenu();
+		this.hideOccupationForm();
 		const form = event.target;
 		const locName = form['location-name'].value;
 		const dailyMsg = form['daily-msg'].value;
@@ -1240,8 +1228,6 @@ class Game {
 
 		this.deleteHighlightedLocation()
 			.then(() => {
-				// need refresh locations method
-				this.unlockLocMenu();
 				console.log('You\'ve deleted location');
 			})
 			.catch((err) => {
@@ -1255,6 +1241,7 @@ class Game {
 	}
 
 	restorePopulation() {
+		this.lockLocMenu();
 		return new Promise((res, rej) => {
 			const createLocationXHR = new XMLHttpRequest();
 			createLocationXHR.open('PUT', `api/locations/${this.highlightedLocation.locationId}/restore-population`);
@@ -1270,9 +1257,7 @@ class Game {
 			};
 		})
 			.then(() => {
-				this.highlightedLocation.loyalPopulation = this.highlightedLocation.population;
-				this.highlightOccupiedLocation(this.highlightedLocation);
-				return this.renderHighlightedLocationTextInfo();
+				console.log('Population restored.');
 			})
 			.catch((err) => {
 				this.errorHandler(err);
@@ -1323,9 +1308,7 @@ class Game {
 			};
 		})
 			.then(() => {
-				this.currentLocation.dailyBank = 0;
-				this.renderCurrentOccupiedLocation(this.currentLocation);
-				this.unlockLocMenu();
+				console.log('Bank has been taken.');
 			})
 			.catch((err) => {
 				this.unlockLocMenu();
@@ -1416,9 +1399,7 @@ class Game {
 	// GOOGLE MAP AND HTML5 GEOLOCATION INTERACTION METHODS
 	refreshUserGeodata(coords) {
 		this.setUserGeoData(coords);
-
-		const oldHighLoc = this.highlightedLocation;
-
+		this.saveOldHighlightedLoc();
 		this.renderCurrentLocationInfo()
 			.then(() => {
 				this.renderCurrentUserMarker();
@@ -1432,7 +1413,7 @@ class Game {
 							return this.updateCurrentEmptyLocation();
 						}
 						this.highlightOccupiedLocation(this.currentLocation);
-						if (!oldHighLoc || this.isLocationUpdated(oldHighLoc, this.highlightedLocation)) {
+						if (!this.oldHighLoc || this.isLocationUpdated(this.oldHighLoc, this.highlightedLocation)) {
 							return this.updateHighlightedLocationTextInfo();
 						}
 					}
@@ -1570,20 +1551,34 @@ class Game {
 	}
 
 	isLocationUpdated(locOld, locNew) {
-		const keys = Object.keys(locNew);
+		const result1 = this.deepDiff(locOld, locNew);
+		const result2 = this.deepDiff(locNew, locOld);
+
+		return result1 || result2;
+	}
+
+	deepDiff(obj1, obj2) {
+		const keys = Object.keys(obj2);
 
 		for (let i = 0, len = keys.length; i < len; i += 1) {
 			const key = keys[i];
-			if (typeof locNew[key] === "object") {
-				const result = this.isLocationUpdated(locOld[key], locNew[key]);
+			if (typeof obj2[key] === 'object') {
+				const result = this.deepDiff(obj1[key], obj2[key]);
 
 				if (result === true) return result;
-			}
-			if (locOld[key] !== locNew[key]) {
-				return true;				
+			} else if (obj1[key] !== obj2[key]) {
+				console.log(`${key} : ${obj1[key]}`);
+				console.log(`${key} : ${obj2[key]}`);
+				return true;
 			}
 		}
 		return false;
+	}
+
+	saveOldHighlightedLoc() {
+		if (this.highlightedLocation) {
+			this.oldHighLoc = Object.assign({}, this.highlightedLocation);
+		}
 	}
 
 	lockUI() {
@@ -1661,12 +1656,22 @@ function initMap() {
 			game.refreshOccupiedLocations();
 		});
 
+		socket.on('my_error', (err) => {
+			game.setupMessageElement(err);			
+		});
+
 		socket.on('lifecycle-started', () => {
 			game.lockUI();
 			game.setupMessageElement({
 				text: 'Get ready for a new day...'
 			});
 		});
+
+		socket.on('underpass-update', (data) => {
+			game.setupMessageElement(data);
+			game.refreshUnderpasses();
+		});
+
 		socket.on('daily-event', () => {
 			if (game.currentLocation) {
 				game.unlockUI();

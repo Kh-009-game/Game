@@ -1,3 +1,4 @@
+
 const assert = require('chai').assert;
 const EmptyLocation = require('../services/grid-service');
 
@@ -61,6 +62,7 @@ describe('Grid service', () => {
 	describe('Location north-west point longitude validation', () => {
 		it('Result is boolean', () => {
 			assert.typeOf(EmptyLocation.validateLongitude(0, 0), 'boolean');
+			assert.equal('boolean', typeof EmptyLocation.validateLongitude(0, 0));
 		});
 
 		for (let lat = 0, lng = lat * 2; lat < 90; lat += 90, lng = lat * 2) {
