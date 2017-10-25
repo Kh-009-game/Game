@@ -55,6 +55,10 @@ class UserObject {
 			});
 		});
 	}
+
+	static getUserCashById(userId) {
+		return User.getCashById(userId);
+	}
 }
 
 module.exports = UserObject;

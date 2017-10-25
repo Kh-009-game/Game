@@ -31,7 +31,7 @@ module.exports.getIndexPage = (req, res, next) => {
 		});
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
 	const userData = {
 		name: req.body['reg-name'],
 		email: req.body['reg-email'],
@@ -45,11 +45,22 @@ module.exports.createUser = (req, res) => {
 			.then(() => {
 				console.log('New user was added to db');
 				UserService.sendLetter(userData.email);
-			}).catch((error) => {
-				console.log('error:', error);
+			}).catch((err) => {
+				next(err);
 			});
 		res.redirect('../');
 	}
+};
+
+module.exports.getUserCashById = (req, res, next) => {
+	const userId = req.decoded.id;
+	UserService.getUserCashById(userId)
+		.then((cash) => {
+			res.json({ cash });
+		})
+		.catch((err) => {
+			next(err);
+		});
 };
 
 module.exports.logOut = (req, res) => {

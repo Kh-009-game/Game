@@ -34,6 +34,7 @@ class Game {
 		this.underpasses = [];
 		this.underpassesPolys = [];
 		this.sidebar = document.querySelector('.sidebar');
+		this.cashContainer = document.getElementById('cash-contanier');
 
 		this.showUserLocationsBtn.addEventListener('click', (event) => {
 			this.showAllUserLocations();
@@ -1123,6 +1124,7 @@ class Game {
 			.then(() => {
 				console.log('Congrats! You\'ve occupied the location!');
 				this.hideOccupationForm();
+				this.updateUserCash();
 			})
 			.catch((err) => {
 				this.unlockLocMenu();
@@ -1136,6 +1138,7 @@ class Game {
 		this.occupyLocation(this.highlightedLocation)
 			.then(() => {
 				this.hideOccupationForm();
+				this.updateUserCash();
 			})
 			.catch((err) => {
 				this.unlockLocMenu();
@@ -1257,6 +1260,7 @@ class Game {
 			};
 		})
 			.then(() => {
+				this.updateUserCash();
 				console.log('Population restored.');
 			})
 			.catch((err) => {
@@ -1308,6 +1312,7 @@ class Game {
 			};
 		})
 			.then(() => {
+				this.updateUserCash();
 				console.log('Bank has been taken.');
 			})
 			.catch((err) => {
@@ -1503,6 +1508,33 @@ class Game {
 				notifications.removeChild(removedItem);
 			});
 		}, 10000);
+	}
+
+	updateUserCash() {
+		return new Promise((res, rej) => {
+			const xhr = new XMLHttpRequest();
+			xhr.open('GET', '/user/current-user-cash');
+			xhr.send();
+			xhr.onload = (e) => {
+				const htmlXHR = e.srcElement;
+
+				if (htmlXHR.status !== 200) {
+					rej(htmlXHR.response);
+				}
+
+				res(JSON.parse(htmlXHR.response));
+			};
+		})
+			.then((data) => {
+				this.renderUserCash(data.cash);
+			})
+			.catch((err) => {
+				this.errorHandler(err);
+			});
+	}
+
+	renderUserCash(cash) {
+		this.cashContainer.textContent = cash;
 	}
 
 	errorHandler(err) {

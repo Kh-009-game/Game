@@ -1,5 +1,6 @@
 const express = require('express');
 const userController = require('../controllers/user-controller');
+const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -18,6 +19,12 @@ router.post(
 router.get(
 	'/logout',
 	userController.logOut
+);
+
+router.get(
+	'/current-user-cash',
+	authMiddleware.checkToken,
+	userController.getUserCashById
 );
 
 module.exports = router;

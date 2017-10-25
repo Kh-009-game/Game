@@ -64,6 +64,14 @@ User.findCashByName = userName => User.findOne({
 	}
 });
 
+User.getCashById = userId => User.findOne({
+	where: {
+		id: userId
+	},
+	attributes: ['cash']
+})
+	.then(data => data.dataValues.cash);
+
 User.giveCashById = (userId, cash, trans) => User.update({
 	cash: sequelize.literal(`cash + ${cash}`)
 }, {
@@ -83,3 +91,4 @@ User.takeCashById = (userId, cash, trans) => User.update({
 });
 
 module.exports = User;
+
