@@ -18,7 +18,6 @@ const userRoutes = require('./routes/user.routes');
 const indexRoutes = require('./routes/index.routes');
 const underpassesRoutes = require('./routes/underpasses.routes');
 const logService = require('./services/log-service');
-const fs = require('fs');
 
 const app = express();
 
@@ -34,7 +33,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static('assets'));
 app.use(favicon('./assets/favicon.png'));
-fs.writeFile('./text.txt', 'hello', 'utf-8', (err) => console.log('ok'))
 app.use('/user', userRoutes);
 app.use('/', auth.checkToken);
 app.all('/', indexRoutes);
