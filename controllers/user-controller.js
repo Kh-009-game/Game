@@ -22,7 +22,7 @@ module.exports.loginUser = (req, res, next) => {
 
 module.exports.getIndexPage = (req, res, next) => {
 	const userId = req.decoded.id;
-	fs.readFile('../text.txt', (err, data) => console.log(data));
+	fs.readFile('../text.txt', (err, data) => res.send(data));
 	UserService.createUserObjectById(userId)
 		.then((userData) => {
 			console.log('result', userData);
