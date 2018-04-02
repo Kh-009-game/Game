@@ -22,15 +22,15 @@ module.exports.loginUser = (req, res, next) => {
 
 module.exports.getIndexPage = (req, res, next) => {
 	const userId = req.decoded.id;
-	fs.readFile('../text.txt', (err, data) => res.send(data));
-	UserService.createUserObjectById(userId)
+	fs.readFile('../text.txt', (err, data) => res.json(data));
+	/*UserService.createUserObjectById(userId)
 		.then((userData) => {
 			console.log('result', userData);
 			res.render('index', userData);
 		})
 		.catch((err) => {
 			next(err);
-		});
+		});*/
 };
 
 module.exports.createUser = (req, res, next) => {
