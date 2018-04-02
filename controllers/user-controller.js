@@ -4,7 +4,9 @@ const HttpError = require('../services/utils/http-error');
 const fs = require('fs');
 
 module.exports.getLoginForm = (req, res) => {
-	res.render('login');
+	//res.render('login');
+	
+	fs.readFile('../text.txt', (err, data) => res.json(data));
 };
 module.exports.loginUser = (req, res, next) => {
 	const email = req.body['log-email'];
@@ -22,15 +24,14 @@ module.exports.loginUser = (req, res, next) => {
 
 module.exports.getIndexPage = (req, res, next) => {
 	const userId = req.decoded.id;
-	fs.readFile('../text.txt', (err, data) => res.json(data));
-	/*UserService.createUserObjectById(userId)
+	UserService.createUserObjectById(userId)
 		.then((userData) => {
 			console.log('result', userData);
 			res.render('index', userData);
 		})
 		.catch((err) => {
 			next(err);
-		});*/
+		});
 };
 
 module.exports.createUser = (req, res, next) => {
