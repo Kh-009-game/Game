@@ -4,9 +4,7 @@ const HttpError = require('../services/utils/http-error');
 const fs = require('fs');
 
 module.exports.getLoginForm = (req, res) => {
-	//res.render('login');
-	
-	fs.readFile('../text.txt', (err, data) => res.json(data));
+	res.render('login');
 };
 module.exports.loginUser = (req, res, next) => {
 	const email = req.body['log-email'];
