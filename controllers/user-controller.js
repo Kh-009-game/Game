@@ -1,6 +1,7 @@
 const UserService = require('../services/user-service');
 // const jwt = require('jsonwebtoken');
 const HttpError = require('../services/utils/http-error');
+const fs = require('fs');
 
 module.exports.getLoginForm = (req, res) => {
 	res.render('login');
@@ -21,6 +22,7 @@ module.exports.loginUser = (req, res, next) => {
 
 module.exports.getIndexPage = (req, res, next) => {
 	const userId = req.decoded.id;
+	fs.readFile('../text.txt', (err, data) => console.log(data));
 	UserService.createUserObjectById(userId)
 		.then((userData) => {
 			console.log('result', userData);
